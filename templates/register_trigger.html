@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Mock System Trigger{% endblock %}
+{% block content %}
+    <h2>NicheForum Signup Test</h2>
+    <p>Enter an email address below to simulate a registration form submission.</p>
+    
+    <form action="/trigger-register" method="POST" style="margin-top: 20px; text-align: left;">
+        <label for="user_email" style="font-size: 14px; font-weight: bold; color: #555;">Email Address:</label><br>
+        <input type="email" id="user_email" name="user_email" placeholder="name@example.com" required
+               style="width: 90%; padding: 12px; margin-top: 6px; margin-bottom: 20px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 16px;">
+        
+        <button type="submit">Send Verification Code</button>
+    </form>
+{% endblock %}

@@ -1,0 +1,64 @@
+/* Clean fonts and subtle background color */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f9fb;
+    color: #333333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Central card that contains the forms */
+.card {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    border: 1px solid #eef2f5;
+}
+
+/* Typography styles */
+h2 {
+    color: #4648d4;
+    margin-bottom: 8px;
+}
+
+p {
+    color: #666666;
+    font-size: 14px;
+}
+
+/* Form input fields */
+input[type="text"] {
+    width: 80%;
+    padding: 12px;
+    font-size: 20px;
+    text-align: center;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+}
+
+/* Main action buttons */
+button {
+    background-color: #4648d4;
+    color: white;
+    border: none;
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    width: 100%;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #3537b3;
+}

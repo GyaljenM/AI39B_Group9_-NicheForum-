@@ -1,0 +1,17 @@
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    vertical-align: middle;
+}
+
+.hero-gradient {
+    background: linear-gradient(135deg, rgba(70, 72, 212, 0.95) 0%, rgba(96, 99, 238, 0.8) 100%);
+}
+
+.community-card-shadow {
+    box-shadow: 0 4px 20px -4px rgba(70, 72, 212, 0.15);
+}
+
+.bento-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -8px rgba(70, 72, 212, 0.25);
+}

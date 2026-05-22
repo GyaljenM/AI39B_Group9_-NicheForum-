@@ -1,0 +1,5 @@
+SECRET_KEY = "random-secret-key"
+MYSQL_HOST = "localhost"
+MYSQL_USER = "root"
+MYSQL_PASSWORD = "hussdai@6787Lmao"
+MYSQL_DB = "class_db"

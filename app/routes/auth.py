@@ -13,4 +13,8 @@ class AuthRoutes:
         self.bp.route("/register",methods=["GET","POST"])(
             self.controller.register
         )
+        self.bp.route("/logout")(
+            self.controller.logout
+        )
         return self.bp 
+ 

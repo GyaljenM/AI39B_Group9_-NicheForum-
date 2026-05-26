@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, session
 
 
 class HomeRoutes:
@@ -10,4 +10,6 @@ class HomeRoutes:
         return self.bp
 
     def home(self):
+        if session.get("user_id"):
+            return render_template("dashboard.html", user_name=session.get("user_name"))
         return render_template("index.html")

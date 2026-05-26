@@ -13,6 +13,12 @@ class AuthRoutes:
         self.bp.route("/register",methods=["GET","POST"])(
             self.controller.register
         )
+        self.bp.route("/forgot-password",methods=["GET","POST"])(
+            self.controller.forgot_password
+        )
+        self.bp.route("/reset-password",methods=["GET","POST"])(
+            self.controller.reset_password
+        )
         self.bp.route("/logout")(
             self.controller.logout
         )

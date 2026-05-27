@@ -4,6 +4,8 @@ import config
 class Database:
     def __init__(self):
         """Open a database connection when object is created."""
+        # Initialize connection attribute first so other methods can check it
+        self.__connection = None
         try:
             self.__connection = pymysql.connect(
                 host=config.MYSQL_HOST,
@@ -21,6 +23,8 @@ class Database:
  
     def fetch_one(self, query, params=None):
         """Run a query and return ONE result (or None)."""
+        if not self.__connection:
+            raise RuntimeError("No database connection available")
         cursor = self.__connection.cursor()
         cursor.execute(query, params)
         result = cursor.fetchone()
@@ -29,6 +33,8 @@ class Database:
 
     def fetch_all(self, query, params=None):
         """Run a query and return ALL results as a list."""
+        if not self.__connection:
+            raise RuntimeError("No database connection available")
         cursor = self.__connection.cursor()
         cursor.execute(query, params)
         results = cursor.fetchall()
@@ -37,6 +43,8 @@ class Database:
 
     def execute(self, query, params=None):
         """Run a query that changes data (INSERT, UPDATE, DELETE)."""
+        if not self.__connection:
+            raise RuntimeError("No database connection available")
         cursor = self.__connection.cursor()
         cursor.execute(query, params)
         self.__connection.commit()
@@ -59,6 +67,11 @@ class Database:
         You call it as: Database.create_tables()
         """
         db = Database()
+        # If connection failed, skip creating tables to avoid runtime errors
+        if not db._Database__connection:
+            print("Skipping table creation: no database connection")
+            return
+
         db.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -66,6 +79,9 @@ class Database:
                 email VARCHAR(100) NOT NULL UNIQUE,
                 password VARCHAR(255) NOT NULL,
                 role VARCHAR(20) NOT NULL DEFAULT 'user',
+                is_verified TINYINT DEFAULT 0,
+                verification_token VARCHAR(255),
+                token_expires_at DATETIME,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """) 

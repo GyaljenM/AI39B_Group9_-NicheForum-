@@ -73,6 +73,15 @@ class Database:
             return
 
         db.execute("""
+            CREATE TABLE IF NOT EXISTS categories (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL UNIQUE,
+                description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        db.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(100) NOT NULL,
@@ -85,16 +94,66 @@ class Database:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """) 
-        # Create default admin if not exists
-        admin = db.fetch_one(
-            "SELECT * FROM users WHERE email = %s", ("admin@admin.com",)
-        )
-        if not admin:
-            from werkzeug.security import generate_password_hash
 
-            db.execute(
-                "INSERT INTO users (name, email, password, role) VALUES (%s, %s, %s, %s)",
-                ("Admin", "admin@admin.com", generate_password_hash("admin123"), "admin"),
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS threads (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                content TEXT NOT NULL,
+                author VARCHAR(100) NOT NULL,
+                category_id INT,
+                category VARCHAR(100) DEFAULT 'Sports',
+                votes INT DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
             )
+        """)
+
+        # Fix for existing tables missing the category_id column
+        try:
+            columns = db.fetch_all("DESCRIBE threads")
+            column_names = [col['Field'] for col in columns]
+            
+            if 'category_id' not in column_names:
+                print("Adding missing category_id column to threads table...")
+                db.execute("ALTER TABLE threads ADD COLUMN category_id INT AFTER author")
+                db.execute("ALTER TABLE threads ADD CONSTRAINT fk_category FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL")
+        except Exception as e:
+            print(f"Error updating threads table structure: {e}")
+
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS replies (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                thread_id INT NOT NULL,
+                content TEXT NOT NULL,
+                user_email VARCHAR(100) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Seed categories if they don't exist
+        try:
+            existing_cats = db.fetch_all("SELECT name FROM categories")
+            cat_names = [c['name'] for c in existing_cats]
+            for cat in ['Sports', 'eSports', 'Strategy', 'News']:
+                if cat not in cat_names:
+                    db.execute("INSERT INTO categories (name) VALUES (%s)", (cat,))
+        except Exception as e:
+            print(f"Error seeding categories: {e}")
+
+        # Create default admin if not exists
+        try:
+            admin = db.fetch_one(
+                "SELECT * FROM users WHERE email = %s", ("admin@admin.com",)
+            )
+            if not admin:
+                from werkzeug.security import generate_password_hash
+                db.execute(
+                    "INSERT INTO users (name, email, password, role) VALUES (%s, %s, %s, %s)",
+                    ("Admin", "admin@admin.com", generate_password_hash("admin123"), "admin"),
+                )
+        except Exception as e:
+            print(f"Error creating admin: {e}")
 
         db.close()

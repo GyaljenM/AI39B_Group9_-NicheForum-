@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category_name }} Community | NicheForum{% endblock %}
+
+{% block content %}
+<!-- Community Header -->
+<section class="relative h-[320px] w-full overflow-hidden flex items-center justify-center bg-indigo-900">
+    <div class="absolute inset-0 opacity-40">
+        <img alt="{{ category_name }}" class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&w=1200&q=80">
+    </div>
+    <div class="absolute inset-0 bg-gradient-to-t from-indigo-900 to-transparent"></div>
+    <div class="relative z-10 text-center px-6">
+        <div class="w-20 h-20 rounded-2xl bg-white p-2 mx-auto mb-6 shadow-2xl">
+            <div class="w-full h-full bg-primary rounded-xl flex items-center justify-center text-white">
+                <span class="material-symbols-outlined text-4xl">
+                    {% if category_name == 'Football' %}sports_soccer
+                    {% elif category_name == 'Basketball' %}sports_basketball
+                    {% elif category_name == 'Tennis' %}sports_tennis
+                    {% elif category_name == 'Cricket' %}sports_cricket
+                    {% elif category_name == 'eSports' %}sports_esports
+                    {% else %}groups{% endif %}
+                </span>
+            </div>
+        </div>
+        <h1 class="font-display-lg text-white text-4xl mb-2">{{ category_name }} Hub</h1>
+        <p class="text-white/80 max-w-xl mx-auto">The ultimate destination for {{ category_name.lower() }} enthusiasts. Join the conversation, share clips, and stay updated.</p>
+    </div>
+</section>
+
+<div class="max-w-[1280px] mx-auto px-6 mt-12 grid grid-cols-12 gap-8">
+    <!-- Main Feed -->
+    <main class="col-span-12 lg:col-span-8">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="font-headline-md text-2xl text-on-background">Recent Discussions</h2>
+            <button onclick="toggleModal()" class="px-6 py-3 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all shadow-lg active:scale-95 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">add</span>
+                New Thread
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            {% for thread in threads %}
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden animate-in fade-in duration-300">
+                <div class="p-6 flex items-start gap-4">
+                    <!-- Interactive Vote Sidebar -->
+                    <div class="flex flex-col items-center justify-center p-2 bg-surface-container rounded-xl min-w-[56px]" id="vote-container-{{ thread.id }}">
+                        <button onclick="vote({{ thread.id }}, 'up')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:text-primary transition-all group" id="upvote-{{ thread.id }}">
+                            <span class="material-symbols-outlined text-2xl group-active:scale-125">arrow_drop_up</span>
+                        </button>
+                        <span class="font-bold text-lg" id="votes-count-{{ thread.id }}">{{ thread.votes }}</span>
+                        <button onclick="vote({{ thread.id }}, 'down')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:text-primary transition-all group" id="downvote-{{ thread.id }}">
+                            <span class="material-symbols-outlined text-2xl group-active:scale-125">arrow_drop_down</span>
+                        </button>
+                    </div>
+
+                    <div class="flex-1">
+                        <a href="{{ url_for('Thread.view_thread', thread_id=thread.id) }}" class="block group">
+                            <h4 class="text-xl font-semibold group-hover:text-primary transition-all mb-2">{{ thread.title }}</h4>
+                            <p class="text-on-surface-variant line-clamp-2 mb-4">{{ thread.content }}</p>
+                        </a>
+                        <div class="flex items-center gap-4 text-on-surface-variant text-sm">
+                            <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">account_circle</span> @{{ thread.author }}</span>
+                            <span>•</span>
+                            <span>{{ thread.created_at }}</span>
+                            <span>•</span>
+                            <button onclick="toggleReplies({{ thread.id }})" class="flex items-center gap-1.5 hover:text-primary font-bold">
+                                <span class="material-symbols-outlined text-sm">chat_bubble</span>
+                                {{ thread.replies|length if thread.replies else 0 }} comments
+                            </button>
+                            {% if session.get('user_name', 'Guest') == thread.author %}
+                            <span>•</span>
+                            <form action="{{ url_for('Thread.delete_thread', thread_id=thread.id) }}" method="POST" onsubmit="return confirm('Delete this thread permanently?')" class="inline">
+                                <button type="submit" class="flex items-center gap-1.5 text-red-500 hover:text-red-700 font-bold">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                    Delete
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inline Replies Section (Hidden by default) -->
+                <div id="replies-{{ thread.id }}" class="hidden bg-surface-bright border-t border-slate-50 p-6 animate-in slide-in-from-top-2 duration-200">
+                    <div class="space-y-4 max-h-[300px] overflow-y-auto mb-6 pr-2 custom-scrollbar">
+                        {% if thread.replies %}
+                            {% for reply in thread.replies %}
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold">{{ reply.user_email[0]|upper }}</div>
+                                <div class="flex-1 bg-white p-4 rounded-2xl shadow-sm border border-slate-50">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-sm font-bold">@{{ reply.user_email }}</span>
+                                        <span class="text-xs text-on-surface-variant">{{ reply.created_at }}</span>
+                                    </div>
+                                    <p class="text-sm text-on-surface leading-normal">{{ reply.content }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                        <p class="text-center text-sm text-on-surface-variant py-8">No comments yet. Be the first to start the conversation!</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Quick Reply Form -->
+                    <form action="{{ url_for('Thread.post_reply', thread_id=thread.id) }}" method="POST" class="flex gap-3">
+                        <input name="content" type="text" placeholder="Write a comment..." class="flex-1 text-sm rounded-full bg-white border-slate-200 focus:ring-primary focus:border-primary px-6 py-3" required>
+                        <button type="submit" class="px-6 bg-primary text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all font-bold text-sm">
+                            Post
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+                <span class="material-symbols-outlined text-6xl text-slate-300 mb-4">forum</span>
+                <p class="text-on-surface-variant text-lg">No discussions here yet.</p>
+                <button onclick="toggleModal()" class="mt-4 text-primary font-semibold hover:underline">Start the first conversation</button>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <!-- Sidebar -->
+    <aside class="col-span-12 lg:col-span-4 space-y-6">
+        <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+            <h3 class="font-headline-sm text-xl mb-4">About Community</h3>
+            <p class="text-on-surface-variant text-sm leading-relaxed mb-6">
+                This is a dedicated space for all things {{ category_name.lower() }}. Share news, post your favorite highlights, and engage with fans from around the world.
+            </p>
+            <div class="space-y-4 border-t border-slate-50 pt-6">
+                <div class="flex justify-between text-sm">
+                    <span class="text-on-surface-variant">Members</span>
+                    <span class="font-bold">12,402</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-on-surface-variant">Created</span>
+                    <span class="font-bold">May 2026</span>
+                </div>
+            </div>
+            <button class="w-full mt-8 py-4 bg-surface-container text-on-surface font-label-bold rounded-xl hover:bg-surface-container-high transition-all">Joined</button>
+        </div>
+    </aside>
+</div>
+
+<!-- Modal for Creating New Thread (Pre-selected Category) -->
+<div id="threadModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h2 class="font-headline-sm text-headline-sm">Post to {{ category_name }}</h2>
+            <button onclick="toggleModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition-all">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form action="{{ url_for('Thread.create_thread') }}" method="POST" class="p-6 space-y-4">
+            <input type="hidden" name="category" value="{{ category_name }}">
+            <div>
+                <label class="block text-sm font-label-bold mb-1 text-on-surface-variant">Title</label>
+                <input name="title" type="text" placeholder="Title of your post" class="w-full rounded-xl border-slate-200 focus:ring-primary focus:border-primary px-4 py-3" required>
+            </div>
+            <div>
+                <label class="block text-sm font-label-bold mb-1 text-on-surface-variant">Content</label>
+                <textarea name="content" rows="6" placeholder="What do you want to share?" class="w-full rounded-xl border-slate-200 focus:ring-primary focus:border-primary px-4 py-3" required></textarea>
+            </div>
+            <button type="submit" class="w-full py-4 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all shadow-lg active:scale-95 mt-4">Post to Community</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const userVotes = {};
+
+    async function vote(threadId, action) {
+        if (userVotes[threadId] === action) {
+            alert(`You have already ${action}voted this thread.`);
+            return;
+        }
+
+        try {
+            const response = await fetch(`/thread/${threadId}/vote`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById(`votes-count-${threadId}`).innerText = data.votes;
+                userVotes[threadId] = action;
+                
+                const upBtn = document.getElementById(`upvote-${threadId}`);
+                const downBtn = document.getElementById(`downvote-${threadId}`);
+                
+                if (action === 'up') {
+                    upBtn.classList.add('text-primary');
+                    downBtn.classList.remove('text-primary');
+                } else {
+                    downBtn.classList.add('text-primary');
+                    upBtn.classList.remove('text-primary');
+                }
+            }
+        } catch (error) {
+            console.error('Error voting:', error);
+        }
+    }
+
+    function toggleReplies(threadId) {
+        const repliesDiv = document.getElementById(`replies-${threadId}`);
+        repliesDiv.classList.toggle('hidden');
+    }
+
+    function toggleModal() {
+        const modal = document.getElementById('threadModal');
+        modal.classList.toggle('hidden');
+    }
+</script>
+{% endblock %}

@@ -1,6 +1,7 @@
 from flask import Flask
 from app.routes.auth import AuthRoutes
 from app.routes.HomeRoutes import HomeRoutes
+from app.routes.ThreadRoutes import ThreadRoutes
 from .models.database import Database
 import config
 
@@ -17,6 +18,10 @@ def create_app():
     # Register Home Routes
     home_routes = HomeRoutes()
     app.register_blueprint(home_routes.register())
+
+    # Register Thread Routes
+    thread_routes = ThreadRoutes()
+    app.register_blueprint(thread_routes.register())
 
     @app.errorhandler(404)
     def page_not_found(e):

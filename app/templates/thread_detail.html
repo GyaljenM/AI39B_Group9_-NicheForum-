@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}{{ thread.title }} | NicheForum{% endblock %}
+
+{% block content %}
+<div class="max-w-[1000px] mx-auto px-6 py-12">
+    <!-- Breadcrumbs -->
+    <nav class="flex items-center gap-2 text-sm text-on-surface-variant mb-8">
+        <a href="{{ url_for('Home.home') }}" class="hover:text-primary transition-all">Home</a>
+        <span class="material-symbols-outlined text-xs">chevron_right</span>
+        <a href="{{ url_for('Thread.view_community', category_name=thread.category) }}" class="hover:text-primary transition-all">{{ thread.category }}</a>
+        <span class="material-symbols-outlined text-xs">chevron_right</span>
+        <span class="text-on-surface truncate">{{ thread.title }}</span>
+    </nav>
+
+    <!-- Main Thread Content -->
+    <article class="bg-white rounded-[32px] shadow-xl overflow-hidden border border-slate-100">
+        <div class="p-8 md:p-12">
+            <div class="flex items-start gap-6">
+                <!-- Vote Sidebar -->
+                <div class="hidden md:flex flex-col items-center gap-2 p-3 bg-surface-container rounded-2xl min-w-[64px]">
+                    <button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white hover:text-primary transition-all">
+                        <span class="material-symbols-outlined text-3xl">arrow_drop_up</span>
+                    </button>
+                    <span class="text-xl font-bold">{{ thread.votes }}</span>
+                    <button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white transition-all">
+                        <span class="material-symbols-outlined text-3xl">arrow_drop_down</span>
+                    </button>
+                </div>
+
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                            {{ thread.author[0]|upper }}
+                        </div>
+                        <div>
+                            <p class="font-bold text-on-surface">@{{ thread.author }}</p>
+                            <p class="text-xs text-on-surface-variant">{{ thread.created_at }}</p>
+                        </div>
+                        <span class="ml-auto px-3 py-1 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full uppercase tracking-widest">
+                            {{ thread.category }}
+                        </span>
+                    </div>
+
+                    <h1 class="text-3xl md:text-4xl font-black text-on-background mb-6 leading-tight">
+                        {{ thread.title }}
+                    </h1>
+
+                    <div class="prose max-w-none text-on-surface-variant text-lg leading-relaxed whitespace-pre-wrap">
+                        {{ thread.content }}
+                    </div>
+
+                    <div class="mt-10 pt-8 border-t border-slate-50 flex items-center gap-6">
+                        <button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-all">
+                            <span class="material-symbols-outlined">chat_bubble</span>
+                            <span class="font-bold">{{ replies|length }} Comments</span>
+                        </button>
+                        <button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-all">
+                            <span class="material-symbols-outlined">share</span>
+                            <span class="font-bold">Share</span>
+                        </button>
+                        <button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-all">
+                            <span class="material-symbols-outlined">bookmark</span>
+                            <span class="font-bold">Save</span>
+                        </button>
+                        {% if session.get('user_name', 'Guest') == thread.author %}
+                        <form action="{{ url_for('Thread.delete_thread', thread_id=thread.id) }}" method="POST" onsubmit="return confirm('Delete this thread permanently?')" class="inline">
+                            <button type="submit" class="flex items-center gap-2 text-red-500 hover:text-red-700 transition-all ml-4">
+                                <span class="material-symbols-outlined">delete</span>
+                                <span class="font-bold">Delete</span>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reply Section -->
+        <div class="bg-surface-bright p-8 md:p-12 border-t border-slate-100">
+            <h3 class="text-xl font-bold mb-6">Join the conversation</h3>
+            <form action="{{ url_for('Thread.post_reply', thread_id=thread.id) }}" method="POST" class="space-y-4">
+                <textarea name="content" rows="4" placeholder="What are your thoughts?" class="w-full rounded-2xl border-slate-200 focus:ring-primary focus:border-primary p-6 shadow-inner" required></textarea>
+                <div class="flex justify-end">
+                    <button type="submit" class="px-8 py-4 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all shadow-lg active:scale-95">
+                        Post Reply
+                    </button>
+                </div>
+            </form>
+        </div>
+    </article>
+
+    <!-- Replies List -->
+    <div class="mt-12 space-y-8">
+        <div class="flex items-center gap-4 mb-8">
+            <h3 class="text-xl font-bold text-on-background">{{ replies|length }} Comments</h3>
+            <div class="flex items-center gap-2 text-sm font-semibold text-on-surface-variant cursor-pointer hover:text-on-surface transition-all">
+                <span class="material-symbols-outlined text-lg">sort</span>
+                Sort by
+            </div>
+        </div>
+
+        {% for reply in replies %}
+        <div class="flex gap-4 group animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <!-- Compact Avatar -->
+            <div class="flex-shrink-0">
+                <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold border border-slate-50">
+                    {{ reply.user_email[0]|upper }}
+                </div>
+            </div>
+            
+            <!-- Comment Content -->
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-sm font-bold text-on-surface">@{{ reply.user_email }}</span>
+                    <span class="text-xs text-on-surface-variant">{{ reply.created_at }}</span>
+                </div>
+                <p class="text-[15px] text-on-surface leading-normal whitespace-pre-wrap mb-3">
+                    {{ reply.content }}
+                </p>
+                
+                <!-- Compact Action Bar -->
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1 group/btn cursor-pointer">
+                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/btn:text-primary transition-all">thumb_up</span>
+                        <span class="text-xs font-semibold text-on-surface-variant group-hover/btn:text-on-surface">0</span>
+                    </div>
+                    <div class="flex items-center gap-1 group/btn cursor-pointer">
+                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/btn:text-primary transition-all">thumb_down</span>
+                    </div>
+                    <button class="text-xs font-bold text-on-surface-variant hover:bg-slate-100 px-3 py-1.5 rounded-full transition-all">Reply</button>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-12 bg-white rounded-[32px] border-2 border-dashed border-slate-100">
+            <p class="text-on-surface-variant">No comments yet. Be the first to reply!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

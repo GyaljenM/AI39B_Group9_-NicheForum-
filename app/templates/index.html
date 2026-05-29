@@ -12,8 +12,8 @@
 <h1 class="font-display-lg text-white text-display-lg mb-6 leading-tight">Find Your Tribe in the World of Athletics</h1>
 <p class="font-body-lg text-white/90 text-body-lg mb-10 max-w-2xl mx-auto">Join over 250,000 sports enthusiasts across 1,200 specialized communities. From obscure esports to the world cup, your team is here.</p>
 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-<button class="w-full sm:w-auto px-8 py-4 bg-white text-primary rounded-xl font-label-bold shadow-xl hover:scale-105 transition-all active:scale-95">Discover Trending</button>
-<button class="w-full sm:w-auto px-8 py-4 bg-primary-container text-white rounded-xl font-label-bold shadow-xl border border-white/20 hover:bg-primary transition-all active:scale-95">Explore Categories</button>
+<a href="{{ url_for('Home.trending') }}" class="w-full sm:w-auto px-8 py-4 bg-white text-primary rounded-xl font-label-bold shadow-xl hover:scale-105 transition-all active:scale-95 text-center">Discover Trending</a>
+<a href="{{ url_for('Home.communities') }}" class="w-full sm:w-auto px-8 py-4 bg-primary-container text-white rounded-xl font-label-bold shadow-xl border border-white/20 hover:bg-primary transition-all active:scale-95 text-center">Explore Communities</a>
 </div>
 </div>
 </section>

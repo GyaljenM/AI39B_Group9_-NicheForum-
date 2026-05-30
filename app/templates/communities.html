@@ -4,7 +4,9 @@
 
 {% block content %}
 <div class="max-w-[1280px] mx-auto px-6 mt-8">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+    <div class="grid grid-cols-12 gap-8">
+        <div class="col-span-12 lg:col-span-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
             <h1 class="font-display-lg text-headline-md mb-2">Explore Communities</h1>
             <p class="text-on-surface-variant text-body-lg">Find your tribe among thousands of sports hubs.</p>
@@ -79,6 +81,11 @@
                 <p class="text-slate-500">No communities found.</p>
             </div>
         {% endif %}
+    </div>
+        </div>
+        <aside class="col-span-12 lg:col-span-4">
+            {% include '_sidebar.html' %}
+        </aside>
     </div>
 </div>
 {% endblock %}

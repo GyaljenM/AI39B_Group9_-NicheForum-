@@ -55,4 +55,3 @@ class EmailService:
     def generate_secure_otp(length=6):
         """Generates a cryptographically secure numeric OTP."""
         return ''.join(secrets.choice(string.digits) for _ in range(length))
-  

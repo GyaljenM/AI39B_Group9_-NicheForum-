@@ -1,12 +1,28 @@
 from flask import Flask
 from app.routes.auth import AuthRoutes
 from app.routes.HomeRoutes import HomeRoutes
+from app.routes.ThreadRoutes import ThreadRoutes
 from .models.database import Database
-import config
+import os
+
+# Load configuration object if available; otherwise fall back to environment
+# variables. Importing top-level `config` can fail when the package is
+# executed in certain ways, so we try both locations.
+try:
+    import config as project_config
+except Exception:
+    try:
+        from app import config as project_config
+    except Exception:
+        project_config = None
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(config)
+    if project_config:
+        app.config.from_object(project_config)
+    else:
+        # Minimal fallbacks if no config module is present
+        app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'random-secret-key')
     
     Database.create_tables()
 
@@ -17,6 +33,10 @@ def create_app():
     # Register Home Routes
     home_routes = HomeRoutes()
     app.register_blueprint(home_routes.register())
+
+    # Register Thread Routes
+    thread_routes = ThreadRoutes()
+    app.register_blueprint(thread_routes.register())
 
     @app.errorhandler(404)
     def page_not_found(e):

@@ -100,6 +100,11 @@
         }
     </script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Ensure vertical scrolling is available without touching global static files */
+        html { overflow-y: auto !important; }
+        body { overflow-y: visible !important; }
+    </style>
     {% block styles %}{% endblock %}
 </head>
 <body class="bg-surface-bright text-on-surface font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed">
@@ -184,6 +189,19 @@
                 header.classList.add('py-0', 'bg-white/95', 'backdrop-blur-md');
             } else {
                 header.classList.remove('py-0', 'bg-white/95', 'backdrop-blur-md');
+            }
+        });
+    </script>
+    <script>
+        // Force-enable vertical scrolling at runtime without editing static files
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                document.documentElement.style.overflowY = 'auto';
+                document.body.style.overflowY = 'visible';
+                document.documentElement.classList.remove('overflow-hidden');
+                document.body.classList.remove('overflow-hidden');
+            } catch (e) {
+                /* ignore */
             }
         });
     </script>

@@ -71,7 +71,48 @@ class Database:
                 token_expires_at DATETIME,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """) 
+        """)
+
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS communities (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL UNIQUE,
+                description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS community_members (
+                user_id INT NOT NULL,
+                community_id INT NOT NULL,
+                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, community_id),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE
+            )
+        """)
+
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS posts (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                community_id INT NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                content TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Insert some default communities
+        communities = ["Football", "Basketball", "Tennis", "Cricket", "eSports"]
+        for comm in communities:
+            exists = db.fetch_one("SELECT * FROM communities WHERE name = %s", (comm,))
+            if not exists:
+                db.execute("INSERT INTO communities (name) VALUES (%s)", (comm,))
+
         # Create default admin if not exists
         admin = db.fetch_one(
             "SELECT * FROM users WHERE email = %s", ("admin@admin.com",)

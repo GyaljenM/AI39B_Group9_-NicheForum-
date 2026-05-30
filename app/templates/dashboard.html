@@ -31,118 +31,49 @@
                 <div class="bg-white rounded-[28px] p-6 shadow-sm border border-slate-200">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
                         <div>
-                            <p class="text-sm uppercase tracking-[0.24em] text-primary/90 font-semibold">Create new post</p>
-                            <h2 class="text-2xl font-semibold text-on-background mt-2">Share an update with your community</h2>
+                            <p class="text-sm uppercase tracking-[0.24em] text-primary/90 font-semibold">Join the conversation</p>
+                            <h2 class="text-2xl font-semibold text-on-background mt-2">Ready to share something?</h2>
                         </div>
-                        <button class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-white font-semibold shadow-lg hover:bg-primary-container transition-all">
-                            <span class="material-symbols-outlined">add</span>
-                            New Post
-                        </button>
-                    </div>
-                    <div class="grid gap-4 sm:grid-cols-3">
-                        <div class="rounded-3xl bg-surface-container-high p-4">
-                            <p class="text-sm text-on-surface-variant">Most Active</p>
-                            <p class="mt-3 text-xl font-semibold">12 communities</p>
-                        </div>
-                        <div class="rounded-3xl bg-surface-container-high p-4">
-                            <p class="text-sm text-on-surface-variant">Pending replies</p>
-                            <p class="mt-3 text-xl font-semibold">24 threads</p>
-                        </div>
-                        <div class="rounded-3xl bg-surface-container-high p-4">
-                            <p class="text-sm text-on-surface-variant">Today's top post</p>
-                            <p class="mt-3 text-xl font-semibold">Digital Arena</p>
-                        </div>
+                        <a href="{{ url_for('Home.communities') }}" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-white font-semibold shadow-lg hover:bg-primary-container transition-all">
+                            <span class="material-symbols-outlined">explore</span>
+                            Explore Communities to Post
+                        </a>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-[28px] p-6 shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <p class="text-sm uppercase tracking-[0.3em] text-on-surface-variant">Trending posts</p>
-                            <h2 class="text-2xl font-semibold text-on-background mt-1">Hot picks for you</h2>
+                            <p class="text-sm uppercase tracking-[0.3em] text-on-surface-variant">Recent Activity</p>
+                            <h2 class="text-2xl font-semibold text-on-background mt-1">Latest from NicheForum</h2>
                         </div>
-                        <a href="{{ url_for('Home.trending') }}" class="text-sm text-primary font-semibold hover:text-primary-container transition-all">View all</a>
                     </div>
 
                     <div class="space-y-5">
-                        <article class="rounded-3xl border border-slate-200 p-6 hover:border-primary/20 transition-all">
-                            <div class="flex items-start gap-4">
-                                <div class="flex flex-col items-center rounded-3xl bg-surface-container p-3 text-on-surface-variant">
-                                    <button class="text-primary"><span class="material-symbols-outlined">arrow_drop_up</span></button>
-                                    <span class="mt-1 text-lg font-semibold">1.2k</span>
-                                    <button class="text-on-surface-variant"><span class="material-symbols-outlined">arrow_drop_down</span></button>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex flex-wrap items-center gap-2 text-xs text-on-surface-variant uppercase tracking-[0.18em] font-semibold mb-3">
-                                        <span class="rounded-full bg-primary/10 text-primary px-3 py-1">r/sports</span>
-                                        <span class="rounded-full bg-secondary/10 text-secondary px-3 py-1">Announcement</span>
-                                        <span>• 2h ago</span>
-                                    </div>
-                                    <h3 class="text-xl font-semibold text-on-background">New roster thread: which underdog team will steal the playoffs?</h3>
-                                    <p class="mt-3 text-body-md text-on-surface-variant">Discuss the latest underdog stories, surprise lineups and dark horse teams making waves this season.</p>
-                                    <div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-on-surface-variant">
-                                        <span class="flex items-center gap-2"><span class="material-symbols-outlined">chat_bubble</span> 144 comments</span>
-                                        <span class="flex items-center gap-2"><span class="material-symbols-outlined">account_circle</span> @coachjon</span>
+                        {% if posts %}
+                            {% for post in posts %}
+                            <article class="rounded-3xl border border-slate-200 p-6 hover:border-primary/20 transition-all">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex-1">
+                                        <div class="flex flex-wrap items-center gap-2 text-xs text-on-surface-variant uppercase tracking-[0.18em] font-semibold mb-3">
+                                            <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="rounded-full bg-primary/10 text-primary px-3 py-1 hover:bg-primary hover:text-white transition-colors">c/{{ post.community_name }}</a>
+                                            <span>• {{ post.created_at }}</span>
+                                        </div>
+                                        <h3 class="text-xl font-semibold text-on-background">{{ post.title }}</h3>
+                                        <p class="mt-3 text-body-md text-on-surface-variant line-clamp-2">{{ post.content }}</p>
+                                        <div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-on-surface-variant">
+                                            <span class="flex items-center gap-2"><span class="material-symbols-outlined">account_circle</span> @{{ post.user_name }}</span>
+                                            <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="text-primary font-semibold hover:underline">Read more</a>
+                                        </div>
                                     </div>
                                 </div>
+                            </article>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-12">
+                                <p class="text-slate-400">No posts yet. Join a community and start posting!</p>
                             </div>
-                        </article>
-
-                        <article class="rounded-3xl border border-slate-200 p-6 hover:border-primary/20 transition-all">
-                            <div class="flex items-start gap-4">
-                                <div class="flex flex-col items-center rounded-3xl bg-surface-container p-3 text-on-surface-variant">
-                                    <button class="text-primary"><span class="material-symbols-outlined">arrow_drop_up</span></button>
-                                    <span class="mt-1 text-lg font-semibold">830</span>
-                                    <button class="text-on-surface-variant"><span class="material-symbols-outlined">arrow_drop_down</span></button>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex flex-wrap items-center gap-2 text-xs text-on-surface-variant uppercase tracking-[0.18em] font-semibold mb-3">
-                                        <span class="rounded-full bg-indigo-50 text-indigo-700 px-3 py-1">r/eSports</span>
-                                        <span class="rounded-full bg-tertiary/10 text-tertiary px-3 py-1">Strategy</span>
-                                        <span>• 4h ago</span>
-                                    </div>
-                                    <h3 class="text-xl font-semibold text-on-background">Valorant meta update: the best economy rounds for teams on a budget</h3>
-                                    <p class="mt-3 text-body-md text-on-surface-variant">Share your favorite economy plays and learn how pros save credits without losing momentum.</p>
-                                    <div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-on-surface-variant">
-                                        <span class="flex items-center gap-2"><span class="material-symbols-outlined">chat_bubble</span> 68 comments</span>
-                                        <span class="flex items-center gap-2"><span class="material-symbols-outlined">account_circle</span> @viper_main</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-[28px] p-6 shadow-sm border border-slate-200">
-                    <div class="flex items-center justify-between mb-5">
-                        <div>
-                            <p class="text-sm uppercase tracking-[0.3em] text-on-surface-variant">Saved for later</p>
-                            <h2 class="text-2xl font-semibold text-on-background mt-1">Your reading list</h2>
-                        </div>
-                        <button class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-on-surface hover:border-primary transition-all">
-                            <span class="material-symbols-outlined">bookmark</span>
-                            Manage
-                        </button>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="rounded-3xl bg-surface-container-high p-5">
-                            <div class="flex items-center justify-between gap-3">
-                                <div>
-                                    <p class="font-semibold">Community rules for new members</p>
-                                    <span class="text-xs text-on-surface-variant">r/sports • 5 min read</span>
-                                </div>
-                                <span class="text-sm text-primary font-semibold">Saved</span>
-                            </div>
-                        </div>
-                        <div class="rounded-3xl bg-surface-container-high p-5">
-                            <div class="flex items-center justify-between gap-3">
-                                <div>
-                                    <p class="font-semibold">Top training drills for football season</p>
-                                    <span class="text-xs text-on-surface-variant">r/football • 9 min read</span>
-                                </div>
-                                <span class="text-sm text-primary font-semibold">Saved</span>
-                            </div>
-                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

@@ -4,6 +4,15 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+html, body {
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    height: auto !important;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     background-color: #f7f9fb;
     font-family: 'Work Sans', sans-serif;

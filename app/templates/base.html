@@ -101,9 +101,14 @@
     </script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        /* Ensure vertical scrolling is available without touching global static files */
-        html { overflow-y: auto !important; }
-        body { overflow-y: visible !important; }
+        /* Global Reset to ensure scrolling is ALWAYS enabled */
+        html, body {
+            overflow: visible !important;
+            overflow-y: auto !important;
+            height: auto !important;
+            min-height: 100% !important;
+            position: relative !important;
+        }
     </style>
     {% block styles %}{% endblock %}
 </head>
@@ -193,17 +198,26 @@
         });
     </script>
     <script>
-        // Force-enable vertical scrolling at runtime without editing static files
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                document.documentElement.style.overflowY = 'auto';
-                document.body.style.overflowY = 'visible';
+        // Force-enable vertical scrolling at runtime
+        (function() {
+            const enableScroll = () => {
+                document.documentElement.style.setProperty('overflow', 'visible', 'important');
+                document.documentElement.style.setProperty('overflow-y', 'auto', 'important');
+                document.documentElement.style.setProperty('height', 'auto', 'important');
+                
+                document.body.style.setProperty('overflow', 'visible', 'important');
+                document.body.style.setProperty('overflow-y', 'auto', 'important');
+                document.body.style.setProperty('height', 'auto', 'important');
+                
                 document.documentElement.classList.remove('overflow-hidden');
                 document.body.classList.remove('overflow-hidden');
-            } catch (e) {
-                /* ignore */
-            }
-        });
+            };
+            
+            window.addEventListener('load', enableScroll);
+            document.addEventListener('DOMContentLoaded', enableScroll);
+            // Also run immediately
+            enableScroll();
+        })();
     </script>
 </body>
 </html>

@@ -68,13 +68,21 @@
                                 {{ thread.replies|length if thread.replies else 0 }} comments
                             </button>
                             {% if session.get('user_name', 'Guest') == thread.author %}
-                            <span>•</span>
-                            <form action="{{ url_for('Thread.delete_thread', thread_id=thread.id) }}" method="POST" onsubmit="return confirm('Delete this thread permanently?')" class="inline">
-                                <button type="submit" class="flex items-center gap-1.5 text-red-500 hover:text-red-700 font-bold">
-                                    <span class="material-symbols-outlined text-sm">delete</span>
-                                    Delete
+                            <div class="relative group/menu inline-block ml-2">
+                                <button class="p-1 hover:bg-slate-50 rounded-full transition-all align-middle">
+                                    <span class="material-symbols-outlined text-base">more_horiz</span>
                                 </button>
-                            </form>
+                                <div class="absolute left-0 top-0 mt-8 hidden group-hover/menu:block z-20">
+                                    <div class="bg-white border border-slate-100 rounded-xl shadow-xl py-2 min-w-[140px]">
+                                        <form action="{{ url_for('Thread.delete_thread', thread_id=thread.id) }}" method="POST" onsubmit="return confirm('Delete this thread permanently?')">
+                                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                                                <span class="material-symbols-outlined text-sm">delete</span>
+                                                Delete Thread
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                             {% endif %}
                         </div>
                     </div>

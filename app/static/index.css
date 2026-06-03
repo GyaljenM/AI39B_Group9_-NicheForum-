@@ -3,6 +3,14 @@
     vertical-align: middle;
 }
 
+/* Ensure scrolling is enabled globally */
+html, body {
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    height: auto !important;
+    min-height: 100vh;
+}
+
 .hero-gradient {
     background: linear-gradient(135deg, rgba(70, 72, 212, 0.95) 0%, rgba(96, 99, 238, 0.8) 100%);
 }

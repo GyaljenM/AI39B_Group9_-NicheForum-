@@ -15,6 +15,7 @@ class HomeRoutes:
         self.bp.route("/community/<int:community_id>", methods=["GET"])(self.community_detail)
         self.bp.route("/community/<int:community_id>/join", methods=["POST"])(self.join_community)
         self.bp.route("/community/<int:community_id>/post", methods=["POST"])(self.create_post)
+        self.bp.route("/post/delete/<int:post_id>", methods=["POST"])(self.delete_post)
         return self.bp
 
     def home(self):
@@ -26,12 +27,18 @@ class HomeRoutes:
             JOIN communities c ON p.community_id = c.id 
             ORDER BY p.created_at DESC LIMIT 10
         """)
+        
+        # Also fetch threads for the home page (index.html)
+        threads = db.fetch_all("SELECT * FROM threads ORDER BY created_at DESC LIMIT 10")
+        for thread in threads:
+            thread['replies'] = db.fetch_all("SELECT * FROM replies WHERE thread_id = %s", (thread['id'],))
+            
         communities = db.fetch_all("SELECT * FROM communities LIMIT 5")
         db.close()
         
         if session.get("user_id"):
             return render_template("dashboard.html", user_name=session.get("user_name"), posts=posts, communities=communities)
-        return render_template("index.html", posts=posts, communities=communities)
+        return render_template("index.html", posts=posts, threads=threads, communities=communities)
 
     def communities(self):
         db = Database()
@@ -116,3 +123,17 @@ class HomeRoutes:
     def live(self):
         user_name = session.get("user_name") if session.get("user_id") else None
         return render_template("live.html", user_name=user_name)
+
+    @login_required
+    def delete_post(self, post_id):
+        user_id = session.get("user_id")
+        db = Database()
+        # Verify ownership
+        post = db.fetch_one("SELECT * FROM posts WHERE id = %s", (post_id,))
+        if post and post['user_id'] == user_id:
+            db.execute("DELETE FROM posts WHERE id = %s", (post_id,))
+            flash("Post deleted successfully.", "success")
+        else:
+            flash("You do not have permission to delete this post.", "danger")
+        db.close()
+        return redirect(request.referrer or url_for("Home.home"))

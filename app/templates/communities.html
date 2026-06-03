@@ -1,91 +1,63 @@
 {% extends "base.html" %}
 
-{% block title %}Communities{% endblock %}
+{% block title %}Communities | NicheForum{% endblock %}
 
 {% block content %}
-<div class="max-w-[1280px] mx-auto px-6 mt-8">
-    <div class="grid grid-cols-12 gap-8">
-        <div class="col-span-12 lg:col-span-8">
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-        <div>
-            <h1 class="font-display-lg text-headline-md mb-2">Explore Communities</h1>
-            <p class="text-on-surface-variant text-body-lg">Find your tribe among thousands of sports hubs.</p>
-        </div>
-        <div class="flex gap-4">
-            <div class="relative">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
-                <input type="text" placeholder="Filter by name..." class="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+<section class="max-w-[1280px] mx-auto px-6 py-8">
+    <div class="{% if user_name %}grid grid-cols-1 xl:grid-cols-[1.5fr_0.9fr] gap-6{% endif %}">
+        <div class="space-y-6">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="font-headline-md text-3xl font-bold text-on-background">Explore Communities</h2>
+                    <p class="text-on-surface-variant text-body-md mt-1">Discover new groups and join the conversation.</p>
+                </div>
             </div>
-            <button class="px-6 py-2 bg-primary text-white rounded-xl font-label-bold text-sm shadow-md hover:bg-primary-container transition-all">Create New</button>
-        </div>
-    </div>
 
-    <!-- Category Tabs -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-8 scrollbar-hide">
-        <button class="px-5 py-2 bg-indigo-600 text-white rounded-full text-xs font-label-bold whitespace-nowrap">All Sports</button>
-        <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-label-bold hover:border-primary hover:text-primary transition-all whitespace-nowrap">Football</button>
-        <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-label-bold hover:border-primary hover:text-primary transition-all whitespace-nowrap">Basketball</button>
-        <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-label-bold hover:border-primary hover:text-primary transition-all whitespace-nowrap">eSports</button>
-        <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-label-bold hover:border-primary hover:text-primary transition-all whitespace-nowrap">Tennis</button>
-        <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-label-bold hover:border-primary hover:text-primary transition-all whitespace-nowrap">Cricket</button>
-        <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-label-bold hover:border-primary hover:text-primary transition-all whitespace-nowrap">Combat Sports</button>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% if communities %}
-            {% for community in communities %}
-            <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-slate-100 flex flex-col group">
-                <div class="h-32 bg-slate-100 relative overflow-hidden">
-                    <div class="absolute inset-0 bg-indigo-600/10 group-hover:bg-indigo-600/20 transition-colors"></div>
-                    <div class="absolute -bottom-6 left-6">
-                        <div class="w-12 h-12 rounded-xl bg-white p-1 shadow-lg">
-                            <div class="w-full h-full bg-primary rounded-lg flex items-center justify-center text-white">
-                                <span class="material-symbols-outlined">
-                                    {% if community.name == 'Football' %}sports_soccer
-                                    {% elif community.name == 'Basketball' %}sports_basketball
-                                    {% elif community.name == 'Tennis' %}sports_tennis
-                                    {% elif community.name == 'Cricket' %}sports_cricket
-                                    {% elif community.name == 'eSports' %}sports_esports
-                                    {% else %}groups{% endif %}
-                                </span>
-                            </div>
-                        </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 {% if not user_name %}lg:grid-cols-3{% endif %} gap-6">
+                <!-- Community Card 1 -->
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-all duration-300">
+                    <div class="h-32 relative">
+                        <img alt="Stadium lights" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiww80AT8ggewJc526e5-VSpglJt0Rl21ZQB4hIOjX5N797Iwym8yp_fcuYbl7Uaf7Xxhboa9R-XJNfyQv31Ia-WP4lXJ7deHCOCQQY5A3Ct0qZeuf1aPYaC8NTXAX36Dm7x0todwMskGWl1EfCkJhutvWtn7OMkZ7VSjhIn39xcGTLfPuvlZmlor-Q6z8QVLJRRLAdvBrNGjQzpx9RenGcd_sHn9Lw3KZsqd4905fl3SpKd4emAaXERHUdvBLqKhorZ8JTz8TvkU">
+                        <div class="absolute inset-0 bg-black/30"></div>
+                    </div>
+                    <div class="p-6 flex-1">
+                        <h3 class="text-xl font-bold mb-2">Premier League Hub</h3>
+                        <p class="text-slate-600 text-sm mb-4">Official community for the world's most watched football league. Real-time updates and discussions.</p>
+                        <button class="w-full py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-all">Join Community</button>
                     </div>
                 </div>
-                <div class="p-6 pt-8 flex-1">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-headline-sm"><a href="{{ url_for('Home.community_detail', community_id=community.id) }}" class="hover:text-primary transition-colors">{{ community.name }}</a></h3>
-                        {% if community.id in user_communities %}
-                        <span class="material-symbols-outlined text-green-500 text-sm" title="Member">check_circle</span>
-                        {% endif %}
+
+                <!-- Community Card 2 -->
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-all duration-300">
+                    <div class="h-32 relative">
+                        <img alt="Basketball court" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-4hCvkWeHur2c7OS0pk6r5BEh9IPzpIRAtSj58IsF6u0VYgtW-ET7g4oG1w2lGREqSOpEdbOHaI4jSUKaN1X-iKjtrTE1awAkCVdNUgc4NE4vBKzwSoKvio51_IEnoekOzcdeS4ADpVx28tySPaxzT_S2nCqhnTDHQEsneMABF0gGFmBg7SsTYaaGMFyaDu0NotgnGN5K4C1RqYtNbTCBK9MO4P-zkBzX7IbcPehsaKSknLqMbdeNn3BW_aHE0WkXZLX6FJeOErw">
+                        <div class="absolute inset-0 bg-black/30"></div>
                     </div>
-                    <p class="text-on-surface-variant text-sm line-clamp-2 mb-6">{{ community.description or 'Official community for ' ~ community.name ~ ' enthusiasts.' }}</p>
-                    <div class="flex items-center justify-between mt-auto">
-                        <span class="text-xs font-semibold text-slate-500">Active Community</span>
-                        <div class="flex gap-2">
-                            <a href="{{ url_for('Home.community_detail', community_id=community.id) }}" class="px-4 py-2 bg-slate-50 text-slate-600 rounded-lg font-label-bold text-xs hover:bg-slate-100 transition-all">View</a>
-                            {% if community.id not in user_communities %}
-                            <form action="{{ url_for('Home.join_community', community_id=community.id) }}" method="POST">
-                                <button type="submit" class="px-4 py-2 bg-indigo-50 text-primary rounded-lg font-label-bold text-xs hover:bg-primary hover:text-white transition-all">Join</button>
-                            </form>
-                            {% else %}
-                            <span class="px-4 py-2 bg-green-50 text-green-600 rounded-lg font-label-bold text-xs">Joined</span>
-                            {% endif %}
-                        </div>
+                    <div class="p-6 flex-1">
+                        <h3 class="text-xl font-bold mb-2">NBA Insiders</h3>
+                        <p class="text-slate-600 text-sm mb-4">The ultimate destination for draft analysis, trade rumors, and tactical breakdowns of the association.</p>
+                        <button class="w-full py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-all">Join Community</button>
+                    </div>
+                </div>
+
+                <!-- Community Card 3 -->
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-all duration-300">
+                    <div class="h-32 relative">
+                        <img alt="Tennis player" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOnzMLFIVZe6OiXK6h6kHInM-BA-2VHNlzOcLlS2kfK_h2HCYcOdLe45BQtmf2bMrDZgoHR36kiGC4CHcZqIyFthbbK4AR4QWSrjTXW9vV_t72OS8iDntYKZNHs4tysct-G8SwL50H9yhBfrvGnGY_2pPdf68xgCslTasAtwPkHkBG2ByORN50Cz3IRWRVaXppY2EgHF6u9RpZ2bWM3AUvZOjsppvC9POEKqj6_sxm_dB5CfSmo63SxdH8AOnPQnuQhDbXvn5xt-4">
+                        <div class="absolute inset-0 bg-black/30"></div>
+                    </div>
+                    <div class="p-6 flex-1">
+                        <h3 class="text-xl font-bold mb-2">Grand Slam Fanatics</h3>
+                        <p class="text-slate-600 text-sm mb-4">Coverage of ATP and WTA tours. From Wimbledon grass to Roland-Garros clay, we discuss it all.</p>
+                        <button class="w-full py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-all">Join Community</button>
                     </div>
                 </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="col-span-full text-center py-12">
-                <p class="text-slate-500">No communities found.</p>
-            </div>
+        </div>
+
+        {% if user_name %}
+            {% include "_sidebar.html" %}
         {% endif %}
     </div>
-        </div>
-        <aside class="col-span-12 lg:col-span-4">
-            {% include '_sidebar.html' %}
-        </aside>
-    </div>
-</div>
+</section>
 {% endblock %}

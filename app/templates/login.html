@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Login - NicheForum{% endblock %}
+
+{% block styles %}
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script id="tailwind-config">
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#4648d4",
+                    "primary-container": "#6063ee",
+                    "surface-bright": "#f7f9fb",
+                    "on-surface": "#191c1e",
+                    "outline": "#767586",
+                },
+                fontFamily: {
+                    "lexend": ["Lexend"],
+                    "work-sans": ["Work Sans"],
+                }
+            }
+        }
+    }
+</script>
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    body {
+        background-color: #f7f9fb;
+        font-family: 'Work Sans', sans-serif;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] flex flex-col items-center justify-center px-6 py-12">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-black text-indigo-600 font-lexend mb-2">NicheForum</h1>
+            <p class="text-slate-500 font-medium">Welcome back! Please login to your account.</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-8 shadow-xl border border-slate-100">
+            <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-6">
+                <div>
+                    <label for="email" class="block text-sm font-bold text-slate-700 mb-2 font-lexend">Email Address</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">mail</span>
+                        <input type="email" id="email" name="email" required 
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                            placeholder="name@example.com">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="password" class="text-sm font-bold text-slate-700 font-lexend">Password</label>
+                        <a href="{{ url_for('auth.forgot_password') }}" class="text-xs font-semibold text-primary hover:underline">Forgot password?</a>
+                    </div>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
+                        <input type="password" id="password" name="password" required 
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                            placeholder="••••••••">
+                    </div>
+                </div>
+
+                <div class="flex items-center">
+                    <input type="checkbox" id="remember" class="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary">
+                    <label for="remember" class="ml-2 text-sm text-slate-600 font-medium">Remember me</label>
+                </div>
+
+                <button type="submit" 
+                    class="w-full py-4 bg-primary hover:bg-primary-container text-white rounded-xl font-bold transition-all shadow-lg active:scale-[0.98]">
+                    Login
+                </button>
+            </form>
+
+            <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+                <p class="text-sm text-slate-500 font-medium">
+                    Don't have an account? 
+                    <a href="{{ url_for('auth.register') }}" class="text-primary font-bold hover:underline">Sign up for free</a>
+                </p>
+            </div>
+        </div>
+        
+        <div class="mt-8 text-center">
+            <a href="{{ url_for('main.home') }}" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-primary transition-all">
+                <span class="material-symbols-outlined mr-2">arrow_back</span>
+                Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

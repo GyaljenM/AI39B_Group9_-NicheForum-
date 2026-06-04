@@ -17,6 +17,6 @@ def contact():
 @app.error_handler(404)
 def error(e):
     return f"404 page not found please check it again!"
-
+ 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5000)

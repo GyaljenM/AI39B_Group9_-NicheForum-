@@ -52,7 +52,14 @@ class Database:
 
     def close(self):
         """Close the database connection."""
-        self.__connection.close()
+        try:
+            if self.__connection:
+                self.__connection.close()
+        except Exception:
+            # Ignore errors when connection is already closed
+            pass
+        finally:
+            self.__connection = None
 
                         
     # ── Static Method: Create tables on app startup ─────────
@@ -94,6 +101,20 @@ class Database:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """) 
+
+        # Ensure existing installations get the verification columns if they are missing
+        try:
+            user_cols = db.fetch_all("DESCRIBE users")
+            user_col_names = [c['Field'] for c in user_cols]
+
+            if 'is_verified' not in user_col_names:
+                db.execute("ALTER TABLE users ADD COLUMN is_verified TINYINT DEFAULT 0 AFTER role")
+            if 'verification_token' not in user_col_names:
+                db.execute("ALTER TABLE users ADD COLUMN verification_token VARCHAR(255) AFTER is_verified")
+            if 'token_expires_at' not in user_col_names:
+                db.execute("ALTER TABLE users ADD COLUMN token_expires_at DATETIME AFTER verification_token")
+        except Exception as e:
+            print(f"Error ensuring users table verification columns: {e}")
 
         db.execute("""
             CREATE TABLE IF NOT EXISTS threads (

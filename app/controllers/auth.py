@@ -43,17 +43,39 @@ class AuthController:
                 return redirect(url_for("Auth.register"))
 
             try:
+                # Generate OTP and store verification token, require verification before login
+                otp_code = EmailService.generate_secure_otp()
+                expiry_dt = datetime.utcnow() + timedelta(minutes=5)
+
                 db.execute(
-                    "INSERT INTO users (name, email, password, is_verified) VALUES (%s, %s, %s, 1)",
-                    (name, email, hashed_password)
+                    "INSERT INTO users (name, email, password, is_verified, verification_token, token_expires_at) VALUES (%s, %s, %s, 0, %s, %s)",
+                    (name, email, hashed_password, otp_code, expiry_dt)
                 )
                 db.close()
-                
-                flash("Registration successful! You can now login.", "success")
-                return redirect(url_for("Auth.login"))
+
+                # Try sending the OTP email separately so email failures don't break registration
+                email_sent = False
+                try:
+                    EmailService.send_otp(email, otp_code)
+                    email_sent = True
+                except Exception as email_err:
+                    print(f"WARNING: Failed to send OTP email: {email_err}")
+
+                if email_sent:
+                    flash("Registration successful! A verification code was sent to your email.", "info")
+                else:
+                    flash("Registration successful! Check your email for the verification code. If not found, contact support.", "warning")
+
+                return redirect(url_for("Auth.verify_registration", email=email))
             except Exception as e:
-                if db: db.close()
+                if db:
+                    try:
+                        db.close()
+                    except Exception:
+                        pass
                 print(f"ERROR: Registration failed: {e}")
+                import traceback
+                traceback.print_exc()
                 flash("An error occurred during registration. Please try again.", "danger")
 
         return render_template("register.html")
@@ -119,3 +141,46 @@ class AuthController:
         session.clear()
         flash("Logged out successfully.", "info")
         return redirect(url_for("Auth.login"))
+
+    def verify_registration(self):
+        """Handle OTP verification after registration."""
+        # Render the OTP entry page on GET so the browser URL is /verify-registration
+        if request.method == "GET":
+            email = request.args.get("email")
+            return render_template("enter_otp.html", email=email)
+
+        if request.method == "POST":
+            email = request.form.get("email")
+            otp = request.form.get("otp")
+
+            db = Database()
+            user = db.fetch_one("SELECT * FROM users WHERE email = %s", (email,))
+
+            if not user:
+                if db: db.close()
+                flash("Account not found.", "danger")
+                return redirect(url_for("Auth.register"))
+
+            # Validate token and expiry
+            if not user.get("verification_token") or user.get("verification_token") != otp:
+                if db: db.close()
+                flash("Invalid verification code.", "danger")
+                return render_template("enter_otp.html", email=email)
+
+            if datetime.utcnow() > user.get("token_expires_at"):
+                if db: db.close()
+                flash("Verification code has expired. Please request a new code.", "danger")
+                return redirect(url_for("Auth.register"))
+
+            # Mark user verified and clear token fields
+            db.execute(
+                "UPDATE users SET is_verified = 1, verification_token = NULL, token_expires_at = NULL WHERE email = %s",
+                (email,)
+            )
+            db.close()
+
+            flash("Your account has been verified. You may now login.", "success")
+            return redirect(url_for("Auth.login"))
+
+        # For GET or other, redirect to register
+        return redirect(url_for("Auth.register"))

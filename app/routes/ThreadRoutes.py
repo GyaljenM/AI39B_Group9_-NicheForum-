@@ -1,5 +1,6 @@
 from flask import Blueprint, request, redirect, url_for, session, flash, render_template
 from app.models.database import Database
+from app.utils.word_censor import WordCensor
 
 class ThreadRoutes:
     def __init__(self):
@@ -69,11 +70,14 @@ class ThreadRoutes:
         if not content:
             return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
 
+        # Apply word censoring to the reply content
+        censored_content = WordCensor.censor_text(content)
+
         try:
             db = Database()
             db.execute(
                 "INSERT INTO replies (thread_id, content, user_email) VALUES (%s, %s, %s)",
-                (thread_id, content, author)
+                (thread_id, censored_content, author)
             )
             db.close()
         except Exception as e:
@@ -110,6 +114,10 @@ class ThreadRoutes:
         if not title or not content:
             return redirect(request.referrer or url_for("Home.home"))
 
+        # Apply word censoring to title and content
+        censored_title = WordCensor.censor_text(title)
+        censored_content = WordCensor.censor_text(content)
+
         try:
             db = Database()
             # Fetch the ID for the category name
@@ -118,7 +126,7 @@ class ThreadRoutes:
 
             db.execute(
                 "INSERT INTO threads (title, content, author, category, category_id) VALUES (%s, %s, %s, %s, %s)",
-                (title, content, author, category_name, category_id)
+                (censored_title, censored_content, author, category_name, category_id)
             )
             db.close()
         except Exception as e:

@@ -94,6 +94,65 @@
                         </div>
                         <h3 class="font-headline-sm mb-2">{{ post.title }}</h3>
                         <p class="text-on-surface-variant text-sm whitespace-pre-line">{{ post.content }}</p>
+
+                        <!-- Like / Dislike + Reply toggle -->
+                        <div class="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100">
+                            <form action="{{ url_for('Home.vote_post', post_id=post.id) }}" method="POST">
+                                <input type="hidden" name="vote_type" value="like">
+                                <button type="submit"
+                                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition-all active:scale-95
+                                    {% if post.user_vote == 'like' %}bg-green-50 border-green-200 text-green-700{% else %}border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
+                                    <span class="material-symbols-outlined text-base">thumb_up</span>
+                                    <span>{{ post.like_count }}</span>
+                                </button>
+                            </form>
+                            <form action="{{ url_for('Home.vote_post', post_id=post.id) }}" method="POST">
+                                <input type="hidden" name="vote_type" value="dislike">
+                                <button type="submit"
+                                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition-all active:scale-95
+                                    {% if post.user_vote == 'dislike' %}bg-red-50 border-red-200 text-red-700{% else %}border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
+                                    <span class="material-symbols-outlined text-base">thumb_down</span>
+                                    <span>{{ post.dislike_count }}</span>
+                                </button>
+                            </form>
+                            <button type="button" onclick="document.getElementById('replies-{{ post.id }}').classList.toggle('hidden')"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm transition-all">
+                                <span class="material-symbols-outlined text-base">chat_bubble</span>
+                                <span>{{ post.comments|length }} {{ 'Reply' if post.comments|length == 1 else 'Replies' }}</span>
+                            </button>
+                        </div>
+
+                        <!-- Replies section (collapsed by default) -->
+                        <div id="replies-{{ post.id }}" class="hidden mt-4 space-y-4">
+                            {% for comment in post.comments %}
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-sm shrink-0">
+                                    {{ comment.user_name[0]|upper }}
+                                </div>
+                                <div class="flex-1 bg-slate-50 rounded-xl px-4 py-2">
+                                    <div class="flex items-center gap-2">
+                                        <p class="text-sm font-semibold">{{ comment.user_name }}</p>
+                                        <p class="text-xs text-slate-400">{{ comment.created_at }}</p>
+                                    </div>
+                                    <p class="text-sm text-on-surface-variant whitespace-pre-line">{{ comment.content }}</p>
+                                </div>
+                            </div>
+                            {% else %}
+                            <p class="text-sm text-slate-400 pl-1">No replies yet. Start the conversation!</p>
+                            {% endfor %}
+
+                            {% if session.get('user_id') %}
+                            <form action="{{ url_for('Home.comment_post', post_id=post.id) }}" method="POST" class="flex gap-2 pt-2">
+                                <input type="text" name="content" placeholder="Write a reply..." required
+                                    class="flex-1 px-4 py-2 rounded-full border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm">
+                                <button type="submit" class="px-5 py-2 bg-primary text-white rounded-full font-label-bold text-sm hover:bg-primary-container transition-all">
+                                    Reply
+                                </button>
+                            </form>
+                            {% else %}
+                            <p class="text-sm text-slate-400 pl-1">Please log in to reply.</p>
+                            {% endif %}
+                        </div>
                     </div>
                     {% endfor %}
                 {% else %}

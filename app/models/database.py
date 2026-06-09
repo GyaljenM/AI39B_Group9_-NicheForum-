@@ -104,6 +104,8 @@ class Database:
                 email VARCHAR(100) NOT NULL UNIQUE,
                 password VARCHAR(255) NOT NULL,
                 role VARCHAR(20) NOT NULL DEFAULT 'user',
+                bio TEXT,
+                profile_pic VARCHAR(255),
                 is_verified TINYINT DEFAULT 0,
                 verification_token VARCHAR(255),
                 token_expires_at DATETIME,
@@ -170,6 +172,35 @@ class Database:
             )
         """)
 
+        # Likes / dislikes on community posts. One row per (user, post) so a
+        # user can only have a single active vote; the vote_type column tells
+        # us whether it is a like or a dislike.
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS post_votes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                post_id INT NOT NULL,
+                vote_type ENUM('like', 'dislike') NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_post (user_id, post_id),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Replies / comments left on community posts.
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS post_comments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                post_id INT NOT NULL,
+                user_id INT NOT NULL,
+                content TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
         column_names = []
         try:
             columns = db.fetch_all("DESCRIBE threads")
@@ -201,6 +232,18 @@ class Database:
                 db.execute("ALTER TABLE threads ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
         except Exception as e:
             print(f"Error updating threads table structure: {e}")
+
+        try:
+            users_columns = db.fetch_all("DESCRIBE users")
+            user_column_names = [col['Field'] for col in users_columns]
+            if 'bio' not in user_column_names:
+                print("Adding missing bio column to users table...")
+                db.execute("ALTER TABLE users ADD COLUMN bio TEXT AFTER role")
+            if 'profile_pic' not in user_column_names:
+                print("Adding missing profile_pic column to users table...")
+                db.execute("ALTER TABLE users ADD COLUMN profile_pic VARCHAR(255) AFTER bio")
+        except Exception as e:
+            print(f"Error updating users table structure: {e}")
 
         try:
             posts_columns = db.fetch_all("DESCRIBE posts")

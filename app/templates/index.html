@@ -4,7 +4,7 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="relative h-[480px] w-full overflow-hidden flex items-center justify-center">
+<section class="relative h-[480px] w-full flex items-center justify-center">
 <img alt="Sports Stadium" class="absolute inset-0 w-full h-full object-cover" data-alt="A wide-angle cinematic shot of a massive, modern sports stadium at dusk, with floodlights beaming down onto a pristine green pitch. The atmosphere is electric with a hazy, energetic mist in the air, captured in a high-contrast corporate modern style. The color palette features deep indigo skies and brilliant emerald turf, evoking a sense of elite athletic competition and vibrant community energy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAN0Pz_Z9HnHKgRt1w1hTAQbV5Siee4WwfASzQr7RVYy_XWCjy5Xgw3GcGgIKT8occOXumUYQBwOflzA_-pA1KKH6LwTcPSEu6yjIY5xfQ8DsphfnLLrHH302gucF3Y3gm5Q7UDWFcPyJLn3PgPIQN450e7ukujC94j7JicCsVS6jec6sm3oHZNqYCVaPzhfh309NnHdMt6arpnrz8eE2sGitbAMIrIZnlO4p50cE3_yopMRDvHCZPA6yJjDBfZTw4tSdBEXXlge1g">
 <div class="absolute inset-0 hero-gradient"></div>
 <div class="relative z-10 text-center px-6 max-w-3xl">
@@ -257,163 +257,17 @@
 </div>
 </div>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-<!-- Community Card 1 -->
-<div class="bg-white rounded-2xl overflow-hidden community-card-shadow flex flex-col bento-hover transition-all duration-300">
-<div class="h-32 relative">
-<img alt="Stadium lights" class="w-full h-full object-cover" data-alt="An atmospheric, close-up photograph of bright stadium floodlights against a navy blue evening sky. The light flares create a dramatic, starburst effect, illuminating a soft haze in the air. The aesthetic is clean, professional, and high-contrast, fitting a modern corporate sports platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiww80AT8ggewJc526e5-VSpglJt0Rl21ZQB4hIOjX5N797Iwym8yp_fcuYbl7Uaf7Xxhboa9R-XJNfyQv31Ia-WP4lXJ7deHCOCQQY5A3Ct0qZeuf1aPYaC8NTXAX36Dm7x0todwMskGWl1EfCkJhutvWtn7OMkZ7VSjhIn39xcGTLfPuvlZmlor-Q6z8QVLJRRLAdvBrNGjQzpx9RenGcd_sHn9Lw3KZsqd4905fl3SpKd4emAaXERHUdvBLqKhorZ8JTz8TvkU">
-<div class="absolute inset-0 bg-black/30"></div>
-<div class="absolute -bottom-6 left-6">
-<div class="w-12 h-12 rounded-xl bg-white p-1 shadow-lg">
-<div class="w-full h-full bg-primary rounded-lg flex items-center justify-center text-white">
-<span class="material-symbols-outlined">sports_soccer</span>
-</div>
-</div>
-</div>
-</div>
-<div class="p-6 pt-8 flex-1">
-<div class="flex justify-between items-start mb-2">
-<h3 class="font-headline-sm text-headline-sm">Premier League Hub</h3>
-<span class="material-symbols-outlined text-tertiary-container" style="font-variation-settings: 'FILL' 1;">verified</span>
-</div>
-<p class="text-on-surface-variant text-sm line-clamp-2 mb-4">Official community for the world's most watched football league. Real-time updates and discussions.</p>
-<div class="flex items-center gap-3 mb-6">
-<div class="flex -space-x-2">
-<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200"></div>
-<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-300"></div>
-<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-400"></div>
-</div>
-<span class="text-label-sm text-on-surface-variant">82k members</span>
-</div>
-<a href="{{ url_for('Thread.view_community', category_name='Football') }}" class="block w-full text-center py-3 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all shadow-md active:scale-95">Join Community</a>
-</div>
-</div>
-<!-- Community Card 2 -->
-<div class="bg-white rounded-2xl overflow-hidden community-card-shadow flex flex-col bento-hover transition-all duration-300">
-<div class="h-32 relative">
-<img alt="Basketball court" class="w-full h-full object-cover" data-alt="A stylized, architectural photograph of an empty, minimalist indoor basketball court with polished wooden floors reflecting warm overhead lighting. The composition is symmetrical and clean, with a focus on geometric lines and high-quality textures. The lighting is soft and professional, emphasizing a modern, corporate athletic aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-4hCvkWeHur2c7OS0pk6r5BEh9IPzpIRAtSj58IsF6u0VYgtW-ET7g4oG1w2lGREqSOpEdbOHaI4jSUKaN1X-iKjtrTE1awAkCVdNUgc4NE4vBKzwSoKvio51_IEnoekOzcdeS4ADpVx28tySPaxzT_S2nCqhnTDHQEsneMABF0gGFmBg7SsTYaaGMFyaDu0NotgnGN5K4C1RqYtNbTCBK9MO4P-zkBzX7IbcPehsaKSknLqMbdeNn3BW_aHE0WkXZLX6FJeOErw">
-<div class="absolute inset-0 bg-black/30"></div>
-<div class="absolute -bottom-6 left-6">
-<div class="w-12 h-12 rounded-xl bg-white p-1 shadow-lg">
-<div class="w-full h-full bg-secondary-container rounded-lg flex items-center justify-center text-white">
-<span class="material-symbols-outlined">sports_basketball</span>
-</div>
-</div>
-</div>
-</div>
-<div class="p-6 pt-8 flex-1">
-<h3 class="font-headline-sm text-headline-sm mb-2">NBA Insiders</h3>
-<p class="text-on-surface-variant text-sm line-clamp-2 mb-4">The ultimate destination for draft analysis, trade rumors, and tactical breakdowns of the association.</p>
-<div class="flex items-center gap-3 mb-6">
-<div class="flex -space-x-2">
-<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200"></div>
-<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-300"></div>
-</div>
-<span class="text-label-sm text-on-surface-variant">45k members</span>
-</div>
-<a href="{{ url_for('Thread.view_community', category_name='Basketball') }}" class="block w-full text-center py-3 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all shadow-md active:scale-95">Join Community</a>
-</div>
-</div>
-<!-- Community Card 3 -->
-<div class="bg-white rounded-2xl overflow-hidden community-card-shadow flex flex-col bento-hover transition-all duration-300">
-<div class="h-32 relative">
-<img alt="Tennis player" class="w-full h-full object-cover" data-alt="A high-speed action shot of a professional tennis player mid-serve, with the tennis ball captured in sharp focus against a blurred background of a red clay court. The lighting is bright and crisp, showcasing vivid colors and dynamic motion. The overall style is modern, energetic, and clean, perfectly capturing the spirit of competitive sport." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOnzMLFIVZe6OiXK6h6kHInM-BA-2VHNlzOcLlS2kfK_h2HCYcOdLe45BQtmf2bMrDZgoHR36kiGC4CHcZqIyFthbbK4AR4QWSrjTXW9vV_t72OS8iDntYKZNHs4tysct-G8SwL50H9yhBfrvGnGY_2pPdf68xgCslTasAtwPkHkBG2ByORN50Cz3IRWRVaXppY2EgHF6u9RpZ2bWM3AUvZOjsppvC9POEKqj6_sxm_dB5CfSmo63SxdH8AOnPQnuQhDbXvn5xt-4">
-<div class="absolute inset-0 bg-black/30"></div>
-<div class="absolute -bottom-6 left-6">
-<div class="w-12 h-12 rounded-xl bg-white p-1 shadow-lg">
-<div class="w-full h-full bg-tertiary-container rounded-lg flex items-center justify-center text-white">
-<span class="material-symbols-outlined">sports_tennis</span>
-</div>
-</div>
-</div>
-</div>
-<div class="p-6 pt-8 flex-1">
-<h3 class="font-headline-sm text-headline-sm mb-2">Grand Slam Fanatics</h3>
-<p class="text-on-surface-variant text-sm line-clamp-2 mb-4">Coverage of ATP and WTA tours. From Wimbledon grass to Roland-Garros clay, we discuss it all.</p>
-<div class="flex items-center gap-3 mb-6">
-<div class="flex -space-x-2">
-<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200"></div>
-</div>
-<span class="text-label-sm text-on-surface-variant">12k members</span>
-</div>
-<a href="{{ url_for('Thread.view_community', category_name='Tennis') }}" class="block w-full text-center py-3 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all shadow-md active:scale-95">Join Community</a>
-</div>
-</div>
-<!-- Community Card 4 -->
-<div class="bg-white rounded-2xl overflow-hidden community-card-shadow flex flex-col bento-hover transition-all duration-300 lg:col-span-2">
-<div class="grid grid-cols-1 md:grid-cols-2 h-full">
-<div class="h-48 md:h-full relative">
-<img alt="Esports Arena" class="w-full h-full object-cover" data-alt="An expansive view of a professional esports arena during a tournament, filled with glowing neon lights in shades of blue and magenta. Massive screens show game footage while the crowd is silhouetted against the bright stage. The atmosphere is high-tech and electrifying, using a vibrant color palette to represent modern digital competition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQhXeCxv7phwFkCzBe8z-GYVXjTH10TOKwCktp08lanixjgC25IBOgwY11nj4G8L35-7AwgYkQOupAUN_MgZ3tieb9G9gGK_B5QLbMq8XDVfZWCK5pWYzgLfcJ3uWkmXUvjB5UPozzwz0hVaTgQNjBE0AxrE4LF0ceCqe-nIXe06BplxHEy9N8kSQpaPz0doJJTwTIuBLsKP9bG_Vp5GgKH7yiLdRRJrMk6o8EjTD4r7UbMzkmb76tWftAhYYJgYMZ38dQYI-iR8E">
-<div class="absolute inset-0 bg-primary/20 backdrop-blur-[2px]"></div>
-<div class="absolute inset-0 flex items-center justify-center">
-<div class="text-center text-white p-4">
-<span class="material-symbols-outlined text-6xl mb-2">sports_esports</span>
-<p class="font-headline-sm">Trending Now</p>
-</div>
-</div>
-</div>
-<div class="p-8 flex flex-col justify-center">
-<span class="text-secondary font-label-bold text-[10px] mb-2 uppercase tracking-widest flex items-center gap-2">
-<span class="w-2 h-2 bg-secondary rounded-full animate-pulse"></span> Growing +400%
-                                </span>
-<h3 class="font-headline-md text-headline-md mb-3">Valorant Masters</h3>
-<p class="text-on-surface-variant text-body-md mb-6">Strategy, clips, and pro circuit discussion for the fastest growing tactical shooter on the planet.</p>
-<div class="flex items-center gap-4">
-<button class="flex-1 py-3 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all shadow-md">Join Now</button>
-<button class="w-12 h-12 flex items-center justify-center border border-slate-200 rounded-xl hover:bg-slate-50 transition-all">
-<span class="material-symbols-outlined">share</span>
-</button>
-</div>
-</div>
-</div>
-</div>
-<!-- Community Card 5 -->
-<div class="bg-white rounded-2xl overflow-hidden community-card-shadow flex flex-col bento-hover transition-all duration-300">
-<div class="p-6 flex flex-col h-full">
-<div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-primary mb-4">
-<span class="material-symbols-outlined text-3xl">add</span>
-</div>
-<h3 class="font-headline-sm text-headline-sm mb-2">Create Community</h3>
-<p class="text-on-surface-variant text-sm mb-8">Can't find your niche? Build your own world and invite others to join the conversation.</p>
-<div class="mt-auto">
-<button class="w-full py-3 border-2 border-dashed border-primary/30 text-primary rounded-xl font-label-bold hover:bg-primary/5 transition-all">Start New Hub</button>
-</div>
-</div>
-</div>
-</div>
-<!-- Secondary Sorting Section -->
-<div class="mt-16 bg-white rounded-2xl p-8 community-card-shadow">
-<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-<h2 class="font-headline-sm text-headline-sm">Popular Sports Topics</h2>
-<div class="flex flex-wrap gap-2">
-<div class="flex items-center gap-2 px-4 py-2 bg-surface-bright border border-slate-200 rounded-full cursor-pointer hover:border-primary transition-all">
-<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
-<span class="text-label-bold">Most Popular</span>
-<span class="material-symbols-outlined text-sm">expand_more</span>
-</div>
-<div class="flex items-center gap-2 px-4 py-2 bg-surface-bright border border-slate-200 rounded-full cursor-pointer hover:border-primary transition-all">
-<span class="w-2 h-2 rounded-full bg-primary"></span>
-<span class="text-label-bold">Highest Votes</span>
-<span class="material-symbols-outlined text-sm">expand_more</span>
-</div>
-<div class="flex items-center gap-2 px-4 py-2 bg-surface-bright border border-slate-200 rounded-full cursor-pointer hover:border-primary transition-all">
-<span class="w-2 h-2 rounded-full bg-secondary"></span>
-<span class="text-label-bold">Latest Thread</span>
-<span class="material-symbols-outlined text-sm">expand_more</span>
-</div>
-</div>
-</div>
 <div class="space-y-4">
     {% for thread in threads %}
     <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden animate-in fade-in duration-300">
         <div class="p-4 flex items-start gap-4">
             <!-- Interactive Vote Sidebar -->
             <div class="flex flex-col items-center justify-center p-2 bg-surface-container rounded-xl min-w-[56px]" id="vote-container-{{ thread.id }}">
-                <button onclick="vote({{ thread.id }}, 'up')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:text-primary transition-all group" id="upvote-{{ thread.id }}">
+                <button data-thread-id="{{ thread.id }}" data-vote="up" class="js-vote-btn w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:text-primary transition-all group" id="upvote-{{ thread.id }}">
                     <span class="material-symbols-outlined text-2xl group-active:scale-125">arrow_drop_up</span>
                 </button>
                 <span class="font-bold text-lg" id="votes-count-{{ thread.id }}">{{ thread.votes }}</span>
-                <button onclick="vote({{ thread.id }}, 'down')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:text-primary transition-all group" id="downvote-{{ thread.id }}">
+                <button data-thread-id="{{ thread.id }}" data-vote="down" class="js-vote-btn w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:text-primary transition-all group" id="downvote-{{ thread.id }}">
                     <span class="material-symbols-outlined text-2xl group-active:scale-125">arrow_drop_down</span>
                 </button>
             </div>
@@ -429,7 +283,7 @@
                     <span>•</span>
                     <span>{{ thread.created_at }}</span>
                     <span>•</span>
-                    <button onclick="toggleReplies({{ thread.id }})" class="flex items-center gap-1 hover:text-primary font-bold">
+                    <button data-thread-id="{{ thread.id }}" class="js-toggle-replies flex items-center gap-1 hover:text-primary font-bold">
                         <span class="material-symbols-outlined text-sm">chat_bubble</span>
                         {{ thread.replies|length }} comments
                     </button>
@@ -530,8 +384,21 @@
         const repliesDiv = document.getElementById(`replies-${threadId}`);
         repliesDiv.classList.toggle('hidden');
     }
+
+    // Wire up vote and reply-toggle buttons from their data-* attributes.
+    // This keeps Jinja expressions out of inline JS handlers.
+    document.querySelectorAll('.js-vote-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            vote(parseInt(btn.dataset.threadId, 10), btn.dataset.vote);
+        });
+    });
+
+    document.querySelectorAll('.js-toggle-replies').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            toggleReplies(parseInt(btn.dataset.threadId, 10));
+        });
+    });
 </script>
-</div>
 </div>
 </main>
 

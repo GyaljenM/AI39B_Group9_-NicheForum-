@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Reply | NicheForum{% endblock %}
+
+{% block content %}
+<div class="max-w-[800px] mx-auto px-6 py-12">
+    <h2 class="text-2xl font-bold mb-6">Edit Your Reply</h2>
+    <form action="{{ url_for('Thread.edit_reply', thread_id=thread_id, reply_id=reply.id) }}" method="POST" class="space-y-4">
+        <textarea name="content" rows="6" class="w-full rounded-2xl border-slate-200 focus:ring-primary focus:border-primary p-6" required>{{ reply.content }}</textarea>
+        <div class="flex gap-3">
+            <button type="submit" class="px-6 py-3 bg-primary text-white rounded-xl">Save</button>
+            <a href="{{ url_for('Thread.view_thread', thread_id=thread_id) }}" class="px-6 py-3 bg-surface-bright rounded-xl">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

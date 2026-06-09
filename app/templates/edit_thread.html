@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Thread | NicheForum{% endblock %}
+
+{% block content %}
+<div class="max-w-[900px] mx-auto px-6 py-12">
+    <h2 class="text-2xl font-bold mb-6">Edit Thread</h2>
+    <form action="{{ url_for('Thread.edit_thread', thread_id=thread.id) }}" method="POST" class="space-y-4">
+        <div>
+            <label class="block text-sm font-label-bold mb-1 text-on-surface-variant">Title</label>
+            <input name="title" type="text" value="{{ thread.title }}" class="w-full rounded-xl border-slate-200 focus:ring-primary focus:border-primary px-4 py-3" required>
+        </div>
+        <div>
+            <label class="block text-sm font-label-bold mb-1 text-on-surface-variant">Content</label>
+            <textarea name="content" rows="8" class="w-full rounded-2xl border-slate-200 focus:ring-primary focus:border-primary p-6 shadow-inner" required>{{ thread.content }}</textarea>
+        </div>
+        <div class="flex gap-3">
+            <button type="submit" class="px-6 py-3 bg-primary text-white rounded-xl">Save Changes</button>
+            <a href="{{ url_for('Thread.view_thread', thread_id=thread.id) }}" class="px-6 py-3 bg-surface-bright rounded-xl">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

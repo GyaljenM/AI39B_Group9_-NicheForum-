@@ -260,6 +260,12 @@
                     </button>
                     {% if session.get('user_name', 'Guest') == thread.author %}
                     <span>•</span>
+                    <span>•</span>
+                    <a href="{{ url_for('Thread.edit_thread', thread_id=thread.id) }}" class="flex items-center gap-1 text-on-surface-variant hover:text-primary font-bold">
+                        <span class="material-symbols-outlined text-sm">edit</span>
+                        Edit
+                    </a>
+                    <span>•</span>
                     <form action="{{ url_for('Thread.delete_thread', thread_id=thread.id) }}" method="POST" onsubmit="return confirm('Delete this thread permanently?')" class="inline">
                         <button type="submit" class="flex items-center gap-1 text-red-500 hover:text-red-700 font-bold">
                             <span class="material-symbols-outlined text-sm">delete</span>
@@ -283,6 +289,11 @@
                             <span class="text-[10px] text-on-surface-variant">{{ reply.created_at }}</span>
                         </div>
                         <p class="text-xs text-on-surface leading-normal">{{ reply.content }}</p>
+                    {% if session.get('user_name', 'Guest') == reply.user_email %}
+                    <div class="mt-2 text-[10px]">
+                        <a href="{{ url_for('Thread.edit_reply', thread_id=thread.id, reply_id=reply.id) }}" class="font-bold text-on-surface-variant hover:text-primary">Edit</a>
+                    </div>
+                    {% endif %}
                     </div>
                 </div>
                 {% else %}

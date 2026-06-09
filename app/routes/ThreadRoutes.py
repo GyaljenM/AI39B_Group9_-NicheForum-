@@ -11,6 +11,8 @@ class ThreadRoutes:
         self.bp.route("/community/<category_name>")(self.view_community)
         self.bp.route("/thread/<int:thread_id>")(self.view_thread)
         self.bp.route("/thread/<int:thread_id>/reply", methods=["POST"])(self.post_reply)
+        self.bp.route("/thread/<int:thread_id>/reply/<int:reply_id>/edit", methods=["GET", "POST"])(self.edit_reply)
+        self.bp.route("/thread/<int:thread_id>/edit", methods=["GET", "POST"])(self.edit_thread)
         self.bp.route("/thread/<int:thread_id>/vote", methods=["POST"])(self.vote_thread)
         self.bp.route("/thread/delete/<int:thread_id>", methods=["POST"])(self.delete_thread)
         return self.bp
@@ -84,6 +86,76 @@ class ThreadRoutes:
             print(f"Error posting reply: {e}")
 
         return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
+
+    def edit_reply(self, thread_id, reply_id):
+        try:
+            db = Database()
+            reply = db.fetch_one("SELECT * FROM replies WHERE id = %s AND thread_id = %s", (reply_id, thread_id))
+            if not reply:
+                flash("Reply not found.", "danger")
+                db.close()
+                return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
+
+            author = session.get("user_name", "Guest")
+            if reply['user_email'] != author:
+                flash("You are not authorized to edit this reply.", "danger")
+                db.close()
+                return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
+
+            if request.method == 'POST':
+                content = request.form.get('content')
+                if not content:
+                    flash("Content cannot be empty.", "warning")
+                    db.close()
+                    return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
+
+                censored = WordCensor.censor_text(content)
+                db.execute("UPDATE replies SET content = %s WHERE id = %s", (censored, reply_id))
+                db.close()
+                flash("Reply updated.", "success")
+                return redirect(url_for("Thread.view_thread", thread_id=thread_id))
+
+            db.close()
+            return render_template("edit_reply.html", reply=reply, thread_id=thread_id)
+        except Exception as e:
+            flash(f"Error editing reply: {e}", "danger")
+            return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
+
+    def edit_thread(self, thread_id):
+        try:
+            db = Database()
+            thread = db.fetch_one("SELECT * FROM threads WHERE id = %s", (thread_id,))
+            if not thread:
+                flash("Thread not found.", "danger")
+                db.close()
+                return redirect(url_for("Home.home"))
+
+            author = session.get("user_name", "Guest")
+            if thread['author'] != author:
+                flash("You are not authorized to edit this thread.", "danger")
+                db.close()
+                return redirect(url_for("Thread.view_thread", thread_id=thread_id))
+
+            if request.method == 'POST':
+                title = request.form.get('title')
+                content = request.form.get('content')
+                if not title or not content:
+                    flash("Title and content cannot be empty.", "warning")
+                    db.close()
+                    return redirect(url_for("Thread.edit_thread", thread_id=thread_id))
+
+                censored_title = WordCensor.censor_text(title)
+                censored_content = WordCensor.censor_text(content)
+                db.execute("UPDATE threads SET title = %s, content = %s WHERE id = %s", (censored_title, censored_content, thread_id))
+                db.close()
+                flash("Thread updated.", "success")
+                return redirect(url_for("Thread.view_thread", thread_id=thread_id))
+
+            db.close()
+            return render_template("edit_thread.html", thread=thread)
+        except Exception as e:
+            flash(f"Error editing thread: {e}", "danger")
+            return redirect(url_for("Thread.view_thread", thread_id=thread_id))
 
     def view_community(self, category_name):
         try:

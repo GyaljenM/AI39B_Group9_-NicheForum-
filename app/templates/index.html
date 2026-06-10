@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from '_composer.html' import composer, composer_script %}
+{% from '_post_parts.html' import render_media, render_poll, render_notes, render_actions_menu %}
 
 {% block title %}NicheForum{% endblock %}
 
@@ -56,7 +58,7 @@
 <a href="{{ url_for('Thread.view_community', category_name='Football') }}" class="flex items-center gap-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 font-semibold rounded-lg cursor-pointer group">
 <span class="material-symbols-outlined" data-icon="sports_soccer">sports_soccer</span>
 <span class="font-lexend text-sm">Football</span>
-<span class="ml-auto text-[10px] bg-primary text-white px-2 py-0.5 rounded-full">HOT</span>
+<span class="ml-auto text-[10px] font-bold tracking-wide bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">HOT</span>
 </a>
 <a href="{{ url_for('Thread.view_community', category_name='Basketball') }}" class="flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-all hover:translate-x-1">
 <span class="material-symbols-outlined" data-icon="sports_basketball">sports_basketball</span>
@@ -78,9 +80,9 @@
 <a href="{{ url_for('Home.communities') }}" class="mt-6 block text-center w-full py-2 text-primary font-label-bold text-sm border border-primary/20 rounded-lg hover:bg-primary/5 transition-all">View All Communities</a>
 </div>
 <!-- Stats Card -->
-<div class="bg-indigo-600 rounded-xl p-6 text-white overflow-hidden relative">
+<div class="bg-primary rounded-xl p-6 text-white overflow-hidden relative">
 <div class="absolute -right-4 -bottom-4 opacity-20">
-<span class="material-symbols-outlined text-[120px]" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span class="material-symbols-outlined text-[120px]" style="font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 48;">groups</span>
 </div>
 <div class="relative z-10">
 <h3 class="font-headline-sm text-headline-sm mb-1">Global Community</h3>
@@ -128,7 +130,7 @@
 <div class="p-6 pt-8 flex-1">
 <div class="flex justify-between items-start mb-2">
 <h3 class="font-headline-sm text-headline-sm">Premier League Hub</h3>
-<span class="material-symbols-outlined text-tertiary-container" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="material-symbols-outlined text-tertiary-container" style="font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;">verified</span>
 </div>
 <p class="text-on-surface-variant text-sm line-clamp-2 mb-4">Official community for the world's most watched football league. Real-time updates and discussions.</p>
 <div class="flex items-center gap-3 mb-6">
@@ -273,12 +275,21 @@
             </div>
             
             <div class="flex-1">
-                <a href="{{ url_for('Thread.view_thread', thread_id=thread.id) }}" class="block group">
-                    <h4 class="text-lg font-bold group-hover:text-primary transition-all mb-1">{{ thread.title }}</h4>
-                    <p class="text-on-surface-variant text-sm line-clamp-2 mb-3">{{ thread.content }}</p>
-                </a>
-                
-                <div class="flex items-center gap-4 text-on-surface-variant text-xs">
+                <div class="flex items-start justify-between gap-2">
+                    <a href="{{ url_for('Thread.view_thread', thread_id=thread.id) }}" class="block group flex-1 min-w-0">
+                        <h4 class="text-lg font-bold group-hover:text-primary transition-all mb-1">{{ thread.title }}</h4>
+                        <p class="text-on-surface-variant text-sm line-clamp-2 mb-3">{{ thread.content }}</p>
+                    </a>
+                    {% if session.get('user_id') %}
+                    {{ render_actions_menu(thread, 'thread', session.get('user_id'), session.get('user_name', 'Guest') == thread.author, url_for('Thread.delete_thread', thread_id=thread.id)) }}
+                    {% endif %}
+                </div>
+
+                {{ render_media(thread.media) }}
+                {{ render_poll(thread, url_for('Thread.vote_thread_poll', thread_id=thread.id), session.get('user_id')) }}
+                {{ render_notes(thread, 'thread', session.get('user_id')) }}
+
+                <div class="flex items-center gap-4 text-on-surface-variant text-xs mt-3">
                     <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">account_circle</span> @{{ thread.author }}</span>
                     <span>•</span>
                     <span>{{ thread.created_at }}</span>
@@ -418,26 +429,9 @@
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <form action="{{ url_for('Thread.create_thread') }}" method="POST" class="p-6 space-y-4">
-            <div>
-                <label class="block text-sm font-label-bold mb-1 text-on-surface-variant">Title</label>
-                <input name="title" type="text" placeholder="What's on your mind?" class="w-full rounded-xl border-slate-200 focus:ring-primary focus:border-primary px-4 py-3" required>
-            </div>
-            <div>
-                <label class="block text-sm font-label-bold mb-1 text-on-surface-variant">Content</label>
-                <textarea name="content" rows="4" placeholder="Deep dive into your topic..." class="w-full rounded-xl border-slate-200 focus:ring-primary focus:border-primary px-4 py-3" required></textarea>
-            </div>
-            <div>
-                <label class="block text-sm font-label-bold mb-1 text-on-surface-variant">Category</label>
-                <select name="category" class="w-full rounded-xl border-slate-200 focus:ring-primary focus:border-primary px-4 py-3">
-                    <option value="Sports">Sports</option>
-                    <option value="eSports">eSports</option>
-                    <option value="Strategy">Strategy</option>
-                    <option value="News">News</option>
-                </select>
-            </div>
-            <button type="submit" class="w-full py-4 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all shadow-lg active:scale-95 mt-4">Post Thread</button>
-        </form>
+        <div class="p-6">
+            {{ composer(url_for('Thread.create_thread'), 'thread_type', categories=['Sports', 'eSports', 'Strategy', 'News'], submit_label='Post Thread') }}
+        </div>
     </div>
 </div>
 
@@ -447,5 +441,6 @@
         modal.classList.toggle('hidden');
     }
 </script>
+{{ composer_script() }}
 {% endblock %}
   

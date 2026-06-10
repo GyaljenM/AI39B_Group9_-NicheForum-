@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Trending | NicheForum{% endblock %}
+
+{% block content %}
+<section class="max-w-[1280px] mx-auto px-6 py-8">
+    <div class="{% if user_name %}grid grid-cols-1 xl:grid-cols-[1.5fr_0.9fr] gap-6{% endif %}">
+        <div class="space-y-6">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-on-background">Trending Now</h2>
+                    <p class="text-on-surface-variant text-body-md mt-1">The most discussed topics across all communities.</p>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <article class="bg-white rounded-[28px] border border-slate-200 p-6 hover:border-primary/20 transition-all shadow-sm">
+                    <div class="flex items-start gap-4">
+                        <div class="flex flex-col items-center rounded-3xl bg-slate-50 p-3 text-slate-500">
+                            <button class="text-primary"><span class="material-symbols-outlined">arrow_drop_up</span></button>
+                            <span class="mt-1 text-lg font-semibold">1.2k</span>
+                            <button><span class="material-symbols-outlined">arrow_drop_down</span></button>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex flex-wrap items-center gap-2 text-xs font-semibold mb-3">
+                                <span class="rounded-full bg-primary/10 text-primary px-3 py-1">r/sports</span>
+                                <span class="text-slate-400">• 2h ago</span>
+                            </div>
+                            <h3 class="text-xl font-semibold text-on-background">New roster thread: which underdog team will steal the playoffs?</h3>
+                            <p class="mt-3 text-slate-600">Discuss the latest underdog stories, surprise lineups and dark horse teams making waves this season.</p>
+                            <div class="mt-4 flex items-center gap-4 text-sm text-slate-500">
+                                <span class="flex items-center gap-2"><span class="material-symbols-outlined">chat_bubble</span> 144 comments</span>
+                                <span class="flex items-center gap-2"><span class="material-symbols-outlined">account_circle</span> @coachjon</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="bg-white rounded-[28px] border border-slate-200 p-6 hover:border-primary/20 transition-all shadow-sm">
+                    <div class="flex items-start gap-4">
+                        <div class="flex flex-col items-center rounded-3xl bg-slate-50 p-3 text-slate-500">
+                            <button class="text-primary"><span class="material-symbols-outlined">arrow_drop_up</span></button>
+                            <span class="mt-1 text-lg font-semibold">830</span>
+                            <button><span class="material-symbols-outlined">arrow_drop_down</span></button>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex flex-wrap items-center gap-2 text-xs font-semibold mb-3">
+                                <span class="rounded-full bg-primary/10 text-primary px-3 py-1">r/eSports</span>
+                                <span class="text-slate-400">• 4h ago</span>
+                            </div>
+                            <h3 class="text-xl font-semibold text-on-background">Valorant meta update: the best economy rounds for teams on a budget</h3>
+                            <p class="mt-3 text-slate-600">Share your favorite economy plays and learn how pros save credits without losing momentum.</p>
+                            <div class="mt-4 flex items-center gap-4 text-sm text-slate-500">
+                                <span class="flex items-center gap-2"><span class="material-symbols-outlined">chat_bubble</span> 68 comments</span>
+                                <span class="flex items-center gap-2"><span class="material-symbols-outlined">account_circle</span> @viper_main</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+
+        {% if user_name %}
+            {% include "_sidebar.html" %}
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

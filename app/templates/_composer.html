@@ -1,0 +1,163 @@
+{# Reusable tabbed post composer: Text / Images & Videos / Poll.
+   Used by community_detail.html (community posts) and the thread modals in
+   community.html / index.html. `type_field` is 'post_type' or 'thread_type'.
+   Pass `category` to inject the hidden category field used by threads. #}
+{% macro composer(action, type_field, category=None, categories=None, submit_label='Post', title_placeholder='Post Title') %}
+<form action="{{ action }}" method="POST" enctype="multipart/form-data" data-composer class="space-y-4 text-left">
+    <input type="hidden" name="{{ type_field }}" value="text" data-post-type>
+    {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+
+    <!-- Tab navigation bar -->
+    <div class="flex gap-1 border-b border-slate-200">
+        <button type="button" data-tab="text" class="composer-tab flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all">
+            <span class="material-symbols-outlined text-base">article</span> Text
+        </button>
+        <button type="button" data-tab="media" class="composer-tab flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all">
+            <span class="material-symbols-outlined text-base">image</span> Images &amp; Videos
+        </button>
+        <button type="button" data-tab="poll" class="composer-tab flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all">
+            <span class="material-symbols-outlined text-base">poll</span> Poll
+        </button>
+    </div>
+
+    <!-- Shared title -->
+    <input type="text" name="title" placeholder="{{ title_placeholder }}" required
+           class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+
+    {% if categories %}
+    <!-- Shared category selector (lives outside the panels so it always submits) -->
+    <select name="category" class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+        {% for c in categories %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+    </select>
+    {% endif %}
+
+    <!-- TEXT panel -->
+    <div data-panel="text" class="space-y-3">
+        <textarea name="content" rows="4" placeholder="What's on your mind?" required
+                  class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
+        <label data-dropzone class="flex flex-col items-center justify-center gap-1 w-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-center cursor-pointer hover:border-primary transition-all">
+            <span class="material-symbols-outlined text-2xl text-slate-400">cloud_upload</span>
+            <span class="text-sm text-slate-500">Attach images or videos (optional)</span>
+            <div data-filelist class="flex flex-wrap gap-2 justify-center mt-1"></div>
+            <input type="file" name="media" multiple accept="image/*,video/*" class="hidden">
+        </label>
+    </div>
+
+    <!-- IMAGES & VIDEOS panel -->
+    <div data-panel="media" class="space-y-3 hidden">
+        <label data-dropzone class="flex flex-col items-center justify-center gap-1 w-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center cursor-pointer hover:border-primary transition-all">
+            <span class="material-symbols-outlined text-3xl text-slate-400">cloud_upload</span>
+            <span class="text-sm text-slate-500">Drag &amp; drop images/videos here, or click to upload</span>
+            <span class="text-xs text-slate-400">Images: png, jpg, gif, webp &middot; Videos: mp4, webm, mov, ogg</span>
+            <div data-filelist class="flex flex-wrap gap-2 justify-center mt-1"></div>
+            <input type="file" name="media" multiple accept="image/*,video/*" class="hidden">
+        </label>
+        <textarea name="content" rows="2" placeholder="Add a caption (optional)"
+                  class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
+    </div>
+
+    <!-- POLL panel -->
+    <div data-panel="poll" class="space-y-3 hidden">
+        <textarea name="content" rows="2" placeholder="Add context for your poll (optional)"
+                  class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
+        <div data-poll-options class="space-y-2">
+            <input type="text" name="poll_options" placeholder="Option 1" required
+                   class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-primary">
+            <input type="text" name="poll_options" placeholder="Option 2" required
+                   class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <button type="button" data-add-option class="text-sm text-primary font-medium hover:underline flex items-center gap-1">
+            <span class="material-symbols-outlined text-base">add</span> Add option
+        </button>
+    </div>
+
+    <button type="submit" class="w-full py-3 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all active:scale-95">
+        {{ submit_label }}
+    </button>
+</form>
+{% endmacro %}
+
+{# Renders the JS that drives every [data-composer] on the page. Call ONCE per
+   page, after the composer(s). Guarded so it is safe to call more than once. #}
+{% macro composer_script() %}
+<script>
+(function () {
+    if (window.__composerInit) return;
+    window.__composerInit = true;
+
+    function renderFiles(input, list) {
+        list.innerHTML = '';
+        Array.from(input.files).forEach(function (f) {
+            const chip = document.createElement('span');
+            chip.className = 'text-xs bg-white border border-slate-200 rounded-full px-2 py-0.5 text-slate-600';
+            chip.textContent = f.name;
+            list.appendChild(chip);
+        });
+    }
+
+    function setup(root) {
+        const typeInput = root.querySelector('[data-post-type]');
+        const tabs = root.querySelectorAll('.composer-tab');
+        const panels = root.querySelectorAll('[data-panel]');
+
+        function activate(tab) {
+            typeInput.value = tab;
+            tabs.forEach(function (t) {
+                const on = t.dataset.tab === tab;
+                t.classList.toggle('text-primary', on);
+                t.classList.toggle('border-primary', on);
+                t.classList.toggle('text-slate-500', !on);
+                t.classList.toggle('border-transparent', !on);
+            });
+            panels.forEach(function (p) {
+                const on = p.dataset.panel === tab;
+                p.classList.toggle('hidden', !on);
+                // Disable inputs in inactive panels so they neither submit nor
+                // trigger required-field validation while hidden.
+                p.querySelectorAll('input, textarea').forEach(function (el) { el.disabled = !on; });
+            });
+        }
+
+        tabs.forEach(function (t) { t.addEventListener('click', function () { activate(t.dataset.tab); }); });
+
+        root.querySelectorAll('[data-dropzone]').forEach(function (zone) {
+            const input = zone.querySelector('input[type=file]');
+            const list = zone.querySelector('[data-filelist]');
+            input.addEventListener('change', function () { renderFiles(input, list); });
+            ['dragover', 'dragenter'].forEach(function (e) {
+                zone.addEventListener(e, function (ev) { ev.preventDefault(); zone.classList.add('border-primary', 'bg-indigo-50'); });
+            });
+            ['dragleave', 'drop'].forEach(function (e) {
+                zone.addEventListener(e, function (ev) { ev.preventDefault(); zone.classList.remove('border-primary', 'bg-indigo-50'); });
+            });
+            zone.addEventListener('drop', function (ev) {
+                if (ev.dataTransfer.files.length) { input.files = ev.dataTransfer.files; renderFiles(input, list); }
+            });
+        });
+
+        const addBtn = root.querySelector('[data-add-option]');
+        if (addBtn) {
+            const wrap = root.querySelector('[data-poll-options]');
+            addBtn.addEventListener('click', function () {
+                if (wrap.children.length >= 6) return;
+                const n = wrap.children.length + 1;
+                const div = document.createElement('div');
+                div.className = 'flex gap-2';
+                div.innerHTML =
+                    '<input type="text" name="poll_options" placeholder="Option ' + n + '" class="flex-1 px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-primary">' +
+                    '<button type="button" data-remove-option class="px-2 text-slate-400 hover:text-red-500"><span class="material-symbols-outlined">close</span></button>';
+                wrap.appendChild(div);
+            });
+            wrap.addEventListener('click', function (ev) {
+                const rm = ev.target.closest('[data-remove-option]');
+                if (rm && wrap.children.length > 2) rm.parentElement.remove();
+            });
+        }
+
+        activate('text');
+    }
+
+    document.querySelectorAll('[data-composer]').forEach(setup);
+})();
+</script>
+{% endmacro %}

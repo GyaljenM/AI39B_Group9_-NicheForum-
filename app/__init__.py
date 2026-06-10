@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, flash, redirect, request, url_for
 from app.routes.auth import AuthRoutes
 from app.routes.HomeRoutes import HomeRoutes
 from app.routes.ThreadRoutes import ThreadRoutes
@@ -23,7 +23,10 @@ def create_app():
     else:
         # Minimal fallbacks if no config module is present
         app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'random-secret-key')
-    
+
+    # Cap upload size (images/videos attached to posts & threads) at 50 MB.
+    app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
+
     Database.create_tables()
 
     # Register Auth Routes
@@ -41,5 +44,10 @@ def create_app():
     @app.errorhandler(404)
     def page_not_found(e):
         return "PAGE NOT FOUND", 404
-    
+
+    @app.errorhandler(413)
+    def file_too_large(e):
+        flash("That file is too large. Please upload media under 50 MB.", "danger")
+        return redirect(request.referrer or url_for("Home.home"))
+
     return app

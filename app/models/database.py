@@ -130,6 +130,7 @@ class Database:
                 community_id INT NOT NULL,
                 title VARCHAR(255) NOT NULL,
                 content TEXT NOT NULL,
+                post_type ENUM('text','media','poll') NOT NULL DEFAULT 'text',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
                 FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE
@@ -141,6 +142,7 @@ class Database:
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 title VARCHAR(255) NOT NULL,
                 content TEXT NOT NULL,
+                thread_type ENUM('text','media','poll') NOT NULL DEFAULT 'text',
                 author VARCHAR(100) DEFAULT 'anonymous',
                 category_id INT,
                 category VARCHAR(100) DEFAULT 'Sports',
@@ -201,6 +203,202 @@ class Database:
             )
         """)
 
+        # ── Media attachments + polls for community posts ──────────
+        # Images/videos attached to a post (any post_type can carry media).
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS post_media (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                post_id INT NOT NULL,
+                media_type ENUM('image', 'video') NOT NULL,
+                file_path VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Options belonging to a poll-type post.
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS post_poll_options (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                post_id INT NOT NULL,
+                option_text VARCHAR(255) NOT NULL,
+                position INT DEFAULT 0,
+                FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+            )
+        """)
+
+        # One vote row per (user, post); changing a vote updates option_id.
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS post_poll_votes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                option_id INT NOT NULL,
+                post_id INT NOT NULL,
+                user_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_post_poll (user_id, post_id),
+                FOREIGN KEY (option_id) REFERENCES post_poll_options(id) ON DELETE CASCADE,
+                FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        # ── Media attachments + polls for threads ──────────────────
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS thread_media (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                thread_id INT NOT NULL,
+                media_type ENUM('image', 'video') NOT NULL,
+                file_path VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE
+            )
+        """)
+
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS thread_poll_options (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                thread_id INT NOT NULL,
+                option_text VARCHAR(255) NOT NULL,
+                position INT DEFAULT 0,
+                FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Poll voting requires a logged-in user even on guest-created threads.
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS thread_poll_votes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                option_id INT NOT NULL,
+                thread_id INT NOT NULL,
+                user_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_thread_poll (user_id, thread_id),
+                FOREIGN KEY (option_id) REFERENCES thread_poll_options(id) ON DELETE CASCADE,
+                FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        # ── Community notes (crowd-sourced context on possible misinformation) ──
+        # Any logged-in user can attach a note to a post/thread; other users rate
+        # it helpful/not-helpful and a note is only publicly promoted once it earns
+        # enough net-helpful ratings (see NOTE_PROMOTE_THRESHOLD in HomeRoutes).
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS post_notes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                post_id INT NOT NULL,
+                user_id INT NOT NULL,
+                content TEXT NOT NULL,
+                source VARCHAR(500),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        # One rating row per (user, note); changing a rating updates it.
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS post_note_votes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                note_id INT NOT NULL,
+                user_id INT NOT NULL,
+                rating ENUM('helpful', 'not_helpful') NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_note (note_id, user_id),
+                FOREIGN KEY (note_id) REFERENCES post_notes(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS thread_notes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                thread_id INT NOT NULL,
+                user_id INT NOT NULL,
+                content TEXT NOT NULL,
+                source VARCHAR(500),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS thread_note_votes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                note_id INT NOT NULL,
+                user_id INT NOT NULL,
+                rating ENUM('helpful', 'not_helpful') NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_thread_note (note_id, user_id),
+                FOREIGN KEY (note_id) REFERENCES thread_notes(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        # ── Content reports (users flag posts/threads for moderator review) ────
+        # One open report per (user, item) via UNIQUE key; re-reporting updates the
+        # existing row. Admins triage these on the /admin/reports page.
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS post_reports (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                post_id INT NOT NULL,
+                user_id INT NOT NULL,
+                reason VARCHAR(50) NOT NULL,
+                details TEXT,
+                status ENUM('open', 'reviewed') NOT NULL DEFAULT 'open',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_post_report (post_id, user_id),
+                FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS thread_reports (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                thread_id INT NOT NULL,
+                user_id INT NOT NULL,
+                reason VARCHAR(50) NOT NULL,
+                details TEXT,
+                status ENUM('open', 'reviewed') NOT NULL DEFAULT 'open',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_thread_report (thread_id, user_id),
+                FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        # ── Per-community moderation (admin appoints moderators; both can ban) ──
+        # A moderator is a user appointed to police one community. Site admins
+        # (users.role='admin') implicitly moderate every community.
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS community_moderators (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                community_id INT NOT NULL,
+                user_id INT NOT NULL,
+                appointed_by INT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_community_moderator (community_id, user_id),
+                FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Banned users are removed from a community and blocked from rejoining/posting.
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS community_bans (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                community_id INT NOT NULL,
+                user_id INT NOT NULL,
+                banned_by INT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_community_ban (community_id, user_id),
+                FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
         column_names = []
         try:
             columns = db.fetch_all("DESCRIBE threads")
@@ -230,6 +428,9 @@ class Database:
             if 'created_at' not in column_names:
                 print("Adding missing created_at column to threads table...")
                 db.execute("ALTER TABLE threads ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+            if 'thread_type' not in column_names:
+                print("Adding missing thread_type column to threads table...")
+                db.execute("ALTER TABLE threads ADD COLUMN thread_type ENUM('text','media','poll') NOT NULL DEFAULT 'text' AFTER content")
         except Exception as e:
             print(f"Error updating threads table structure: {e}")
 
@@ -251,6 +452,9 @@ class Database:
             if 'created_at' not in post_column_names:
                 print("Adding missing created_at column to posts table...")
                 db.execute("ALTER TABLE posts ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+            if 'post_type' not in post_column_names:
+                print("Adding missing post_type column to posts table...")
+                db.execute("ALTER TABLE posts ADD COLUMN post_type ENUM('text','media','poll') NOT NULL DEFAULT 'text' AFTER content")
         except Exception:
             pass
 

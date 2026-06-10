@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from '_post_parts.html' import render_media, render_poll, render_notes, render_actions_menu %}
 
 {% block title %}{{ thread.title }} | NicheForum{% endblock %}
 
@@ -50,6 +51,10 @@
                         {{ thread.content }}
                     </div>
 
+                    {{ render_media(thread.media) }}
+                    {{ render_poll(thread, url_for('Thread.vote_thread_poll', thread_id=thread.id), session.get('user_id')) }}
+                    {{ render_notes(thread, 'thread', session.get('user_id')) }}
+
                     <div class="mt-10 pt-8 border-t border-slate-50 flex items-center gap-6">
                         <button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-all">
                             <span class="material-symbols-outlined">chat_bubble</span>
@@ -63,22 +68,9 @@
                             <span class="material-symbols-outlined">bookmark</span>
                             <span class="font-bold">Save</span>
                         </button>
-                        {% if session.get('user_name', 'Guest') == thread.author %}
-                        <div class="relative group/menu inline-block ml-4">
-                            <button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-all">
-                                <span class="material-symbols-outlined">more_horiz</span>
-                                <span class="font-bold">More</span>
-                            </button>
-                            <div class="absolute left-0 top-full mt-2 hidden group-hover/menu:block z-20">
-                                <div class="bg-white border border-slate-100 rounded-xl shadow-xl py-2 min-w-[140px]">
-                                    <form action="{{ url_for('Thread.delete_thread', thread_id=thread.id) }}" method="POST" onsubmit="return confirm('Delete this thread permanently?')">
-                                        <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
-                                            <span class="material-symbols-outlined text-sm">delete</span>
-                                            Delete Thread
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
+                        {% if session.get('user_id') %}
+                        <div class="ml-4">
+                            {{ render_actions_menu(thread, 'thread', session.get('user_id'), session.get('user_name', 'Guest') == thread.author, url_for('Thread.delete_thread', thread_id=thread.id)) }}
                         </div>
                         {% endif %}
                     </div>

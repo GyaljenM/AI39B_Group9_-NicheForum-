@@ -1,0 +1,213 @@
+{# Shared renderers for attached media and polls, used by every feed that
+   shows posts or threads (community_detail, community, index, thread_detail). #}
+
+{% macro render_media(media) %}
+{% if media %}
+<div class="grid grid-cols-1 {% if media|length > 1 %}sm:grid-cols-2{% endif %} gap-3 mt-4">
+    {% for m in media %}
+        {% if m.media_type == 'image' %}
+        <img src="{{ url_for('static', filename=m.file_path) }}" alt="Attached image"
+             class="rounded-xl w-full max-h-96 object-cover border border-slate-100">
+        {% else %}
+        <video controls class="rounded-xl w-full max-h-96 bg-black border border-slate-100">
+            <source src="{{ url_for('static', filename=m.file_path) }}">
+            Your browser does not support embedded videos.
+        </video>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+{% endmacro %}
+
+{# `item` is a post/thread dict enriched by attach_media_and_poll().
+   `vote_action` is the poll-vote form URL. `logged_in` gates voting. #}
+{% macro render_poll(item, vote_action, logged_in) %}
+{% if item.poll_options %}
+<div class="mt-4 space-y-2">
+    {% if item.show_results %}
+        {% for o in item.poll_options %}
+        <div class="relative border border-slate-200 rounded-xl overflow-hidden">
+            <div class="absolute inset-0 bg-primary/10" style="width: {{ o.pct }}%"></div>
+            <div class="relative flex items-center justify-between px-4 py-2 text-sm">
+                <span class="font-medium {% if o.id == item.user_poll_vote %}text-primary{% else %}text-on-surface{% endif %}">
+                    {{ o.option_text }}{% if o.id == item.user_poll_vote %} <span class="material-symbols-outlined text-sm align-middle">check_circle</span>{% endif %}
+                </span>
+                <span class="text-slate-500">{{ o.pct }}% &middot; {{ o.vote_count }}</span>
+            </div>
+        </div>
+        {% endfor %}
+        <p class="text-xs text-slate-400">{{ item.poll_total }} vote{{ '' if item.poll_total == 1 else 's' }}</p>
+    {% elif logged_in %}
+        {% for o in item.poll_options %}
+        <form action="{{ vote_action }}" method="POST">
+            <input type="hidden" name="option_id" value="{{ o.id }}">
+            <button type="submit"
+                    class="w-full text-left px-4 py-2 border border-slate-200 rounded-xl text-sm hover:border-primary hover:bg-indigo-50/40 transition-all">
+                {{ o.option_text }}
+            </button>
+        </form>
+        {% endfor %}
+        <p class="text-xs text-slate-400">Vote to see the results.</p>
+    {% else %}
+        {% for o in item.poll_options %}
+        <div class="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm text-slate-400">{{ o.option_text }}</div>
+        {% endfor %}
+        <p class="text-xs text-slate-400">Log in to vote in this poll.</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endmacro %}
+
+{# Community notes: crowd-sourced context to fight misinformation.
+   `item` is a post/thread dict enriched by attach_notes() (item.notes, item.top_note).
+   `kind` is 'post' or 'thread' and selects the right routes. `logged_in` gates writing
+   and rating. A note is only promoted into the public banner once enough readers rate
+   it helpful (see NOTE_PROMOTE_THRESHOLD); until then it lives in the collapsible panel. #}
+{% macro render_notes(item, kind, logged_in) %}
+{% if kind == 'post' %}
+    {% set add_action = url_for('Home.add_post_note', post_id=item.id) %}
+    {% set rate_endpoint = 'Home.rate_post_note' %}
+{% else %}
+    {% set add_action = url_for('Thread.add_thread_note', thread_id=item.id) %}
+    {% set rate_endpoint = 'Thread.rate_thread_note' %}
+{% endif %}
+
+{# 1. Promoted banner — visible to everyone once a note is rated helpful enough. #}
+{% if item.top_note %}
+<div class="mt-4 border border-amber-200 bg-amber-50 rounded-xl p-4">
+    <div class="flex items-center gap-2 mb-1.5">
+        <span class="material-symbols-outlined text-amber-600 text-xl">fact_check</span>
+        <div>
+            <p class="text-sm font-semibold text-amber-900">Readers added context</p>
+            <p class="text-xs text-amber-700">Other users have added this note</p>
+        </div>
+    </div>
+    <p class="text-sm text-amber-900 whitespace-pre-line">{{ item.top_note.content }}</p>
+    {% if item.top_note.source %}
+    <a href="{{ item.top_note.source }}" target="_blank" rel="noopener noreferrer"
+       class="inline-flex items-center gap-1 mt-2 text-xs font-medium text-amber-800 underline break-all">
+        <span class="material-symbols-outlined text-sm">link</span>{{ item.top_note.source }}
+    </a>
+    {% endif %}
+    <p class="text-xs text-amber-700 mt-2">{{ item.top_note.helpful_count }} found this helpful</p>
+</div>
+{% endif %}
+
+{# 2. Collapsible panel — read/rate all notes and (if logged in) add one. #}
+<div class="mt-3">
+    <button type="button" onclick="document.getElementById('notes-{{ kind }}-{{ item.id }}').classList.toggle('hidden')"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm transition-all">
+        <span class="material-symbols-outlined text-base">fact_check</span>
+        <span>Community Notes{% if item.notes %} ({{ item.notes|length }}){% endif %}</span>
+    </button>
+
+    <div id="notes-{{ kind }}-{{ item.id }}" class="hidden mt-3 space-y-3">
+        {% for note in item.notes %}
+        <div class="border border-slate-200 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-1">
+                <p class="text-xs text-slate-500">Note by <span class="font-semibold text-slate-700">{{ note.author_name }}</span> &middot; {{ note.created_at }}</p>
+                {% if note.promoted %}
+                <span class="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Shown publicly</span>
+                {% else %}
+                <span class="text-xs px-2 py-0.5 rounded-full bg-slate-50 text-slate-500 border border-slate-200">Pending ratings</span>
+                {% endif %}
+            </div>
+            <p class="text-sm text-on-surface-variant whitespace-pre-line">{{ note.content }}</p>
+            {% if note.source %}
+            <a href="{{ note.source }}" target="_blank" rel="noopener noreferrer"
+               class="inline-flex items-center gap-1 mt-2 text-xs font-medium text-primary underline break-all">
+                <span class="material-symbols-outlined text-sm">link</span>{{ note.source }}
+            </a>
+            {% endif %}
+            <div class="flex items-center gap-2 mt-3">
+                {% if logged_in %}
+                <form action="{{ url_for(rate_endpoint, note_id=note.id) }}" method="POST">
+                    <input type="hidden" name="rating" value="helpful">
+                    <button type="submit"
+                        class="flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs transition-all active:scale-95
+                        {% if note.user_rating == 'helpful' %}bg-green-50 border-green-200 text-green-700{% else %}border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
+                        <span class="material-symbols-outlined text-sm">check_circle</span>
+                        <span>Helpful ({{ note.helpful_count }})</span>
+                    </button>
+                </form>
+                <form action="{{ url_for(rate_endpoint, note_id=note.id) }}" method="POST">
+                    <input type="hidden" name="rating" value="not_helpful">
+                    <button type="submit"
+                        class="flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs transition-all active:scale-95
+                        {% if note.user_rating == 'not_helpful' %}bg-red-50 border-red-200 text-red-700{% else %}border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
+                        <span class="material-symbols-outlined text-sm">cancel</span>
+                        <span>Not helpful ({{ note.not_helpful_count }})</span>
+                    </button>
+                </form>
+                {% else %}
+                <span class="text-xs text-slate-400">{{ note.helpful_count }} helpful &middot; {{ note.not_helpful_count }} not helpful</span>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-400">No community notes yet. Spotted misinformation? Add context below.</p>
+        {% endfor %}
+
+        {% if logged_in %}
+        <form action="{{ add_action }}" method="POST" class="border border-dashed border-slate-200 rounded-xl p-4 space-y-2">
+            <p class="text-sm font-semibold text-on-surface">Add a community note</p>
+            <textarea name="content" rows="3" required placeholder="Add context other readers should know. Be helpful and cite sources."
+                class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm"></textarea>
+            <input type="url" name="source" placeholder="Source link (optional)"
+                class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm">
+            <button type="submit" class="px-5 py-2 bg-primary text-white rounded-full font-label-bold text-sm hover:bg-primary-container transition-all">
+                Submit note
+            </button>
+        </form>
+        {% else %}
+        <p class="text-sm text-slate-400">Please log in to add or rate community notes.</p>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+{# Three-dot (kebab) actions menu shown at the top-right of a post/thread card.
+   `item`/`kind` identify the content; `logged_in` gates Report; `is_owner` + an
+   optional `delete_action` URL gate Delete. Quick actions:
+     • Add a community note → reveals the render_notes() panel below the card.
+     • Report → opens the shared report modal (defined once in base.html).
+     • Delete → existing owner-only delete form.
+   Click-to-toggle (mobile friendly); base.html closes open menus on outside click. #}
+{% macro render_actions_menu(item, kind, logged_in, is_owner=False, delete_action=None) %}
+{% if kind == 'post' %}
+    {% set report_action = url_for('Home.report_post', post_id=item.id) %}
+{% else %}
+    {% set report_action = url_for('Thread.report_thread', thread_id=item.id) %}
+{% endif %}
+{% set menu_id = 'kebab-' ~ kind ~ '-' ~ item.id %}
+<div class="relative inline-block text-left">
+    <button type="button" onclick="toggleKebab(event, '{{ menu_id }}')" aria-label="More actions"
+        class="p-2 hover:bg-slate-50 rounded-full transition-all text-on-surface-variant">
+        <span class="material-symbols-outlined">more_vert</span>
+    </button>
+    <div id="{{ menu_id }}" data-kebab
+         class="hidden absolute right-0 top-full mt-2 z-30 bg-white border border-slate-100 rounded-xl shadow-xl py-2 min-w-[200px]">
+        <button type="button" onclick="openNotesPanel('notes-{{ kind }}-{{ item.id }}')"
+            class="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-slate-50 flex items-center gap-2 transition-colors">
+            <span class="material-symbols-outlined text-base text-amber-600">fact_check</span>
+            Add a community note
+        </button>
+        {% if logged_in %}
+        <button type="button" onclick="openReportModal('{{ report_action }}', {{ (item.title or 'this content')|tojson }})"
+            class="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-slate-50 flex items-center gap-2 transition-colors">
+            <span class="material-symbols-outlined text-base text-slate-500">flag</span>
+            Report {{ 'post' if kind == 'post' else 'thread' }}
+        </button>
+        {% endif %}
+        {% if is_owner and delete_action %}
+        <div class="my-1 border-t border-slate-100"></div>
+        <form action="{{ delete_action }}" method="POST" onsubmit="return confirm('Delete this {{ kind }} permanently?')">
+            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                <span class="material-symbols-outlined text-base">delete</span>
+                Delete {{ 'post' if kind == 'post' else 'thread' }}
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}

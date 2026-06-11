@@ -14,12 +14,15 @@
                         <p class="mt-3 max-w-2xl text-white/90 text-body-lg">Explore the latest posts, trending conversations and community updates tailored for you. Stay engaged with your favorite topics and discover more niche forums.</p>
                     </div>
                     <div class="flex items-center gap-4">
-                        <div class="rounded-full bg-white/15 p-4 shadow-lg border border-white/10">
+                        <a href="{{ url_for('Home.communities') }}" class="rounded-full bg-white/15 p-4 shadow-lg border border-white/10 hover:bg-white/25 transition-all group" title="Communities">
                             <span class="material-symbols-outlined text-4xl">forum</span>
-                        </div>
-                        <div class="rounded-full bg-white/15 p-4 shadow-lg border border-white/10">
+                        </a>
+                        <a href="{{ url_for('Home.trending') }}" class="rounded-full bg-white/15 p-4 shadow-lg border border-white/10 hover:bg-white/25 transition-all group" title="Trending">
                             <span class="material-symbols-outlined text-4xl">whatshot</span>
-                        </div>
+                        </a>
+                        <a href="{{ url_for('Home.live') }}" class="rounded-full bg-white/15 p-4 shadow-lg border border-white/10 hover:bg-white/25 transition-all group" title="Live Matches">
+                            <span class="material-symbols-outlined text-4xl">live_tv</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -28,207 +31,74 @@
                 <div class="bg-white rounded-[28px] p-6 shadow-sm border border-slate-200">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
                         <div>
-                            <p class="text-sm uppercase tracking-[0.24em] text-primary/90 font-semibold">Create new post</p>
-                            <h2 class="text-2xl font-semibold text-on-background mt-2">Share an update with your community</h2>
+                            <p class="text-sm uppercase tracking-[0.24em] text-primary/90 font-semibold">Join the conversation</p>
+                            <h2 class="text-2xl font-semibold text-on-background mt-2">Ready to share something?</h2>
                         </div>
-                        <button onclick="toggleModal()" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-white font-semibold shadow-lg hover:bg-primary-container transition-all">
-                            <span class="material-symbols-outlined">add</span>
-                            New Post
-                        </button>
-                    </div>
-                    <div class="grid gap-4 sm:grid-cols-3">
-                        <div class="rounded-3xl bg-surface-container-high p-4">
-                            <p class="text-sm text-on-surface-variant">Most Active</p>
-                            <p class="mt-3 text-xl font-semibold">12 communities</p>
-                        </div>
-                        <div class="rounded-3xl bg-surface-container-high p-4">
-                            <p class="text-sm text-on-surface-variant">Pending replies</p>
-                            <p class="mt-3 text-xl font-semibold">24 threads</p>
-                        </div>
-                        <div class="rounded-3xl bg-surface-container-high p-4">
-                            <p class="text-sm text-on-surface-variant">Today's top post</p>
-                            <p class="mt-3 text-xl font-semibold">Digital Arena</p>
-                        </div>
+                        <a href="{{ url_for('Home.communities') }}" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-white font-semibold shadow-lg hover:bg-primary-container transition-all">
+                            <span class="material-symbols-outlined">explore</span>
+                            Explore Communities to Post
+                        </a>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-[28px] p-6 shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <p class="text-sm uppercase tracking-[0.3em] text-on-surface-variant">Trending posts</p>
-                            <h2 class="text-2xl font-semibold text-on-background mt-1">Hot picks for you</h2>
+                            <p class="text-sm uppercase tracking-[0.3em] text-on-surface-variant">Recent Activity</p>
+                            <h2 class="text-2xl font-semibold text-on-background mt-1">Latest from NicheForum</h2>
                         </div>
-                        <button class="text-sm text-primary font-semibold hover:text-primary-container transition-all">View all</button>
                     </div>
 
                     <div class="space-y-5">
-                        {% for thread in threads %}
-                        <article class="rounded-3xl border border-slate-200 p-6 hover:border-primary/20 transition-all">
-                            <div class="flex items-start gap-4">
-                                <div class="flex flex-col items-center rounded-3xl bg-surface-container p-3 text-on-surface-variant">
-                                    <button class="text-primary"><span class="material-symbols-outlined">arrow_drop_up</span></button>
-                                    <span class="mt-1 text-lg font-semibold">{{ thread.votes }}</span>
-                                    <button class="text-on-surface-variant"><span class="material-symbols-outlined">arrow_drop_down</span></button>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex flex-wrap items-center gap-2 text-xs text-on-surface-variant uppercase tracking-[0.18em] font-semibold mb-3">
-                                        <span class="rounded-full bg-primary/10 text-primary px-3 py-1">r/{{ thread.category.lower() }}</span>
-                                        <span class="rounded-full bg-secondary/10 text-secondary px-3 py-1">{{ thread.category }}</span>
-                                        <span>• {{ thread.created_at }}</span>
+                        {% if posts %}
+                            {% for post in posts %}
+                            <article class="rounded-3xl border border-slate-200 p-6 hover:border-primary/20 transition-all relative">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <div class="flex flex-wrap items-center gap-2 text-xs text-on-surface-variant uppercase tracking-[0.18em] font-semibold">
+                                                <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="rounded-full bg-primary/10 text-primary px-3 py-1 hover:bg-primary hover:text-white transition-colors">c/{{ post.community_name }}</a>
+                                                <span>• {{ post.created_at }}</span>
+                                            </div>
+                                            {% if session.get('user_id') == post.user_id %}
+                                            <div class="relative group">
+                                                <button class="p-1 hover:bg-slate-50 rounded-full transition-all">
+                                                    <span class="material-symbols-outlined text-xl">more_vert</span>
+                                                </button>
+                                                <div class="absolute right-0 top-0 mt-8 hidden group-hover:block z-20">
+                                                    <div class="bg-white border border-slate-100 rounded-xl shadow-xl py-2 min-w-[140px]">
+                                                        <form action="{{ url_for('Home.delete_post', post_id=post.id) }}" method="POST" onsubmit="return confirm('Delete this post permanently?')">
+                                                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                                                                <span class="material-symbols-outlined text-sm">delete</span>
+                                                                Delete Post
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <h3 class="text-xl font-semibold text-on-background">{{ post.title }}</h3>
+                                        <p class="mt-3 text-body-md text-on-surface-variant line-clamp-2">{{ post.content }}</p>
+                                        <div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-on-surface-variant">
+                                            <span class="flex items-center gap-2"><span class="material-symbols-outlined">account_circle</span> @{{ post.user_name }}</span>
+                                            <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="text-primary font-semibold hover:underline">Read more</a>
+                                        </div>
                                     </div>
-                                    <h3 class="text-xl font-semibold text-on-background">{{ thread.title }}</h3>
-                                    <p class="mt-3 text-body-md text-on-surface-variant">{{ thread.content[:200] }}...</p>
-                                    <div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-on-surface-variant">
-                                        <span class="flex items-center gap-2"><span class="material-symbols-outlined">chat_bubble</span> 0 comments</span>
-                                        <span class="flex items-center gap-2"><span class="material-symbols-outlined">account_circle</span> @{{ thread.author }}</span>
-                                    </div>
                                 </div>
-                            </div>
-                        </article>
+                            </article>
+                            {% endfor %}
                         {% else %}
-                        <p class="text-center text-on-surface-variant py-8">No trending posts yet.</p>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-[28px] p-6 shadow-sm border border-slate-200">
-                    <div class="flex items-center justify-between mb-5">
-                        <div>
-                            <p class="text-sm uppercase tracking-[0.3em] text-on-surface-variant">Saved for later</p>
-                            <h2 class="text-2xl font-semibold text-on-background mt-1">Your reading list</h2>
-                        </div>
-                        <button class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-on-surface hover:border-primary transition-all">
-                            <span class="material-symbols-outlined">bookmark</span>
-                            Manage
-                        </button>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="rounded-3xl bg-surface-container-high p-5">
-                            <div class="flex items-center justify-between gap-3">
-                                <div>
-                                    <p class="font-semibold">Community rules for new members</p>
-                                    <span class="text-xs text-on-surface-variant">r/sports • 5 min read</span>
-                                </div>
-                                <span class="text-sm text-primary font-semibold">Saved</span>
+                            <div class="text-center py-12">
+                                <p class="text-slate-400">No posts yet. Join a community and start posting!</p>
                             </div>
-                        </div>
-                        <div class="rounded-3xl bg-surface-container-high p-5">
-                            <div class="flex items-center justify-between gap-3">
-                                <div>
-                                    <p class="font-semibold">Top training drills for football season</p>
-                                    <span class="text-xs text-on-surface-variant">r/football • 9 min read</span>
-                                </div>
-                                <span class="text-sm text-primary font-semibold">Saved</span>
-                            </div>
-                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
 
-        <aside class="space-y-6">
-            <div class="bg-white rounded-[28px] p-6 shadow-sm border border-slate-200">
-                <div class="flex items-center gap-4 mb-4">
-                    <div class="h-14 w-14 rounded-full bg-primary text-white flex items-center justify-center text-2xl font-semibold">{{ user_name[0]|upper }}</div>
-                    <div>
-                        <p class="text-sm text-on-surface-variant uppercase tracking-[0.24em]">Signed in as</p>
-                        <p class="text-lg font-semibold text-on-background">{{ user_name }}</p>
-                    </div>
-                </div>
-                <div class="grid gap-4 text-sm text-on-surface-variant">
-                    <div class="rounded-3xl bg-surface-container p-4">
-                        <p class="font-semibold text-on-background">220</p>
-                        <p class="mt-1">Karma points</p>
-                    </div>
-                    <div class="rounded-3xl bg-surface-container p-4">
-                        <p class="font-semibold text-on-background">18</p>
-                        <p class="mt-1">Communities joined</p>
-                    </div>
-                </div>
-                <button class="mt-6 w-full rounded-full bg-primary px-4 py-3 text-white font-semibold hover:bg-primary-container transition-all">Edit profile</button>
-            </div>
-
-            <div class="bg-white rounded-[28px] p-6 shadow-sm border border-slate-200">
-                <div class="mb-4">
-                    <p class="text-sm uppercase tracking-[0.3em] text-on-surface-variant">Recommended</p>
-                    <h2 class="text-2xl font-semibold text-on-background mt-1">Communities to follow</h2>
-                </div>
-                <div class="space-y-3">
-                    <a class="block rounded-3xl border border-slate-200 p-4 hover:bg-surface-bright transition-all" href="#">
-                        <div class="flex items-center justify-between gap-3">
-                            <div>
-                                <p class="font-semibold">r/FootballTalk</p>
-                                <p class="text-sm text-on-surface-variant">Match previews, tactics, and fan culture.</p>
-                            </div>
-                            <button class="rounded-full bg-primary/10 px-3 py-1 text-primary text-xs font-semibold">Follow</button>
-                        </div>
-                    </a>
-                    <a class="block rounded-3xl border border-slate-200 p-4 hover:bg-surface-bright transition-all" href="#">
-                        <div class="flex items-center justify-between gap-3">
-                            <div>
-                                <p class="font-semibold">r/ElectroArena</p>
-                                <p class="text-sm text-on-surface-variant">Esports strategy, highlights, and stats.</p>
-                            </div>
-                            <button class="rounded-full bg-primary/10 px-3 py-1 text-primary text-xs font-semibold">Follow</button>
-                        </div>
-                    </a>
-                    <a class="block rounded-3xl border border-slate-200 p-4 hover:bg-surface-bright transition-all" href="#">
-                        <div class="flex items-center justify-between gap-3">
-                            <div>
-                                <p class="font-semibold">r/WellnessPlay</p>
-                                <p class="text-sm text-on-surface-variant">Recovery, nutrition, and athlete wellness.</p>
-                            </div>
-                            <button class="rounded-full bg-primary/10 px-3 py-1 text-primary text-xs font-semibold">Follow</button>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </aside>
+        {% include "_sidebar.html" %}
     </div>
 </section>
-
-<!-- FAB for Create Action -->
-<button onclick="toggleModal()" class="fixed bottom-8 right-8 w-16 h-16 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-all active:scale-95 group z-40">
-<span class="material-symbols-outlined text-3xl">edit</span>
-<span class="absolute right-full mr-4 bg-on-background text-white px-4 py-2 rounded-lg text-sm font-label-bold opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap pointer-events-none">New Thread</span>
-</button>
-
-<!-- Modal for Creating New Thread -->
-<div id="threadModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 backdrop-blur-sm p-4 text-on-surface">
-    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
-        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-            <h2 class="font-headline-sm text-headline-sm">Create New Thread</h2>
-            <button onclick="toggleModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition-all">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-        <form action="{{ url_for('Thread.create_thread') }}" method="POST" class="p-6 space-y-4">
-            <div>
-                <label class="block text-sm font-label-bold mb-1 text-on-surface-variant">Title</label>
-                <input name="title" type="text" placeholder="What's on your mind?" class="w-full rounded-xl border-slate-200 focus:ring-primary focus:border-primary px-4 py-3" required>
-            </div>
-            <div>
-                <label class="block text-sm font-label-bold mb-1 text-on-surface-variant">Content</label>
-                <textarea name="content" rows="4" placeholder="Deep dive into your topic..." class="w-full rounded-xl border-slate-200 focus:ring-primary focus:border-primary px-4 py-3" required></textarea>
-            </div>
-            <div>
-                <label class="block text-sm font-label-bold mb-1 text-on-surface-variant">Category</label>
-                <select name="category" class="w-full rounded-xl border-slate-200 focus:ring-primary focus:border-primary px-4 py-3">
-                    <option value="Sports">Sports</option>
-                    <option value="eSports">eSports</option>
-                    <option value="Strategy">Strategy</option>
-                    <option value="News">News</option>
-                </select>
-            </div>
-            <button type="submit" class="w-full py-4 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all shadow-lg active:scale-95 mt-4">Post Thread</button>
-        </form>
-    </div>
-</div>
-
-<script>
-    function toggleModal() {
-        const modal = document.getElementById('threadModal');
-        modal.classList.toggle('hidden');
-    }
-</script>
 {% endblock %}

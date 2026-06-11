@@ -1,17 +1,43 @@
+/* Iconography: Material Symbols Rounded with a consistent thin-stroke weight.
+   The class name stays `material-symbols-outlined` (used across all templates),
+   but we override the family to the Rounded variant for a softer, designer-led
+   look and pin opsz/wght/GRAD so icons read uniformly everywhere. */
 .material-symbols-outlined {
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-family: 'Material Symbols Rounded';
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
     vertical-align: middle;
+    line-height: 1;
+}
+
+/* Soft-rounded icon container: subtle gradient + hairline border instead of a
+   bare floating glyph. Use on a wrapper around a `.material-symbols-outlined`. */
+.icon-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, rgba(70, 58, 203, 0.10) 0%, rgba(70, 58, 203, 0.04) 100%);
+    border: 1px solid rgba(70, 58, 203, 0.12);
+    color: #463acb;
+}
+
+/* Ensure scrolling is enabled globally */
+html, body {
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    height: auto !important;
+    min-height: 100vh;
 }
 
 .hero-gradient {
-    background: linear-gradient(135deg, rgba(70, 72, 212, 0.95) 0%, rgba(96, 99, 238, 0.8) 100%);
+    background: linear-gradient(135deg, rgba(70, 58, 203, 0.95) 0%, rgba(90, 79, 219, 0.8) 100%);
 }
 
 .community-card-shadow {
-    box-shadow: 0 4px 20px -4px rgba(70, 72, 212, 0.15);
+    box-shadow: 0 4px 20px -4px rgba(70, 58, 203, 0.15);
 }
 
 .bento-hover:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 24px -8px rgba(70, 72, 212, 0.25);
+    box-shadow: 0 12px 24px -8px rgba(70, 58, 203, 0.25);
 }

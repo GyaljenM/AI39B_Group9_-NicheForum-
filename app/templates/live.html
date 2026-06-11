@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Live Matches | NicheForum{% endblock %}
+
+{% block content %}
+<section class="max-w-[1280px] mx-auto px-6 py-8">
+    <div class="{% if user_name %}grid grid-cols-1 xl:grid-cols-[1.5fr_0.9fr] gap-6{% endif %}">
+        <div class="space-y-6">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-on-background">Live Matches</h2>
+                    <p class="text-on-surface-variant text-body-md mt-1">Real-time scores and discussions for ongoing games.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                    <span class="text-sm font-semibold text-red-500 uppercase tracking-wider">Live Now</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 {% if not user_name %}lg:grid-cols-2{% endif %} gap-6">
+                <!-- Match 1 -->
+                <div class="bg-white rounded-[28px] border border-slate-200 p-6 shadow-sm hover:border-primary/20 transition-all">
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Premier League</span>
+                        <span class="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">72'</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-8 mb-8">
+                        <div class="flex-1 text-center">
+                            <div class="w-16 h-16 bg-slate-100 rounded-full mx-auto mb-3 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-3xl text-slate-400">shield</span>
+                            </div>
+                            <p class="font-bold">Arsenal</p>
+                        </div>
+                        <div class="text-4xl font-black text-on-background">2 - 1</div>
+                        <div class="flex-1 text-center">
+                            <div class="w-16 h-16 bg-slate-100 rounded-full mx-auto mb-3 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-3xl text-slate-400">shield</span>
+                            </div>
+                            <p class="font-bold">Chelsea</p>
+                        </div>
+                    </div>
+                    <button class="w-full py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-all">Enter Match Thread</button>
+                </div>
+
+                <!-- Match 2 -->
+                <div class="bg-white rounded-[28px] border border-slate-200 p-6 shadow-sm hover:border-primary/20 transition-all">
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">NBA</span>
+                        <span class="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">Q4 04:12</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-8 mb-8">
+                        <div class="flex-1 text-center">
+                            <div class="w-16 h-16 bg-slate-100 rounded-full mx-auto mb-3 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-3xl text-slate-400">sports_basketball</span>
+                            </div>
+                            <p class="font-bold">Lakers</p>
+                        </div>
+                        <div class="text-4xl font-black text-on-background">102 - 98</div>
+                        <div class="flex-1 text-center">
+                            <div class="w-16 h-16 bg-slate-100 rounded-full mx-auto mb-3 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-3xl text-slate-400">sports_basketball</span>
+                            </div>
+                            <p class="font-bold">Warriors</p>
+                        </div>
+                    </div>
+                    <button class="w-full py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-all">Enter Match Thread</button>
+                </div>
+            </div>
+        </div>
+
+        {% if user_name %}
+            {% include "_sidebar.html" %}
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

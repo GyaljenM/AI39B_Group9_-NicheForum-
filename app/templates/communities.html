@@ -20,7 +20,7 @@
 
     <!-- Category Tabs -->
     <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-8 scrollbar-hide">
-        <button class="px-5 py-2 bg-indigo-600 text-white rounded-full text-xs font-label-bold whitespace-nowrap">All Sports</button>
+        <button class="px-5 py-2 bg-primary text-white rounded-full text-xs font-label-bold whitespace-nowrap">All Sports</button>
         <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-label-bold hover:border-primary hover:text-primary transition-all whitespace-nowrap">Football</button>
         <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-label-bold hover:border-primary hover:text-primary transition-all whitespace-nowrap">Basketball</button>
         <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-label-bold hover:border-primary hover:text-primary transition-all whitespace-nowrap">eSports</button>
@@ -34,7 +34,7 @@
             {% for community in communities %}
             <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-slate-100 flex flex-col group">
                 <div class="h-32 bg-slate-100 relative overflow-hidden">
-                    <div class="absolute inset-0 bg-indigo-600/10 group-hover:bg-indigo-600/20 transition-colors"></div>
+                            <div class="absolute inset-0 bg-primary/10 group-hover:bg-primary/20 transition-colors"></div>
                     <div class="absolute -bottom-6 left-6">
                         <div class="w-12 h-12 rounded-xl bg-white p-1 shadow-lg">
                             <div class="w-full h-full bg-primary rounded-lg flex items-center justify-center text-white">
@@ -64,7 +64,7 @@
                             <a href="{{ url_for('Home.community_detail', community_id=community.id) }}" class="px-4 py-2 bg-slate-50 text-slate-600 rounded-lg font-label-bold text-xs hover:bg-slate-100 transition-all">View</a>
                             {% if community.id not in user_communities %}
                             <form action="{{ url_for('Home.join_community', community_id=community.id) }}" method="POST">
-                                <button type="submit" class="px-4 py-2 bg-indigo-50 text-primary rounded-lg font-label-bold text-xs hover:bg-primary hover:text-white transition-all">Join</button>
+                                <button type="submit" class="px-4 py-2 bg-primary/10 text-primary rounded-lg font-label-bold text-xs hover:bg-primary hover:text-white transition-all">Join</button>
                             </form>
                             {% else %}
                             <span class="px-4 py-2 bg-green-50 text-green-600 rounded-lg font-label-bold text-xs">Joined</span>

@@ -3,22 +3,25 @@
 
 {% block styles %}
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link href="{{ url_for('static', filename='register.css') }}" rel="stylesheet">
 <script id="tailwind-config">
     tailwind.config = {
         theme: {
             extend: {
                 colors: {
-                    "primary": "#4648d4",
-                    "primary-container": "#6063ee",
-                    "surface-bright": "#f7f9fb",
-                    "on-surface": "#191c1e",
-                    "outline": "#767586",
+                    "slate": { "50":"#f8f8f7","100":"#f2f1ef","200":"#e6e4e1","300":"#d4d1cc","400":"#a7a39d","500":"#79756f","600":"#57534d","700":"#423f3a","800":"#292724","900":"#1a1816" },
+                    "indigo": { "50":"#f3f2fd","100":"#e8e6fa","200":"#d1cdf4","300":"#b0a9ea","400":"#8179dd","500":"#645ad3","600":"#463acb","700":"#3c31af","800":"#342d8f","900":"#2e2a74" },
+                    "primary": "#463acb",
+                    "primary-container": "#5a4fdb",
+                    "surface-bright": "#fbfbfa",
+                    "on-surface": "#1a1816",
+                    "outline": "#79756f",
                 },
                 fontFamily: {
                     "lexend": ["Lexend"],
-                    "work-sans": ["Work Sans"],
+                    "inter": ["Inter"],
                 }
             }
         }
@@ -30,12 +33,9 @@
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    body {
-        background-color: #f7f9fb;
-        font-family: 'Work Sans', sans-serif;
-    }
 </style>
 {% endblock %}
+
 
 {% block content %}
 <div class="min-h-[80vh] flex flex-col items-center justify-center px-6 py-12">

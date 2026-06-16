@@ -15,8 +15,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 0.75rem;
-    background: linear-gradient(135deg, rgba(70, 58, 203, 0.10) 0%, rgba(70, 58, 203, 0.04) 100%);
+    border-radius: 4px;
+    background: rgba(70, 58, 203, 0.07);
     border: 1px solid rgba(70, 58, 203, 0.12);
     color: #463acb;
 }
@@ -30,7 +30,7 @@ html, body {
 }
 
 .hero-gradient {
-    background: linear-gradient(135deg, rgba(70, 58, 203, 0.95) 0%, rgba(90, 79, 219, 0.8) 100%);
+    background: rgba(70, 58, 203, 0.9);
 }
 
 .community-card-shadow {

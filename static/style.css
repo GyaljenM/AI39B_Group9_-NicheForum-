@@ -15,7 +15,7 @@ body {
 .card {
     background: #ffffff;
     padding: 30px;
-    border-radius: 12px;
+    border-radius: 4px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     width: 100%;
     max-width: 400px;
@@ -41,7 +41,7 @@ input[type="text"] {
     font-size: 20px;
     text-align: center;
     border: 2px solid #e2e8f0;
-    border-radius: 8px;
+    border-radius: 4px;
     letter-spacing: 4px;
     margin-bottom: 20px;
 }
@@ -54,7 +54,7 @@ button {
     padding: 14px 20px;
     font-size: 16px;
     font-weight: bold;
-    border-radius: 8px;
+    border-radius: 4px;
     width: 100%;
     cursor: pointer;
 }

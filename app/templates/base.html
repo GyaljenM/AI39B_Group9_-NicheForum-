@@ -63,7 +63,7 @@
                         "on-primary-fixed": "#221c5e",
                         "on-error-container": "#93000a",
                         "background": "#f8f8f7",
-                        "secondary": "#b90538",
+                        "secondary": "#64748b",
                         "on-tertiary-fixed": "#002113",
                         "on-error": "#ffffff",
                         "primary": "#64748b",
@@ -74,10 +74,10 @@
                         "tertiary-container": "#00885d",
                         "surface": "#f8f8f7",
                         "on-surface": "#1a1816",
-                        "inverse-primary": "#c5bef5",
+                        "inverse-primary": "#94a3b8",
                         "error-container": "#ffdad6",
                         "secondary-fixed-dim": "#ffb2b7",
-                        "primary-container": "#5a4fdb",
+                        "primary-container": "#cbd5e1",
                         "surface-container-high": "#e7e5e1",
                         "on-tertiary-fixed-variant": "#005236",
                         "error": "#ba1a1a",
@@ -95,8 +95,8 @@
                         "on-secondary-container": "#fffbff",
                         "secondary-fixed": "#ffdadb",
                         "on-secondary-fixed-variant": "#92002a",
-                        "secondary-container": "#dc2c4f",
-                        "primary-fixed-dim": "#c5bef5",
+                        "secondary-container": "#94a3b8",
+                        "primary-fixed-dim": "#94a3b8",
                         "on-primary": "#ffffff",
                         "on-tertiary-container": "#000703",
                         "inverse-on-surface": "#f2f1ef",
@@ -210,7 +210,7 @@
         .dark .hover\:bg-surface-bright:hover { background-color: #292724 !important; }
 
         /* Keep the brand-coloured surfaces readable */
-        .dark .bg-indigo-50 .text-slate-500 { color: #c5bef5 !important; }
+        .dark .bg-indigo-50 .text-slate-500 { color: #94a3b8 !important; }
 
         /* Navbar hamburger (user) menu */
         .user-menu-item {
@@ -233,20 +233,19 @@
 <header class="fixed top-0 w-full border-b z-50 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm transition-all duration-300">
 <div class="max-w-[1280px] mx-auto flex justify-between items-center h-16 px-6">
 <div class="flex items-center gap-8">
-<a href="{{ url_for('Home.home') }}" class="text-2xl font-black text-indigo-600 dark:text-indigo-400 font-lexend cursor-pointer">NicheForum</a>
+<a href="{{ url_for('Home.home') }}" class="text-2xl font-black text-slate-600 dark:text-slate-400 font-lexend cursor-pointer">NicheForum</a>
 <nav class="hidden md:flex items-center gap-6 font-lexend text-sm font-medium">
-<a class="transition-all {% if request.endpoint == 'Home.home' %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Home.home') }}">Home</a>
-<a class="transition-all {% if request.endpoint == 'Home.trending' %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Home.trending') }}">Trending</a>
-<a class="transition-all {% if request.endpoint == 'Home.communities' %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Home.communities') }}">Communities</a>
-<a class="transition-all {% if request.endpoint == 'Home.live' %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Home.live') }}">Live</a>
+<a class="transition-all {% if request.endpoint == 'Home.home' %}text-slate-600 dark:text-slate-400 border-b-2 border-slate-600{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-600{% endif %} py-5" href="{{ url_for('Home.home') }}">Home</a>
+<a class="transition-all {% if request.endpoint == 'Home.trending' %}text-slate-600 dark:text-slate-400 border-b-2 border-slate-600{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-600{% endif %} py-5" href="{{ url_for('Home.trending') }}">Trending</a>
+<a class="transition-all {% if request.endpoint == 'Home.communities' %}text-slate-600 dark:text-slate-400 border-b-2 border-slate-600{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-600{% endif %} py-5" href="{{ url_for('Home.communities') }}">Communities</a>
+<a class="transition-all {% if request.endpoint == 'Home.live' %}text-slate-600 dark:text-slate-400 border-b-2 border-slate-600{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-600{% endif %} py-5" href="{{ url_for('Home.live') }}">Live</a>
 {% if session.get('user_id') %}
-<a class="transition-all flex items-center gap-1 {% if request.endpoint in ['Chat.chat_home', 'Chat.conversation'] %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Chat.chat_home') }}">
+<a class="transition-all flex items-center gap-1 {% if request.endpoint in ['Chat.chat_home', 'Chat.conversation'] %}text-slate-600 dark:text-slate-400 border-b-2 border-slate-600{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-600{% endif %} py-5" href="{{ url_for('Chat.chat_home') }}">
     <span class="material-symbols-outlined text-base">chat</span>Chat
 </a>
 {% endif %}
 {% if session.get('user_role') == 'admin' %}
-<a class="transition-all flex items-center gap-1 {% if request.endpoint == 'Home.admin_reports' %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Home.admin_reports') }}">
-    <span class="material-symbols-outlined text-base">flag</span>Reports
+<a class="transition-all flex items-center gap-1 {% if request.endpoint == 'Home.admin_reports' %}text-slate-600 dark:text-slate-400 border-b-2 border-slate-600{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-600{% endif %} py-5" href="{{ url_for('Home.admin_reports') }}">
 </a>
 {% endif %}
 </nav>

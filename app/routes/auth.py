@@ -25,5 +25,8 @@ class AuthRoutes:
         self.bp.route("/logout")(
             self.controller.logout
         )
-        return self.bp 
+        self.bp.route("/deactivate-account", methods=["POST"])(
+            self.controller.deactivate_account
+        )
+        return self.bp
  

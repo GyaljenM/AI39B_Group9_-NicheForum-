@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Chat | NicheForum{% endblock %}
+
+{% block content %}
+<section class="max-w-[1280px] mx-auto px-6 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-[320px_1fr] xl:grid-cols-[320px_1fr_320px] gap-6 items-start">
+
+        <!-- ── Left: Chat tab / user list ─────────────────────────────── -->
+        <aside class="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden lg:sticky lg:top-24">
+            <div class="px-6 py-5 border-b border-slate-100">
+                <p class="text-sm uppercase tracking-[0.3em] text-on-surface-variant">Messages</p>
+                <h2 class="text-2xl font-semibold text-on-background mt-1 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">chat</span>Chat
+                </h2>
+                <p class="text-sm text-on-surface-variant mt-1">Talk with other members and share your thoughts.</p>
+            </div>
+            <div class="max-h-[60vh] overflow-y-auto divide-y divide-slate-100">
+                {% for c in conversations %}
+                <a href="{{ url_for('Chat.conversation', other_id=c.id) }}"
+                   class="flex items-center gap-3 px-5 py-4 hover:bg-surface-bright transition-all
+                          {% if other and other.id == c.id %}bg-primary/5 border-l-4 border-primary{% endif %}">
+                    <span class="h-11 w-11 shrink-0 rounded-full bg-primary text-white flex items-center justify-center font-semibold overflow-hidden">
+                        {% if c.profile_pic %}
+                            <img src="{{ url_for('static', filename=c.profile_pic) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
+                        {% else %}{{ c.name[0]|upper }}{% endif %}
+                    </span>
+                    <div class="min-w-0">
+                        <p class="font-semibold text-on-background truncate">{{ c.name }}</p>
+                        <p class="text-xs text-on-surface-variant">
+                            {% if c.last_at %}Tap to continue{% else %}Start a conversation{% endif %}
+                        </p>
+                    </div>
+                </a>
+                {% else %}
+                <p class="px-5 py-8 text-center text-sm text-slate-400">No other members yet.</p>
+                {% endfor %}
+            </div>
+        </aside>
+
+        <!-- ── Middle: Conversation ───────────────────────────────────── -->
+        <div class="bg-white rounded-[28px] shadow-sm border border-slate-200 flex flex-col min-h-[70vh]">
+            {% if other %}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <!-- Clicking the profile toggles the mutual-communities panel -->
+                <button type="button" onclick="toggleProfilePanel()" class="flex items-center gap-3 group text-left">
+                    <span class="h-12 w-12 rounded-full bg-primary text-white flex items-center justify-center font-semibold overflow-hidden">
+                        {% if other.profile_pic %}
+                            <img src="{{ url_for('static', filename=other.profile_pic) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
+                        {% else %}{{ other.name[0]|upper }}{% endif %}
+                    </span>
+                    <div>
+                        <p class="font-semibold text-on-background group-hover:text-primary transition-colors">{{ other.name }}</p>
+                        <p class="text-xs text-on-surface-variant">View shared communities</p>
+                    </div>
+                </button>
+                <button type="button" onclick="toggleProfilePanel()"
+                        class="xl:hidden rounded-full bg-primary/10 px-4 py-2 text-primary text-sm font-semibold">
+                    Profile
+                </button>
+            </div>
+
+            <div id="messageList" class="flex-1 overflow-y-auto px-6 py-5 space-y-3 max-h-[55vh]">
+                {% for m in messages %}
+                    {% include "_chat_message.html" %}
+                {% endfor %}
+            </div>
+
+            <div class="border-t border-slate-100 px-6 py-4">
+                <form action="{{ url_for('Chat.send_message', other_id=other.id) }}" method="POST" class="flex items-center gap-3">
+                    <input type="text" name="content" autocomplete="off" placeholder="Write a message..."
+                           class="flex-1 rounded-full bg-surface-container border-none py-3 px-5 focus:ring-2 focus:ring-primary text-body-md">
+                    <button type="submit" class="rounded-full bg-primary text-white p-3 hover:bg-primary-container transition-all">
+                        <span class="material-symbols-outlined">send</span>
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <div class="flex-1 flex flex-col items-center justify-center text-center px-8 py-16">
+                <span class="material-symbols-outlined text-6xl text-slate-300">forum</span>
+                <h3 class="mt-4 text-xl font-semibold text-on-background">Pick someone to chat with</h3>
+                <p class="mt-2 text-on-surface-variant max-w-sm">Choose a member from the list to start sharing thoughts. Click their profile to see the communities you both belong to.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ── Right: Profile panel (mutual communities + share shortcuts) ── -->
+        {% if other %}
+        <aside id="profilePanel" class="hidden xl:block space-y-6 lg:sticky lg:top-24">
+            <div class="bg-white rounded-[28px] p-6 shadow-sm border border-slate-200">
+                <div class="flex items-center gap-4 mb-4">
+                    <span class="h-14 w-14 rounded-full bg-primary text-white flex items-center justify-center text-2xl font-semibold overflow-hidden">
+                        {% if other.profile_pic %}
+                            <img src="{{ url_for('static', filename=other.profile_pic) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
+                        {% else %}{{ other.name[0]|upper }}{% endif %}
+                    </span>
+                    <div>
+                        <p class="text-sm text-on-surface-variant uppercase tracking-[0.24em]">Profile</p>
+                        <p class="text-lg font-semibold text-on-background">{{ other.name }}</p>
+                    </div>
+                </div>
+                {% if other.bio %}<p class="text-sm text-on-surface-variant">{{ other.bio }}</p>{% endif %}
+
+                <p class="mt-5 text-sm uppercase tracking-[0.24em] text-primary/90 font-semibold">Communities you both joined</p>
+                <div class="mt-3 space-y-2">
+                    {% for c in mutual_communities %}
+                    <a href="{{ url_for('Home.community_detail', community_id=c.id) }}"
+                       class="block rounded-2xl border border-slate-200 px-4 py-3 hover:bg-surface-bright transition-all">
+                        <p class="font-semibold text-on-background">c/{{ c.name }}</p>
+                        {% if c.description %}<p class="text-xs text-on-surface-variant line-clamp-1">{{ c.description }}</p>{% endif %}
+                    </a>
+                    {% else %}
+                    <p class="text-sm text-slate-400">You two don't share any communities yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Share shortcuts: Live match + Create thread -->
+            <div class="bg-white rounded-[28px] p-6 shadow-sm border border-slate-200">
+                <p class="text-sm uppercase tracking-[0.3em] text-on-surface-variant">Share into chat</p>
+                <h3 class="text-lg font-semibold text-on-background mt-1">Quick shortcuts</h3>
+
+                <div class="mt-4 grid grid-cols-2 gap-3">
+                    <button type="button" onclick="openShare('live')"
+                            class="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 px-3 py-4 hover:border-primary/40 hover:bg-surface-bright transition-all">
+                        <span class="material-symbols-outlined text-2xl text-red-500">live_tv</span>
+                        <span class="text-sm font-semibold">Live match</span>
+                    </button>
+                    <button type="button" onclick="openShare('thread')"
+                            class="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 px-3 py-4 hover:border-primary/40 hover:bg-surface-bright transition-all">
+                        <span class="material-symbols-outlined text-2xl text-primary">edit_square</span>
+                        <span class="text-sm font-semibold">Create thread</span>
+                    </button>
+                </div>
+
+                <!-- Community picker (revealed when a shortcut is pressed) -->
+                <form id="shareForm" action="{{ url_for('Chat.share_card', other_id=other.id) }}" method="POST" class="hidden mt-4 space-y-3">
+                    <input type="hidden" name="share_type" id="shareType" value="">
+                    <p id="sharePrompt" class="text-sm text-on-surface-variant">Select one of your communities to share.</p>
+                    {% if my_communities %}
+                    <select name="community_id" required
+                            class="w-full rounded-2xl border border-slate-200 px-4 py-2 focus:ring-2 focus:ring-primary text-sm">
+                        {% for c in my_communities %}
+                        <option value="{{ c.id }}">c/{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" onclick="closeShare()" class="px-4 py-2 rounded-full border border-slate-200 text-on-surface-variant text-sm font-semibold hover:bg-slate-50">Cancel</button>
+                        <button type="submit" class="px-4 py-2 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-container">Share</button>
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-slate-400">Join a community first to share threads or live matches.</p>
+                    {% endif %}
+                </form>
+            </div>
+        </aside>
+        {% endif %}
+    </div>
+</section>
+
+{% if other %}
+<script>
+    // ── Toggle the profile / mutual-communities panel ────────────────────
+    function toggleProfilePanel() {
+        const panel = document.getElementById('profilePanel');
+        if (!panel) return;
+        panel.classList.toggle('hidden');
+    }
+
+    // ── Share shortcut: reveal picker and set the share type ─────────────
+    function openShare(type) {
+        const form = document.getElementById('shareForm');
+        document.getElementById('shareType').value = type;
+        document.getElementById('sharePrompt').textContent =
+            type === 'live'
+                ? 'Share a live match from one of your communities:'
+                : 'Share a create-thread link from one of your communities:';
+        form.classList.remove('hidden');
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    function closeShare() {
+        document.getElementById('shareForm').classList.add('hidden');
+    }
+
+    // ── Auto-refresh (polling) ───────────────────────────────────────────
+    const POLL_URL = "{{ url_for('Chat.poll_messages', other_id=other.id) }}";
+    const list = document.getElementById('messageList');
+
+    function escapeHtml(s) {
+        const d = document.createElement('div');
+        d.textContent = s == null ? '' : s;
+        return d.innerHTML;
+    }
+
+    function renderMessage(m) {
+        const side = m.mine ? 'items-end' : 'items-start';
+        const bubble = m.mine
+            ? 'bg-primary text-white rounded-br-md'
+            : 'bg-surface-container text-on-background rounded-bl-md';
+        let body;
+        if (m.share_type) {
+            body =
+                '<a href="' + escapeHtml(m.share_url) + '" class="flex items-center gap-2 underline decoration-white/50">' +
+                '<span class="material-symbols-outlined text-base">' +
+                (m.share_type === 'live' ? 'live_tv' : 'edit_square') + '</span>' +
+                escapeHtml(m.share_label) + '</a>';
+        } else {
+            body = escapeHtml(m.content);
+        }
+        return (
+            '<div class="flex flex-col ' + side + '">' +
+              '<div class="max-w-[75%] px-4 py-2 rounded-2xl ' + bubble + ' text-sm break-words">' + body + '</div>' +
+              '<span class="mt-1 text-[11px] text-slate-400">' + escapeHtml(m.created_at) + '</span>' +
+            '</div>'
+        );
+    }
+
+    let lastCount = list ? list.querySelectorAll('[data-msg]').length : 0;
+    async function poll() {
+        try {
+            const res = await fetch(POLL_URL, { headers: { 'X-Requested-With': 'fetch' } });
+            if (!res.ok) return;
+            const data = await res.json();
+            const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
+            list.innerHTML = data.messages.map(m =>
+                '<div data-msg>' + renderMessage(m) + '</div>'
+            ).join('');
+            if (data.messages.length !== lastCount || atBottom) {
+                list.scrollTop = list.scrollHeight;
+            }
+            lastCount = data.messages.length;
+        } catch (e) { /* ignore transient network errors */ }
+    }
+
+    if (list) {
+        list.scrollTop = list.scrollHeight;
+        poll();
+        setInterval(poll, 4000);
+    }
+</script>
+{% endif %}
+{% endblock %}

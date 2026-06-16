@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Search{% endblock %}
+
+{% block content %}
+{% set people_count = people|length %}
+{% set comm_count = communities|length %}
+{% set post_count = posts|length %}
+<div class="max-w-[1280px] mx-auto px-6 mt-8">
+    <div class="mb-6">
+        <h1 class="font-display-lg text-headline-md mb-2">Search</h1>
+        {% if query %}
+        <p class="text-on-surface-variant text-body-lg">
+            Results for <span class="font-semibold text-on-background">"{{ query }}"</span>
+        </p>
+        {% else %}
+        <p class="text-on-surface-variant text-body-lg">Find people to follow, communities to join, and posts to read.</p>
+        {% endif %}
+    </div>
+
+    <!-- Search bar -->
+    <form action="{{ url_for('Home.search_communities') }}" method="GET" class="mb-8">
+        <div class="relative max-w-xl">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+            <input type="text" name="q" value="{{ query }}" autofocus
+                placeholder="Search people, communities, posts..."
+                class="w-full pl-12 pr-28 py-3 bg-white border border-slate-200 rounded-full text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+            <button type="submit"
+                class="absolute right-2 top-1/2 -translate-y-1/2 px-5 py-2 bg-primary text-white rounded-full font-label-bold text-xs shadow-md hover:bg-primary-container transition-all">Search</button>
+        </div>
+    </form>
+
+    {% if query %}
+    <!-- Tabs -->
+    <div class="flex items-center gap-2 border-b border-slate-200 mb-6">
+        <button data-search-tab="people" class="search-tab px-4 py-3 text-sm font-semibold border-b-2 border-primary text-primary">
+            People <span class="ml-1 text-xs text-slate-400">{{ people_count }}</span>
+        </button>
+        <button data-search-tab="communities" class="search-tab px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-primary">
+            Communities <span class="ml-1 text-xs text-slate-400">{{ comm_count }}</span>
+        </button>
+        <button data-search-tab="posts" class="search-tab px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-primary">
+            Posts <span class="ml-1 text-xs text-slate-400">{{ post_count }}</span>
+        </button>
+    </div>
+
+    <!-- ── People ─────────────────────────────────────────────────────── -->
+    <div data-search-pane="people">
+        {% if people %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for person in people %}
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-4">
+                <a href="{{ url_for('User.profile', user_id=person.id) }}"
+                   class="h-14 w-14 shrink-0 rounded-full bg-primary text-white flex items-center justify-center text-xl font-semibold overflow-hidden">
+                    {% if person.profile_pic %}
+                        <img src="{{ url_for('static', filename=person.profile_pic) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
+                    {% else %}{{ person.name[0]|upper }}{% endif %}
+                </a>
+                <div class="min-w-0 flex-1">
+                    <a href="{{ url_for('User.profile', user_id=person.id) }}" class="font-semibold text-on-background hover:text-primary transition-colors truncate block">{{ person.name }}</a>
+                    <p class="text-xs text-on-surface-variant">@{{ person.name.lower().replace(' ', '_') }} &middot; {{ person.follower_count }} follower{{ '' if person.follower_count == 1 else 's' }}</p>
+                    {% if person.bio %}<p class="text-xs text-on-surface-variant line-clamp-1 mt-0.5">{{ person.bio }}</p>{% endif %}
+                </div>
+                {% if current_user_id %}
+                    {% if person.id in followed_ids %}
+                    <form action="{{ url_for('User.unfollow', user_id=person.id) }}" method="POST">
+                        <button type="submit" class="px-4 py-2 rounded-full border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-all">Following</button>
+                    </form>
+                    {% else %}
+                    <form action="{{ url_for('User.follow', user_id=person.id) }}" method="POST">
+                        <button type="submit" class="px-4 py-2 rounded-full bg-primary text-white text-xs font-semibold hover:bg-primary-container transition-all">Follow</button>
+                    </form>
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-slate-400">
+            <span class="material-symbols-outlined text-4xl">person_off</span>
+            <p class="mt-2 text-slate-500">No people match "<span class="font-semibold">{{ query }}</span>".</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ── Communities ────────────────────────────────────────────────── -->
+    <div data-search-pane="communities" class="hidden">
+        {% if communities %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for community in communities %}
+            <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-slate-100 flex flex-col group">
+                <div class="h-32 bg-slate-100 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-primary/10 group-hover:bg-primary/20 transition-colors"></div>
+                    <div class="absolute -bottom-6 left-6">
+                        <div class="w-12 h-12 rounded-xl bg-white p-1 shadow-lg">
+                            <div class="w-full h-full bg-primary rounded-lg flex items-center justify-center text-white">
+                                <span class="material-symbols-outlined">groups</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 pt-8 flex-1">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-headline-sm"><a href="{{ url_for('Home.community_detail', community_id=community.id) }}" class="hover:text-primary transition-colors">{{ community.name }}</a></h3>
+                        {% if community.id in user_communities %}
+                        <span class="material-symbols-outlined text-green-500 text-sm" title="Member">check_circle</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-on-surface-variant text-sm line-clamp-2 mb-6">{{ community.description or 'Official community for ' ~ community.name ~ ' enthusiasts.' }}</p>
+                    <div class="flex items-center justify-between mt-auto">
+                        <span class="text-xs font-semibold text-slate-500">{{ community.member_count }} member{{ '' if community.member_count == 1 else 's' }}</span>
+                        <div class="flex gap-2">
+                            <a href="{{ url_for('Home.community_detail', community_id=community.id) }}" class="px-4 py-2 bg-slate-50 text-slate-600 rounded-lg font-label-bold text-xs hover:bg-slate-100 transition-all">View</a>
+                            {% if current_user_id and community.id not in user_communities %}
+                            <form action="{{ url_for('Home.join_community', community_id=community.id) }}" method="POST">
+                                <button type="submit" class="px-4 py-2 bg-primary/10 text-primary rounded-lg font-label-bold text-xs hover:bg-primary hover:text-white transition-all">Join</button>
+                            </form>
+                            {% elif community.id in user_communities %}
+                            <span class="px-4 py-2 bg-green-50 text-green-600 rounded-lg font-label-bold text-xs">Joined</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-slate-400">
+            <span class="material-symbols-outlined text-4xl">search_off</span>
+            <p class="mt-2 text-slate-500">No communities match "<span class="font-semibold">{{ query }}</span>".</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ── Posts ──────────────────────────────────────────────────────── -->
+    <div data-search-pane="posts" class="hidden">
+        {% if posts %}
+        <div class="space-y-3 max-w-3xl">
+            {% for post in posts %}
+            <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}"
+               class="block bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-all">
+                <div class="flex items-center gap-2 text-xs text-on-surface-variant mb-1">
+                    <span class="font-semibold text-primary">c/{{ post.community_name }}</span>
+                    <span>&middot;</span>
+                    <span>{{ post.user_name }}</span>
+                </div>
+                <h3 class="font-semibold text-on-background">{{ post.title }}</h3>
+                <p class="text-sm text-on-surface-variant line-clamp-2 mt-1">{{ post.content }}</p>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-slate-400">
+            <span class="material-symbols-outlined text-4xl">article</span>
+            <p class="mt-2 text-slate-500">No posts match "<span class="font-semibold">{{ query }}</span>".</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Simple client-side tab switcher for the search result sections.
+    document.querySelectorAll('[data-search-tab]').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            var target = tab.getAttribute('data-search-tab');
+            document.querySelectorAll('[data-search-tab]').forEach(function (t) {
+                var active = t === tab;
+                t.classList.toggle('border-primary', active);
+                t.classList.toggle('text-primary', active);
+                t.classList.toggle('border-transparent', !active);
+                t.classList.toggle('text-slate-500', !active);
+            });
+            document.querySelectorAll('[data-search-pane]').forEach(function (pane) {
+                pane.classList.toggle('hidden', pane.getAttribute('data-search-pane') !== target);
+            });
+        });
+    });
+</script>
+{% endblock %}

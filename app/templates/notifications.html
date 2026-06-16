@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="w-full max-w-4xl mx-auto mt-20 px-4 py-8">
+    <h1 class="text-3xl font-bold font-lexend mb-6 text-on-surface">Notifications</h1>
+    
+    {% if notifications %}
+        <div class="space-y-3">
+            {% for notification in notifications %}
+                <div class="bg-surface-container border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:bg-surface-container-high transition-colors duration-200">
+                    <div class="flex items-start gap-4">
+                        <!-- Actor Avatar -->
+                        {% if notification.actor_pic %}
+                            <img src="{{ url_for('static', filename=notification.actor_pic) }}" 
+                                 alt="{{ notification.actor_name }}" 
+                                 class="w-12 h-12 rounded-full flex-shrink-0 object-cover">
+                        {% elif notification.actor_name %}
+                            <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 font-semibold">
+                                {{ notification.actor_name[0]|upper }}
+                            </div>
+                        {% else %}
+                            <div class="w-12 h-12 rounded-full bg-slate-300 dark:bg-slate-600 flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-slate-500 dark:text-slate-400">info</span>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Notification Content -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-2 mb-1">
+                                <div class="flex items-center gap-2 flex-1">
+                                    <!-- Notification Type Icon -->
+                                    {% if notification.type == 'follow' %}
+                                        <span class="material-symbols-outlined text-indigo-600 dark:text-indigo-400 text-xl">person_add</span>
+                                    {% elif notification.type == 'message' %}
+                                        <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-xl">mail</span>
+                                    {% elif notification.type == 'community_post' %}
+                                        <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-xl">article</span>
+                                    {% elif notification.type == 'comment' %}
+                                        <span class="material-symbols-outlined text-orange-600 dark:text-orange-400 text-xl">chat_bubble</span>
+                                    {% else %}
+                                        <span class="material-symbols-outlined text-slate-500 dark:text-slate-400 text-xl">notifications</span>
+                                    {% endif %}
+                                    
+                                    <p class="text-on-surface font-medium truncate">
+                                        {% if notification.actor_name %}
+                                            <a href="{{ url_for('User.profile', user_id=notification.actor_id) }}" 
+                                               class="text-indigo-600 dark:text-indigo-400 hover:underline">
+                                                {{ notification.actor_name }}
+                                            </a>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                
+                                <!-- Read Status -->
+                                {% if not notification.is_read %}
+                                    <span class="inline-block w-2.5 h-2.5 bg-secondary rounded-full flex-shrink-0"></span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Message -->
+                            {% if notification.url %}
+                                <a href="{{ notification.url }}" class="text-slate-600 dark:text-slate-300 hover:text-on-surface dark:hover:text-on-surface block">
+                                    <p class="text-sm">{{ notification.message }}</p>
+                                </a>
+                            {% else %}
+                                <p class="text-sm text-slate-600 dark:text-slate-300">{{ notification.message }}</p>
+                            {% endif %}
+                            
+                            <!-- Timestamp -->
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                {{ notification.created_at.strftime('%b %d, %Y at %I:%M %p') if notification.created_at else 'Recently' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-surface-container border border-slate-200 dark:border-slate-700 rounded-lg p-12 text-center">
+            <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 block mb-4">notifications_none</span>
+            <h2 class="text-xl font-semibold text-slate-500 dark:text-slate-400 mb-2">No notifications yet</h2>
+            <p class="text-slate-500 dark:text-slate-400">
+                When people follow you, send you messages, or post in communities you've joined, you'll see them here.
+            </p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    // Optional: Add smooth scroll behavior when clicking notifications
+    document.querySelectorAll('a[href^="{{ url_for("User.profile", user_id=0) }}"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Allow normal navigation for user profiles
+        });
+    });
+</script>
+
+{% endblock %}

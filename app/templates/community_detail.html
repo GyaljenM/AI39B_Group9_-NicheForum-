@@ -6,7 +6,7 @@
 
 {% block content %}
 <div class="max-w-[1280px] mx-auto px-6 mt-8">
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 mb-8">
+    <div class="bg-slate-50 rounded-2xl shadow-sm border border-slate-100 p-8 mb-8">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
                 <h1 class="font-display-lg text-headline-md mb-2">{{ community.name }}</h1>
@@ -40,7 +40,7 @@
         <!-- Post Creation & Feed -->
         <div class="col-span-12 lg:col-span-8">
             {% if is_member %}
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
+            <div class="bg-slate-50 rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
                 <h2 class="font-headline-sm mb-4">Create a Post</h2>
                 {{ composer(url_for('Home.create_post', community_id=community.id), 'post_type', submit_label='Post to ' ~ community.name) }}
             </div>
@@ -62,7 +62,7 @@
             <div class="space-y-6">
                 {% if posts %}
                     {% for post in posts %}
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-all relative">
+                    <div class="bg-slate-50 rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-all relative">
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold">

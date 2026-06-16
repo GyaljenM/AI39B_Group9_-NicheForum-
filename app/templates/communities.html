@@ -10,11 +10,11 @@
             <p class="text-on-surface-variant text-body-lg">Find your tribe among thousands of sports hubs.</p>
         </div>
         <div class="flex gap-4">
-            <div class="relative">
+            <form action="{{ url_for('Home.search_communities') }}" method="GET" class="relative">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
-                <input type="text" placeholder="Filter by name..." class="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
-            </div>
-            <button class="px-6 py-2 bg-primary text-white rounded-xl font-label-bold text-sm shadow-md hover:bg-primary-container transition-all">Create New</button>
+                <input type="text" name="q" placeholder="Search communities..." class="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                <button type="submit" class="ml-2 px-6 py-2 bg-primary text-white rounded-xl font-label-bold text-sm shadow-md hover:bg-primary-container transition-all align-middle">Search</button>
+            </form>
         </div>
     </div>
 

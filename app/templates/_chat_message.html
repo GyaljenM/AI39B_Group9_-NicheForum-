@@ -1,0 +1,14 @@
+<div data-msg>
+    <div class="flex flex-col {% if m.sender_id == session.get('user_id') %}items-end{% else %}items-start{% endif %}">
+        <div class="max-w-[75%] px-4 py-2 rounded-2xl text-sm break-words
+            {% if m.sender_id == session.get('user_id') %}bg-primary text-white rounded-br-md{% else %}bg-surface-container text-on-background rounded-bl-md{% endif %}">
+            {% if m.share_type %}
+            <a href="{{ m.share_url }}" class="flex items-center gap-2 underline decoration-white/50">
+                <span class="material-symbols-outlined text-base">{% if m.share_type == 'live' %}live_tv{% else %}edit_square{% endif %}</span>
+                {{ m.share_label }}
+            </a>
+            {% else %}{{ m.content }}{% endif %}
+        </div>
+        <span class="mt-1 text-[11px] text-slate-400">{{ m.created_at.strftime('%H:%M') if m.created_at else '' }}</span>
+    </div>
+</div>

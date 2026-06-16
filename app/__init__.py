@@ -1,8 +1,12 @@
-from flask import Flask, flash, redirect, request, url_for
+from flask import Flask, flash, redirect, request, url_for, session
 from app.routes.auth import AuthRoutes
 from app.routes.HomeRoutes import HomeRoutes
 from app.routes.ThreadRoutes import ThreadRoutes
+from app.routes.ChatRoutes import ChatRoutes
+from app.routes.UserRoutes import UserRoutes
+from app.routes.NotificationRoutes import NotificationRoutes
 from .models.database import Database
+from app.notifications import unread_count
 import os
 from app.utils.word_censor import WordCensor
 
@@ -76,6 +80,34 @@ def create_app():
     # Register Thread Routes
     thread_routes = ThreadRoutes()
     app.register_blueprint(thread_routes.register())
+
+    # Register Chat Routes
+    chat_routes = ChatRoutes()
+    app.register_blueprint(chat_routes.register())
+
+    # Register User profile / follow Routes
+    user_routes = UserRoutes()
+    app.register_blueprint(user_routes.register())
+
+    # Register Notification Routes
+    notification_routes = NotificationRoutes()
+    app.register_blueprint(notification_routes.register())
+
+    # Make the unread-notification count available to every template so the
+    # bell badge in base.html renders correctly on first paint (the JS poller
+    # then keeps it live). Best-effort: a DB hiccup must not break rendering.
+    @app.context_processor
+    def inject_notification_count():
+        user_id = session.get("user_id")
+        if not user_id:
+            return {"notif_unread_count": 0}
+        try:
+            db = Database()
+            count = unread_count(db, user_id)
+            db.close()
+        except Exception:
+            count = 0
+        return {"notif_unread_count": count}
 
     @app.errorhandler(404)
     def page_not_found(e):

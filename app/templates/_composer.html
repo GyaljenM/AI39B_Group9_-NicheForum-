@@ -22,7 +22,7 @@
 
     <!-- Shared title -->
     <input type="text" name="title" placeholder="{{ title_placeholder }}" required
-           class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+           class="w-full px-4 py-2 rounded-xl bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
 
     {% if categories %}
     <!-- Shared category selector (lives outside the panels so it always submits) -->
@@ -34,7 +34,7 @@
     <!-- TEXT panel -->
     <div data-panel="text" class="space-y-3">
         <textarea name="content" rows="4" placeholder="What's on your mind?" required
-                  class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
+                  class="w-full px-4 py-2 rounded-xl bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
         <label data-dropzone class="flex flex-col items-center justify-center gap-1 w-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-center cursor-pointer hover:border-primary transition-all">
             <span class="material-symbols-outlined text-2xl text-slate-400">cloud_upload</span>
             <span class="text-sm text-slate-500">Attach images or videos (optional)</span>
@@ -45,7 +45,7 @@
 
     <!-- IMAGES & VIDEOS panel -->
     <div data-panel="media" class="space-y-3 hidden">
-        <label data-dropzone class="flex flex-col items-center justify-center gap-1 w-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center cursor-pointer hover:border-primary transition-all">
+        <label data-dropzone class="flex flex-col items-center justify-center gap-1 w-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-100 px-4 py-8 text-center cursor-pointer hover:border-primary transition-all">
             <span class="material-symbols-outlined text-3xl text-slate-400">cloud_upload</span>
             <span class="text-sm text-slate-500">Drag &amp; drop images/videos here, or click to upload</span>
             <span class="text-xs text-slate-400">Images: png, jpg, gif, webp &middot; Videos: mp4, webm, mov, ogg</span>
@@ -53,13 +53,13 @@
             <input type="file" name="media" multiple accept="image/*,video/*" class="hidden">
         </label>
         <textarea name="content" rows="2" placeholder="Add a caption (optional)"
-                  class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
+                  class="w-full px-4 py-2 rounded-xl bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
     </div>
 
     <!-- POLL panel -->
     <div data-panel="poll" class="space-y-3 hidden">
         <textarea name="content" rows="2" placeholder="Add context for your poll (optional)"
-                  class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
+                  class="w-full px-4 py-2 rounded-xl bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
         <div data-poll-options class="space-y-2">
             <input type="text" name="poll_options" placeholder="Option 1" required
                    class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-primary">

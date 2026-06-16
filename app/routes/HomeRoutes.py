@@ -1,6 +1,9 @@
-from flask import Blueprint, render_template, session, request, redirect, url_for, flash
+from flask import Blueprint, render_template, session, request, redirect, url_for, flash, jsonify, current_app
 from app.models.database import Database
 from app.auth import login_required, admin_required
+from app.follows import following_ids, get_followers, get_following
+from app.notifications import notify_community_members
+from app.services.worldcup import get_match_manager
 import os
 import uuid
 from werkzeug.utils import secure_filename
@@ -211,8 +214,10 @@ class HomeRoutes:
     def register(self):
         self.bp.route("/", methods=["GET"])(self.home)
         self.bp.route("/communities", methods=["GET"])(self.communities)
+        self.bp.route("/search", methods=["GET"])(self.search_communities)
         self.bp.route("/trending", methods=["GET"])(self.trending)
         self.bp.route("/live", methods=["GET"])(self.live)
+        self.bp.route("/api/live", methods=["GET"])(self.api_live)
         self.bp.route("/profile", methods=["GET"])(self.profile)
         self.bp.route("/profile/update", methods=["POST"])(self.update_profile)
         self.bp.route("/community/<int:community_id>", methods=["GET"])(self.community_detail)
@@ -271,6 +276,86 @@ class HomeRoutes:
         db.close()
         user_name = session.get("user_name") if user_id else None
         return render_template("communities.html", communities=communities, user_communities=user_communities, user_name=user_name)
+
+    def search_communities(self):
+        """Instagram-style universal search: people, communities, and posts.
+
+        Defaults to the People tab so users can find others to follow. The
+        endpoint keeps its historical name (Home.search_communities) so existing
+        url_for references stay valid.
+        """
+        query = (request.args.get("q") or "").strip()
+        user_id = session.get("user_id")
+        people = []
+        communities = []
+        posts = []
+        user_communities = []
+        followed_ids = set()
+
+        db = Database()
+        if query:
+            like = f"%{query}%"
+
+            # ── People (search by display name) ──────────────────────────
+            people = db.fetch_all(
+                """
+                SELECT u.id, u.name, u.bio, u.profile_pic,
+                       (SELECT COUNT(*) FROM user_follows f WHERE f.followee_id = u.id) AS follower_count
+                FROM users u
+                WHERE u.name LIKE %s AND (%s IS NULL OR u.id != %s)
+                ORDER BY follower_count DESC, u.name ASC
+                LIMIT 30
+                """,
+                (like, user_id, user_id),
+            )
+
+            # ── Communities (name or description) ────────────────────────
+            communities = db.fetch_all(
+                """
+                SELECT c.*,
+                       (SELECT COUNT(*) FROM community_members m WHERE m.community_id = c.id) AS member_count
+                FROM communities c
+                WHERE c.name LIKE %s OR c.description LIKE %s
+                ORDER BY member_count DESC, c.name ASC
+                """,
+                (like, like),
+            )
+
+            # ── Posts (title or body) ────────────────────────────────────
+            posts = db.fetch_all(
+                """
+                SELECT p.id, p.title, p.content, p.created_at, p.community_id,
+                       u.name AS user_name, c.name AS community_name
+                FROM posts p
+                JOIN users u ON p.user_id = u.id
+                JOIN communities c ON p.community_id = c.id
+                WHERE p.title LIKE %s OR p.content LIKE %s
+                ORDER BY p.created_at DESC
+                LIMIT 30
+                """,
+                (like, like),
+            )
+
+            if user_id:
+                memberships = db.fetch_all(
+                    "SELECT community_id FROM community_members WHERE user_id = %s", (user_id,)
+                )
+                user_communities = [m["community_id"] for m in memberships]
+                followed_ids = following_ids(db, user_id)
+        db.close()
+
+        user_name = session.get("user_name") if user_id else None
+        return render_template(
+            "search_results.html",
+            query=query,
+            people=people,
+            communities=communities,
+            posts=posts,
+            user_communities=user_communities,
+            followed_ids=followed_ids,
+            current_user_id=user_id,
+            user_name=user_name,
+        )
 
     def community_detail(self, community_id):
         db = Database()
@@ -419,6 +504,24 @@ class HomeRoutes:
                 (post_id, option_text, position),
             )
 
+        # Create notifications for all community members about this new post
+        try:
+            community = db.fetch_one(
+                "SELECT id, name FROM communities WHERE id = %s",
+                (community_id,),
+            )
+            if community:
+                notify_community_members(
+                    db,
+                    community_id,
+                    "community_post",
+                    f"New post in c/{community['name']}: {title}",
+                    url=url_for("Home.community_detail", community_id=community_id),
+                    actor_id=user_id
+                )
+        except Exception as e:
+            print(f"Error creating community post notification: {e}")
+
         db.close()
         flash("Post created successfully!", "success")
         return redirect(url_for("Home.community_detail", community_id=community_id))
@@ -481,6 +584,17 @@ class HomeRoutes:
         user_name = session.get("user_name") if session.get("user_id") else None
         return render_template("live.html", user_name=user_name)
 
+    def api_live(self):
+        """JSON feed of live World Cup 2026 goal counts (polled by the home page).
+
+        Backed by a process-wide MatchDataManager that caches upstream results
+        for 30 seconds, so frequent client polling does not exhaust the API
+        rate limit. Always returns 200 with a JSON body; upstream problems are
+        reported via the ``source``/``message`` fields rather than an error code.
+        """
+        manager = get_match_manager(api_key=current_app.config.get("API_FOOTBALL_KEY"))
+        return jsonify(manager.get_live_matches())
+
     @login_required
     def profile(self):
         user_id = session.get("user_id")
@@ -488,15 +602,27 @@ class HomeRoutes:
         user = db.fetch_one("SELECT * FROM users WHERE id = %s", (user_id,))
         # Fetch user's posts
         posts = db.fetch_all("""
-            SELECT p.*, u.name as user_name, c.name as community_name 
-            FROM posts p 
-            JOIN users u ON p.user_id = u.id 
-            JOIN communities c ON p.community_id = c.id 
+            SELECT p.*, u.name as user_name, c.name as community_name
+            FROM posts p
+            JOIN users u ON p.user_id = u.id
+            JOIN communities c ON p.community_id = c.id
             WHERE p.user_id = %s
             ORDER BY p.created_at DESC
         """, (user_id,))
+        # Follow graph: people who follow me, and people I follow.
+        followers = get_followers(db, user_id)
+        following = get_following(db, user_id)
         db.close()
-        return render_template("activity_feed.html", user=user, posts=posts, user_name=session.get("user_name"))
+        return render_template(
+            "activity_feed.html",
+            user=user,
+            posts=posts,
+            followers=followers,
+            following=following,
+            follower_count=len(followers),
+            following_count=len(following),
+            user_name=session.get("user_name"),
+        )
 
     @login_required
     def update_profile(self):

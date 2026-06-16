@@ -116,6 +116,7 @@ class Database:
                 is_verified TINYINT DEFAULT 0,
                 verification_token VARCHAR(255),
                 token_expires_at DATETIME,
+                is_active TINYINT NOT NULL DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -420,6 +421,62 @@ class Database:
             )
         """)
 
+        # ── Follows (Instagram-style: follower_id follows followee_id) ─────
+        # One row per directed follow. Two users are "mutual followers" when
+        # both directions exist; chat is gated on that (see ChatRoutes).
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS user_follows (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                follower_id INT NOT NULL,
+                followee_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_follow (follower_id, followee_id),
+                FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (followee_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        # ── Direct messages (1-to-1 chat between two users) ────────────────
+        # Each row is one message from sender_id to receiver_id. Optional
+        # share_* columns let a message carry a "shared card" (a link to a
+        # community, a thread to create, or a live match) instead of / on top
+        # of plain text.
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS direct_messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                sender_id INT NOT NULL,
+                receiver_id INT NOT NULL,
+                content TEXT,
+                share_type VARCHAR(20),
+                share_label VARCHAR(255),
+                share_url VARCHAR(500),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        # ── Notifications (in-app alerts) ──────────────────────────────────
+        # One row per alert delivered to a single recipient (user_id). actor_id
+        # is whoever triggered it (nullable for system messages). `type` groups
+        # the alert ('follow', 'message', 'community_post', 'comment') so the UI
+        # can pick an icon; `url` is where clicking the alert takes the user.
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                actor_id INT,
+                type VARCHAR(30) NOT NULL,
+                message VARCHAR(500) NOT NULL,
+                url VARCHAR(500),
+                is_read TINYINT NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_user_unread (user_id, is_read),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
         column_names = []
         try:
             columns = db.fetch_all("DESCRIBE threads")
@@ -464,6 +521,9 @@ class Database:
             if 'profile_pic' not in user_column_names:
                 print("Adding missing profile_pic column to users table...")
                 db.execute("ALTER TABLE users ADD COLUMN profile_pic VARCHAR(255) AFTER bio")
+            if 'is_active' not in user_column_names:
+                print("Adding missing is_active column to users table...")
+                db.execute("ALTER TABLE users ADD COLUMN is_active TINYINT NOT NULL DEFAULT 1")
         except Exception as e:
             print(f"Error updating users table structure: {e}")
 

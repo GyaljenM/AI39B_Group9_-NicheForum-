@@ -2,6 +2,18 @@
 <html class="light" lang="en">
 <head>
     <meta charset="utf-8">
+    <!-- Apply the saved theme before paint so dark mode is consistent on EVERY page (no flash). -->
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem('nicheForumTheme');
+                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var dark = saved ? saved === 'dark' : prefersDark;
+                document.documentElement.classList.toggle('dark', dark);
+                document.documentElement.classList.toggle('light', !dark);
+            } catch (e) {}
+        })();
+    </script>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>{% block title %}NicheForum{% endblock %} | Communities Hub</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -152,6 +164,67 @@
             font-family: "Lexend", ui-sans-serif, system-ui, sans-serif;
             font-optical-sizing: auto;
         }
+
+        /* ─────────────────────────────────────────────────────────────
+           Site-wide dark mode. Applies on EVERY page (not just profile)
+           and removes stray white areas by recolouring the shared
+           surfaces, borders and text utilities used across templates.
+           ───────────────────────────────────────────────────────────── */
+        .dark body.bg-surface-bright { background-color: #0f0e0c !important; color: #e6e4e1; }
+
+        /* Shared surface/background utilities → dark panels */
+        .dark .bg-white,
+        .dark .bg-surface-bright,
+        .dark .bg-surface,
+        .dark .bg-surface-container-lowest,
+        .dark .bg-surface-container-low { background-color: #1a1816 !important; }
+
+        .dark .bg-surface-container,
+        .dark .bg-surface-container-high,
+        .dark .bg-surface-container-highest { background-color: #292724 !important; }
+
+        .dark .bg-slate-50,
+        .dark .bg-slate-100 { background-color: #221f1c !important; }
+        .dark .bg-indigo-50 { background-color: #221c5e !important; }
+
+        /* Borders */
+        .dark .border-slate-100,
+        .dark .border-slate-200,
+        .dark .border-slate-300 { border-color: #292724 !important; }
+
+        /* Text utilities */
+        .dark .text-on-surface,
+        .dark .text-on-background { color: #e6e4e1 !important; }
+        .dark .text-on-surface-variant,
+        .dark .text-slate-500,
+        .dark .text-slate-600,
+        .dark .text-slate-700 { color: #a7a39d !important; }
+
+        /* Top nav + footer */
+        .dark header.fixed { background-color: #1a1816 !important; border-color: #292724 !important; }
+        .dark header.fixed .bg-white\/95 { background-color: rgba(26,24,22,0.95) !important; }
+        .dark footer { color: #79756f; }
+
+        /* Hover affordances that were tuned for light backgrounds */
+        .dark .hover\:bg-slate-50:hover,
+        .dark .hover\:bg-surface-bright:hover { background-color: #292724 !important; }
+
+        /* Keep the brand-coloured surfaces readable */
+        .dark .bg-indigo-50 .text-slate-500 { color: #c5bef5 !important; }
+
+        /* Navbar hamburger (user) menu */
+        .user-menu-item {
+            display: flex; align-items: center; gap: 12px; width: 100%;
+            padding: 10px 16px; font-size: 14px; font-weight: 500;
+            color: #423f3a; background: none; border: none; cursor: pointer;
+            text-decoration: none; transition: background .15s;
+        }
+        .user-menu-item:hover { background: #f2f1ef; }
+        .user-menu-item .material-symbols-outlined { font-size: 20px; }
+        .user-menu-item.danger { color: #ba1a1a; }
+        .dark .user-menu-item { color: #e6e4e1; }
+        .dark .user-menu-item:hover { background: #292724; }
+        .dark .user-menu-item.danger { color: #ff5449; }
     </style>
     {% block styles %}{% endblock %}
 </head>
@@ -166,6 +239,11 @@
 <a class="transition-all {% if request.endpoint == 'Home.trending' %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Home.trending') }}">Trending</a>
 <a class="transition-all {% if request.endpoint == 'Home.communities' %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Home.communities') }}">Communities</a>
 <a class="transition-all {% if request.endpoint == 'Home.live' %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Home.live') }}">Live</a>
+{% if session.get('user_id') %}
+<a class="transition-all flex items-center gap-1 {% if request.endpoint in ['Chat.chat_home', 'Chat.conversation'] %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Chat.chat_home') }}">
+    <span class="material-symbols-outlined text-base">chat</span>Chat
+</a>
+{% endif %}
 {% if session.get('user_role') == 'admin' %}
 <a class="transition-all flex items-center gap-1 {% if request.endpoint == 'Home.admin_reports' %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Home.admin_reports') }}">
     <span class="material-symbols-outlined text-base">flag</span>Reports
@@ -174,21 +252,39 @@
 </nav>
 </div>
 <div class="flex-1 max-w-md px-8 hidden lg:block">
-<div class="relative group">
+<form action="{{ url_for('Home.search_communities') }}" method="GET" class="relative group">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
-<input class="w-full bg-surface-container border-none rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary text-body-md transition-all" placeholder="Search communities..." type="text">
-</div>
+<input name="q" value="{{ request.args.get('q', '') }}" class="w-full bg-surface-container border-none rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary text-body-md transition-all" placeholder="Search people & communities..." type="text">
+</form>
 </div>
 <div class="flex items-center gap-4">
-        <button class="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-all relative">
-            <span class="material-symbols-outlined text-on-surface-variant">notifications</span>
-            <span class="absolute top-1 right-1 w-2 h-2 bg-secondary rounded-full border-2 border-white"></span>
-        </button>
+        <!-- Notification Bell with Dropdown -->
+        <div class="relative">
+            <button onclick="toggleNotificationDropdown(event)" aria-label="Notifications" 
+                class="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-all relative">
+                <span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+                <span id="notificationBadge" class="absolute top-1 right-1 w-2 h-2 bg-secondary rounded-full border-2 border-white {% if notif_unread_count == 0 %}hidden{% endif %}"></span>
+            </button>
+            <!-- Notification Dropdown -->
+            <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-96 max-h-96 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50">
+                <div class="p-4 border-b border-slate-200 dark:border-slate-800">
+                    <h3 class="font-semibold text-slate-900 dark:text-white">Notifications</h3>
+                </div>
+                <div id="notificationList" class="divide-y divide-slate-200 dark:divide-slate-800">
+                    <div class="p-4 text-center text-slate-500 dark:text-slate-400">
+                        <span class="material-symbols-outlined">hourglass_empty</span> Loading...
+                    </div>
+                </div>
+                <div class="p-3 border-t border-slate-200 dark:border-slate-800">
+                    <a href="{{ url_for('Notification.list_page') }}" class="block text-center text-indigo-600 dark:text-indigo-400 hover:underline text-sm font-medium">
+                        View All Notifications
+                    </a>
+                </div>
+            </div>
+        </div>
         <div class="h-6 w-px bg-slate-200 mx-2"></div>
         {% if session.get('user_id') %}
-        <a href="{{ url_for('Home.profile') }}" class="font-label-bold text-on-surface-variant hover:text-primary transition-all px-4">Profile</a>
-        <a href="{{ url_for('Auth.logout') }}" class="font-label-bold text-on-surface-variant hover:text-primary transition-all px-4">Logout</a>
-        <div class="flex items-center gap-3 rounded-full bg-indigo-50 px-3 py-2">
+        <div class="hidden sm:flex items-center gap-3 rounded-full bg-indigo-50 px-3 py-2">
             <a href="{{ url_for('Home.profile') }}" class="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold cursor-pointer overflow-hidden">
                 {% if session.get('profile_pic') %}
                     <img src="{{ url_for('static', filename=session.get('profile_pic')) }}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
@@ -201,6 +297,36 @@
                 <span class="text-xs text-slate-500">Community member</span>
             </div>
         </div>
+
+        <!-- Hamburger account menu: Settings (Edit Profile, Deactivate), Dark mode, Logout -->
+        <div class="relative">
+            <button type="button" onclick="toggleUserMenu(event)" aria-label="Open menu" aria-haspopup="true"
+                class="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-all">
+                <span class="material-symbols-outlined text-on-surface-variant">menu</span>
+            </button>
+            <div id="userMenu" class="hidden absolute right-0 mt-2 w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 z-50 overflow-hidden">
+                <p class="px-4 pt-1 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Settings</p>
+                <a href="{{ url_for('Home.profile') }}?edit=1" class="user-menu-item">
+                    <span class="material-symbols-outlined">manage_accounts</span> Edit profile
+                </a>
+                <button type="button" onclick="confirmDeactivate()" class="user-menu-item danger">
+                    <span class="material-symbols-outlined">person_off</span> Deactivate account
+                </button>
+                <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                <button type="button" onclick="toggleSiteTheme()" class="user-menu-item" style="justify-content: space-between;">
+                    <span style="display:flex; align-items:center; gap:12px;">
+                        <span class="material-symbols-outlined theme-icon-light">dark_mode</span>
+                        <span class="material-symbols-outlined theme-icon-dark hidden">light_mode</span>
+                        Dark mode
+                    </span>
+                </button>
+                <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                <a href="{{ url_for('Auth.logout') }}" class="user-menu-item">
+                    <span class="material-symbols-outlined">logout</span> Logout
+                </a>
+            </div>
+        </div>
+        <form id="deactivateForm" action="{{ url_for('Auth.deactivate_account') }}" method="POST" class="hidden"></form>
         {% else %}
         <button onclick="openLoginModal()" class="font-label-bold text-on-surface-variant hover:text-primary transition-all px-4 cursor-pointer">Login</button>
         <button onclick="openRegisterModal()" class="bg-primary hover:bg-primary-container text-white px-6 py-2 rounded-full font-label-bold transition-all active:scale-95 shadow-md">Sign Up</button>
@@ -325,8 +451,10 @@
         // Micro-interaction for Navbar Scroll
         window.addEventListener('scroll', () => {
             const header = document.querySelector('header');
+            const isDark = document.documentElement.classList.contains('dark');
             if (window.scrollY > 20) {
-                header.classList.add('py-0', 'bg-white/95', 'backdrop-blur-md');
+                header.classList.add('py-0', 'backdrop-blur-md');
+                header.classList.toggle('bg-white/95', !isDark);
             } else {
                 header.classList.remove('py-0', 'bg-white/95', 'backdrop-blur-md');
             }
@@ -353,6 +481,139 @@
             // Also run immediately
             enableScroll();
         })();
+    </script>
+    <script>
+        // Shared theme controller — keeps the navbar toggle, the profile-page
+        // switch and localStorage in sync across every page.
+        function applySiteTheme(dark) {
+            document.documentElement.classList.toggle('dark', dark);
+            document.documentElement.classList.toggle('light', !dark);
+            try { localStorage.setItem('nicheForumTheme', dark ? 'dark' : 'light'); } catch (e) {}
+            document.querySelectorAll('.theme-icon-light').forEach(el => el.classList.toggle('hidden', dark));
+            document.querySelectorAll('.theme-icon-dark').forEach(el => el.classList.toggle('hidden', !dark));
+            const profileToggle = document.getElementById('theme-toggle');
+            if (profileToggle) profileToggle.checked = dark;
+        }
+        function toggleSiteTheme() {
+            applySiteTheme(!document.documentElement.classList.contains('dark'));
+        }
+        // Sync the icons with whatever the head script already applied.
+        applySiteTheme(document.documentElement.classList.contains('dark'));
+
+        // ── Hamburger account menu ────────────────────────────────────────
+        function toggleUserMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('userMenu');
+            if (menu) menu.classList.toggle('hidden');
+        }
+        // Close the menu when clicking outside of it.
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('userMenu');
+            if (menu && !menu.classList.contains('hidden') && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+        function confirmDeactivate() {
+            if (confirm('Deactivate your account? You can reactivate it any time by logging back in.')) {
+                document.getElementById('deactivateForm').submit();
+            }
+        }
+
+        // ── Notification Bell Dropdown ────────────────────────────────────
+        function toggleNotificationDropdown(e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('notificationDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('hidden');
+                // Load notifications when opening the dropdown
+                if (!dropdown.classList.contains('hidden')) {
+                    loadNotifications();
+                }
+            }
+        }
+
+        function loadNotifications() {
+            const notificationList = document.getElementById('notificationList');
+            const badge = document.getElementById('notificationBadge');
+            const apiUrl = "{{ url_for('Notification.feed') }}";
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    // Update badge visibility
+                    if (data.count > 0) {
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+
+                    // Update notification list
+                    if (data.items && data.items.length > 0) {
+                        notificationList.innerHTML = data.items.map(notif => `
+                            <a href="${notif.url || '#'}" class="block px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <div class="flex items-start gap-3">
+                                    ${notif.actor_pic ? 
+                                        `<img src="/static/${notif.actor_pic}" alt="${notif.actor_name}" class="w-10 h-10 rounded-full flex-shrink-0 object-cover">` :
+                                        `<div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 text-sm font-semibold">${notif.actor_name ? notif.actor_name.charAt(0).toUpperCase() : '?'}</div>`
+                                    }
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm text-on-surface font-medium line-clamp-2">${notif.message}</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">${notif.created_at}</p>
+                                    </div>
+                                    ${!notif.is_read ? '<span class="inline-block w-2 h-2 bg-secondary rounded-full flex-shrink-0 mt-2"></span>' : ''}
+                                </div>
+                            </a>
+                        `).join('');
+                    } else {
+                        notificationList.innerHTML = `
+                            <div class="p-4 text-center text-slate-500 dark:text-slate-400">
+                                <span class="material-symbols-outlined block mb-2">notifications_none</span>
+                                <p class="text-sm">No notifications yet</p>
+                            </div>
+                        `;
+                    }
+
+                    // Mark all as read when opening the dropdown
+                    fetch("{{ url_for('Notification.mark_read') }}", { method: 'POST' })
+                        .catch(err => console.log('Error marking as read:', err));
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                    notificationList.innerHTML = `
+                        <div class="p-4 text-center text-red-500">
+                            <p class="text-sm">Failed to load notifications</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('notificationDropdown');
+            const bellBtn = e.target.closest('button[aria-label="Notifications"]');
+            if (dropdown && !dropdown.contains(e.target) && !bellBtn) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Poll for new notifications every 30 seconds
+        {% if session.get('user_id') %}
+        setInterval(() => {
+            const badge = document.getElementById('notificationBadge');
+            const apiUrl = "{{ url_for('Notification.feed') }}";
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    // Update badge visibility based on unread count
+                    if (data.count > 0) {
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                })
+                .catch(err => console.log('Error polling notifications:', err));
+        }, 30000);  // Poll every 30 seconds
+        {% endif %}
     </script>
 </body>
 </html>

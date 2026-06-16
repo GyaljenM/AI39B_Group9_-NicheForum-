@@ -19,6 +19,17 @@
                 <h1 class="profile-name">{{ user.name or session.get('user_name') }}</h1>
                 <p class="profile-handle">@{{ (user.name or session.get('user_name')).lower().replace(' ', '_') }}</p>
                 <p class="profile-bio">{{ user.bio or 'Community enthusiast and niche forum explorer.' }}</p>
+                <div class="profile-stats">
+                    <button type="button" class="profile-stat" data-tab="posts">
+                        <strong>{{ posts|length }}</strong> Posts
+                    </button>
+                    <button type="button" class="profile-stat" data-tab="followers">
+                        <strong>{{ follower_count }}</strong> Followers
+                    </button>
+                    <button type="button" class="profile-stat" data-tab="following">
+                        <strong>{{ following_count }}</strong> Following
+                    </button>
+                </div>
             </div>
             <div class="profile-actions">
                 <button class="edit-profile-btn" onclick="openEditProfileModal()">Edit Profile</button>
@@ -31,7 +42,16 @@
         <div class="tabs-container">
             <button class="tab-item active" data-tab="overview">Overview</button>
             <button class="tab-item" data-tab="posts">Posts</button>
+            <button class="tab-item" data-tab="followers">Followers</button>
+            <button class="tab-item" data-tab="following">Following</button>
             <button class="tab-item" data-tab="comments">Comments</button>
+        </div>
+        <div class="tabs-actions">
+            <label class="theme-switcher" for="theme-toggle">
+                <span class="theme-label">Dark mode</span>
+                <input type="checkbox" id="theme-toggle" aria-label="Toggle dark mode">
+                <span class="theme-slider" aria-hidden="true"></span>
+            </label>
         </div>
     </nav>
 
@@ -97,6 +117,56 @@
                 <p>Comment history is currently private or empty.</p>
             </div>
         </div>
+
+        <div id="followers-tab" class="tab-pane">
+            {% if followers %}
+                <div class="people-grid">
+                    {% for f in followers %}
+                    <a class="person-card" href="{{ url_for('User.profile', user_id=f.id) }}">
+                        <span class="person-avatar">
+                            {% if f.profile_pic %}
+                                <img src="{{ url_for('static', filename=f.profile_pic) }}" alt="">
+                            {% else %}{{ f.name[0]|upper }}{% endif %}
+                        </span>
+                        <span class="person-meta">
+                            <span class="person-name">{{ f.name }}</span>
+                            <span class="person-handle">@{{ f.name.lower().replace(' ', '_') }}</span>
+                        </span>
+                    </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <span class="material-symbols-outlined">group</span>
+                    <p>No followers yet.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div id="following-tab" class="tab-pane">
+            {% if following %}
+                <div class="people-grid">
+                    {% for f in following %}
+                    <a class="person-card" href="{{ url_for('User.profile', user_id=f.id) }}">
+                        <span class="person-avatar">
+                            {% if f.profile_pic %}
+                                <img src="{{ url_for('static', filename=f.profile_pic) }}" alt="">
+                            {% else %}{{ f.name[0]|upper }}{% endif %}
+                        </span>
+                        <span class="person-meta">
+                            <span class="person-name">{{ f.name }}</span>
+                            <span class="person-handle">@{{ f.name.lower().replace(' ', '_') }}</span>
+                        </span>
+                    </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <span class="material-symbols-outlined">person_search</span>
+                    <p>You're not following anyone yet. Use search to find people.</p>
+                </div>
+            {% endif %}
+        </div>
     </main>
 </div>
 
@@ -147,8 +217,8 @@
 <style>
 /* Layout Styles */
 .activity-dashboard {
-    max-width: 900px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
     background: #f8fafc;
     min-height: 100vh;
 }
@@ -165,11 +235,12 @@
 }
 
 .profile-info-container {
+    max-width: 1200px;
+    margin: -48px auto 0;
     padding: 0 32px 24px;
     display: flex;
     align-items: flex-end;
     gap: 24px;
-    margin-top: -48px;
 }
 
 .profile-avatar {
@@ -235,20 +306,78 @@
     position: sticky;
     top: 64px; /* Adjust based on your main navbar height */
     z-index: 10;
-}
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
 
-.tabs-container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 32px;
-    display: flex;
-    gap: 32px;
-}
+    .tabs-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 32px;
+        display: flex;
+        gap: 32px;
+        align-items: center;
+    }
 
-.tab-item {
-    padding: 16px 4px;
-    background: none;
-    border: none;
+    .tabs-actions {
+        display: flex;
+        align-items: center;
+        padding-right: 32px;
+    }
+
+    .theme-switcher {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        color: #475569;
+        font-size: 14px;
+        font-weight: 600;
+        user-select: none;
+    }
+
+    .theme-switcher input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+        pointer-events: none;
+    }
+
+    .theme-slider {
+        width: 48px;
+        height: 24px;
+        background: #e2e8f0;
+        border-radius: 9999px;
+        position: relative;
+        transition: background 0.2s ease;
+        display: inline-block;
+    }
+
+    .theme-slider::before {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        top: 2px;
+        left: 2px;
+        background: white;
+        border-radius: 9999px;
+        transition: transform 0.2s ease;
+        box-shadow: 0 5px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    #theme-toggle:checked + .theme-slider {
+        background: #463acb;
+    }
+
+    #theme-toggle:checked + .theme-slider::before {
+        transform: translateX(24px);
+    }
+
+    .theme-label {
+        white-space: nowrap;
     border-bottom: 2px solid transparent;
     font-weight: 600;
     color: #64748b;
@@ -267,6 +396,8 @@
 
 /* Feed Content */
 .feed-content {
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 24px 32px;
 }
 
@@ -367,6 +498,93 @@
     font-size: 20px;
 }
 
+/* Profile follow stats */
+.profile-stats {
+    display: flex;
+    gap: 24px;
+    margin-top: 14px;
+}
+
+.profile-stat {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 14px;
+    color: #64748b;
+    transition: color 0.2s;
+}
+
+.profile-stat strong {
+    color: #1e293b;
+    font-weight: 700;
+    margin-right: 4px;
+}
+
+.profile-stat:hover {
+    color: #463acb;
+}
+
+/* People (followers / following) lists */
+.people-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.person-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 12px 16px;
+    text-decoration: none;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.person-card:hover {
+    border-color: #c7d2fe;
+    box-shadow: 0 4px 16px -6px rgba(70, 58, 203, 0.25);
+}
+
+.person-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 9999px;
+    background: #463acb;
+    color: white;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.person-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.person-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.person-name {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.person-handle {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
@@ -391,6 +609,111 @@
     .tabs-container {
         padding: 0 16px;
         gap: 16px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .tabs-actions {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 16px 16px;
+    }
+}
+
+    .dark .activity-dashboard {
+        background: #0f172a;
+        color: #e2e8f0;
+    }
+
+    .dark .profile-header {
+        background: #111827;
+        border-color: #1f2937;
+    }
+
+    .dark .profile-cover {
+        background: linear-gradient(135deg, #4338ca 0%, #8b5cf6 100%);
+    }
+
+    .dark .profile-info-container {
+        background: transparent;
+    }
+
+    .dark .profile-avatar {
+        background: #1f2937;
+        color: #e2e8f0;
+        border-color: #111827;
+    }
+
+    .dark .profile-name {
+        color: #f8fafc;
+    }
+
+    .dark .profile-handle,
+    .dark .profile-bio,
+    .dark .theme-switcher {
+        color: #cbd5e1;
+    }
+
+    .dark .edit-profile-btn {
+        background: #111827;
+        border-color: #374151;
+        color: #e2e8f0;
+    }
+
+    .dark .edit-profile-btn:hover {
+        background: #1f2937;
+        border-color: #4b5563;
+    }
+
+    .dark .activity-tabs {
+        background: #111827;
+        border-color: #1f2937;
+    }
+
+    .dark .tab-item {
+        color: #cbd5e1;
+    }
+
+    .dark .tab-item.active,
+    .dark .tab-item:hover {
+        color: #c7d2fe;
+        border-bottom-color: #8b5cf6;
+    }
+
+    .dark .feed-content {
+        background: #0f172a;
+    }
+
+    .dark .feed-card {
+        background: #111827;
+        border-color: #1f2937;
+    }
+
+    .dark .meta-tag {
+        background: #1f2937;
+        color: #c7d2fe;
+    }
+
+    .dark .meta-time,
+    .dark .card-text,
+    .dark .empty-state {
+        color: #cbd5e1;
+    }
+
+    .dark .card-title {
+        color: #f8fafc;
+    }
+
+    .dark .card-actions {
+        border-color: #1f2937;
+    }
+
+    .dark .action-btn {
+        color: #cbd5e1;
+    }
+
+    .dark .action-btn:hover {
+        background: #1f2937;
+        color: #c7d2fe;
     }
 }
 </style>
@@ -399,24 +722,52 @@
 document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('.tab-item');
     const panes = document.querySelectorAll('.tab-pane');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    function activateTab(target) {
+        tabs.forEach(t => t.classList.toggle('active', t.getAttribute('data-tab') === target));
+        panes.forEach(pane => pane.classList.toggle('active', pane.id === `${target}-tab`));
+    }
 
     tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const target = tab.getAttribute('data-tab');
-
-            // Update tab styles
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-
-            // Switch content panes
-            panes.forEach(pane => {
-                pane.classList.remove('active');
-                if (pane.id === `${target}-tab`) {
-                    pane.classList.add('active');
-                }
-            });
-        });
+        tab.addEventListener('click', () => activateTab(tab.getAttribute('data-tab')));
     });
+
+    // The follower/following/post counters in the header also jump to their tab.
+    document.querySelectorAll('.profile-stat').forEach(stat => {
+        stat.addEventListener('click', () => activateTab(stat.getAttribute('data-tab')));
+    });
+
+    const savedTheme = localStorage.getItem('nicheForumTheme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+
+    // Delegate to the site-wide controller (defined in base.html) so the
+    // navbar toggle, this switch and every other page stay in sync.
+    function applyTheme(darkMode) {
+        if (window.applySiteTheme) {
+            window.applySiteTheme(darkMode);
+        } else {
+            document.documentElement.classList.toggle('dark', darkMode);
+            document.documentElement.classList.toggle('light', !darkMode);
+            localStorage.setItem('nicheForumTheme', darkMode ? 'dark' : 'light');
+        }
+        if (themeToggle) themeToggle.checked = darkMode;
+    }
+
+    applyTheme(isDark);
+
+    if (themeToggle) {
+        themeToggle.addEventListener('change', () => {
+            applyTheme(themeToggle.checked);
+        });
+    }
+
+    // Open the edit-profile modal automatically when arriving from the navbar
+    // "Edit profile" menu item, which links to Home.profile?edit=1.
+    if (new URLSearchParams(window.location.search).get('edit') === '1') {
+        openEditProfileModal();
+    }
 });
 
 function openEditProfileModal() {

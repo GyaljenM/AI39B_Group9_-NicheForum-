@@ -14,13 +14,22 @@ class AuthController:
             user = db.fetch_one("SELECT * FROM users WHERE email = %s", (email,))
             db.close()
 
+            print(f"DEBUG login attempt: email={email!r}, password provided={'yes' if password else 'no'}")
+            print(f"DEBUG fetched user: {user}")
             if user and check_password_hash(user["password"], password):
                 # Login directly - email verification is no longer mandatory for access
+
+                # Reactivate a previously deactivated account on a successful login,
+                # so deactivation is reversible (the user just logs back in).
+                if not user.get("is_active", 1):
+                    db.execute("UPDATE users SET is_active = 1 WHERE id = %s", (user["id"],))
+                    flash("Welcome back! Your account has been reactivated.", "success")
+
                 session["user_id"] = user["id"]
                 session["user_name"] = user["name"]
 
                 # Grant admin privileges for the specific admin email.
-                if email and email.lower() == "adim@gmail.com":
+                if email and email.lower() in {"adim@gmail.com", "adimn@admin.com"}:
                     session["user_role"] = "admin"
                     if user["role"] != "admin":
                         db.execute("UPDATE users SET role = %s WHERE email = %s", ("admin", email))
@@ -149,6 +158,25 @@ class AuthController:
     def logout(self):
         session.clear()
         flash("Logged out successfully.", "info")
+        return redirect(url_for("Auth.login"))
+
+    def deactivate_account(self):
+        """Deactivate the logged-in user's account.
+
+        Sets users.is_active = 0 and ends the session. The account is not
+        deleted — logging back in (see login()) reactivates it.
+        """
+        user_id = session.get("user_id")
+        if not user_id:
+            flash("Please log in first.", "warning")
+            return redirect(url_for("Auth.login"))
+
+        db = Database()
+        db.execute("UPDATE users SET is_active = 0 WHERE id = %s", (user_id,))
+        db.close()
+
+        session.clear()
+        flash("Your account has been deactivated. Log in any time to reactivate it.", "info")
         return redirect(url_for("Auth.login"))
 
     def verify_registration(self):

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from '_post_parts.html' import render_media %}
 
 {% block title %}Activity Feed - NicheForum{% endblock %}
 
@@ -61,24 +62,44 @@
             {% if posts %}
                 {% for post in posts %}
                 <article class="feed-card">
-                    <div class="card-header">
-                        <span class="meta-tag">POSTED IN C/{{ post.community_name|upper }}</span>
-                        <span class="meta-time">{{ post.created_at }}</span>
-                    </div>
-                    <div class="card-body">
-                        <h2 class="card-title">{{ post.title }}</h2>
-                        <p class="card-text">{{ post.content|truncate(200) }}</p>
-                    </div>
-                    <div class="card-actions">
-                        <div class="action-group">
-                            <button class="action-btn"><span class="material-symbols-outlined">thumb_up</span> 0</button>
-                            <button class="action-btn"><span class="material-symbols-outlined">chat_bubble</span> 0</button>
+                    <!-- Reddit-like Header -->
+                    <div class="card-header-new">
+                        <div class="flex items-center gap-2">
+                            <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="font-bold text-xs hover:underline">c/{{ post.community_name }}</a>
+                            <span class="text-slate-400 text-xs">•</span>
+                            <span class="text-slate-500 text-xs">Posted by u/{{ post.user_name or session.get('user_name') }}</span>
+                            <span class="text-slate-400 text-xs">{{ post.created_at }}</span>
                         </div>
-                        <button class="action-btn"><span class="material-symbols-outlined">share</span> Share</button>
+                    </div>
+                    
+                    <div class="card-body-new">
+                        <h2 class="card-title-new">{{ post.title }}</h2>
+                        <div class="card-content-new">
+                            <p class="text-sm text-on-surface-variant line-clamp-3">{{ post.content }}</p>
+                        </div>
+                        {{ render_media(post.media) }}
+                    </div>
+
+                    <!-- Reddit-like Action Bar -->
+                    <div class="card-footer-new">
+                        <div class="flex items-center gap-1">
+                            <button class="action-item">
+                                <span class="material-symbols-outlined text-xl">mode_comment</span>
+                                <span class="text-xs font-bold">0 Comments</span>
+                            </button>
+                            <button class="action-item">
+                                <span class="material-symbols-outlined text-xl">share</span>
+                                <span class="text-xs font-bold">Share</span>
+                            </button>
+                            <button class="action-item">
+                                <span class="material-symbols-outlined text-xl">bookmark</span>
+                                <span class="text-xs font-bold">Save</span>
+                            </button>
+                        </div>
                     </div>
                 </article>
                 {% endfor %}
-            {% else %}
+{% else %}
                 <div class="empty-state">
                     <span class="material-symbols-outlined">post_add</span>
                     <p>No posts yet. Start by joining a community!</p>
@@ -415,87 +436,90 @@
 .feed-card {
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 20px;
-    padding: 24px;
-    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 4px; /* More Reddit-like squared corners */
+    padding: 12px;
+    transition: background 0.1s;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
 }
 
 .feed-card:hover {
-    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.05);
+    border-color: #878a8c;
 }
 
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
-
-.meta-tag {
-    font-size: 11px;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    background: #f3f2fd;
-    padding: 4px 10px;
-    border-radius: 6px;
-}
-
-.meta-time {
-    font-size: 12px;
-    color: #94a3b8;
-}
-
-.card-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: #1e293b;
+.card-header-new {
     margin-bottom: 8px;
 }
 
-.card-text {
-    color: #475569;
-    line-height: 1.6;
-    font-size: 15px;
+.card-title-new {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1c1c1c;
+    margin-bottom: 8px;
+    line-height: 22px;
 }
 
-.card-actions {
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid #f1f5f9;
+.card-body-new {
+    flex: 1;
+}
+
+.card-content-new {
+    margin-bottom: 8px;
+}
+
+.card-footer-new {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 4px;
+    margin-top: 4px;
 }
 
-.action-group {
-    display: flex;
-    gap: 16px;
-}
-
-.action-btn {
+.action-item {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: none;
+    padding: 6px 8px;
+    border-radius: 2px;
+    color: #878a8c;
+    background: transparent;
     border: none;
-    color: #64748b;
-    font-size: 14px;
-    font-weight: 600;
     cursor: pointer;
-    padding: 6px 12px;
-    border-radius: 8px;
-    transition: all 0.2s;
+    transition: background 0.1s;
 }
 
-.action-btn:hover {
-    background: #f1f5f9;
-    color: #64748b;
+.action-item:hover {
+    background: #f6f7f8;
 }
 
-.action-btn .material-symbols-outlined {
+.action-item .material-symbols-outlined {
     font-size: 20px;
+}
+
+.dark .feed-card {
+    background: #1a1a1b;
+    border-color: #343536;
+}
+
+.dark .feed-card:hover {
+    border-color: #444546;
+}
+
+.dark .card-title-new {
+    color: #d7dadc;
+}
+
+.dark .action-item {
+    color: #818384;
+}
+
+.dark .action-item:hover {
+    background: #272729;
+}
+
+.dark .meta-tag {
+    background: #272729;
+    color: #d7dadc;
 }
 
 /* Profile follow stats */

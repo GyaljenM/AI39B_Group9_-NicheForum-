@@ -3,17 +3,22 @@
 
 {% macro render_media(media) %}
 {% if media %}
-<div class="grid grid-cols-1 {% if media|length > 1 %}sm:grid-cols-2{% endif %} gap-3 mt-4">
+<div class="mt-4 {% if media|length > 1 %}grid grid-cols-2 gap-2{% else %}block{% endif %}">
     {% for m in media %}
+    <div class="relative overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 group">
         {% if m.media_type == 'image' %}
-        <img src="{{ url_for('static', filename=m.file_path) }}" alt="Attached image"
-             class="rounded-xl w-full max-h-96 object-cover border border-slate-100">
+        <img src="{{ url_for('static', filename=m.file_path) }}" 
+             alt="Attached image"
+             class="{% if media|length == 1 %}w-full h-auto max-h-[700px] object-contain{% else %}w-full aspect-square object-cover{% endif %} transition-transform duration-500 group-hover:scale-[1.01]">
         {% else %}
-        <video controls class="rounded-xl w-full max-h-96 bg-black border border-slate-100">
-            <source src="{{ url_for('static', filename=m.file_path) }}">
-            Your browser does not support embedded videos.
-        </video>
+        <div class="{% if media|length == 1 %}aspect-video{% else %}aspect-square{% endif %}">
+            <video controls class="w-full h-full object-cover bg-black">
+                <source src="{{ url_for('static', filename=m.file_path) }}">
+                Your browser does not support embedded videos.
+            </video>
+        </div>
         {% endif %}
+    </div>
     {% endfor %}
 </div>
 {% endif %}
@@ -201,12 +206,11 @@
         {% endif %}
         {% if is_owner and delete_action %}
         <div class="my-1 border-t border-slate-100"></div>
-        <form action="{{ delete_action }}" method="POST" onsubmit="return confirm('Delete this {{ kind }} permanently?')">
-            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
-                <span class="material-symbols-outlined text-base">delete</span>
-                Delete {{ 'post' if kind == 'post' else 'thread' }}
-            </button>
-        </form>
+        <button type="button" onclick="openDeleteModal('{{ delete_action }}', '{{ kind }}')"
+            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
+            <span class="material-symbols-outlined text-base">delete</span>
+            Delete {{ 'post' if kind == 'post' else 'thread' }}
+        </button>
         {% endif %}
     </div>
 </div>

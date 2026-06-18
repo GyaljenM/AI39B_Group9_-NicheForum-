@@ -250,6 +250,9 @@ class HomeRoutes:
             JOIN communities c ON p.community_id = c.id 
             ORDER BY p.created_at DESC LIMIT 10
         """)
+        for post in posts:
+            attach_media_and_poll(db, post, "post", session.get("user_id"))
+            attach_notes(db, post, "post", session.get("user_id"))
         
         # Also fetch threads for the home page (index.html)
         threads = db.fetch_all("SELECT * FROM threads ORDER BY created_at DESC LIMIT 10")
@@ -258,11 +261,22 @@ class HomeRoutes:
             attach_media_and_poll(db, thread, "thread", session.get("user_id"))
             attach_notes(db, thread, "thread", session.get("user_id"))
 
+        recent_threads = db.fetch_all("""
+            SELECT 'thread' as type, id, title, category, author, created_at, NULL as community_id 
+            FROM threads
+            UNION ALL
+            SELECT 'post' as type, p.id, p.title, c.name as category, u.name as author, p.created_at, p.community_id 
+            FROM posts p 
+            JOIN users u ON p.user_id = u.id 
+            JOIN communities c ON p.community_id = c.id
+            ORDER BY created_at DESC LIMIT 10
+        """)
+
         communities = db.fetch_all("SELECT * FROM communities LIMIT 5")
         db.close()
         
         if session.get("user_id"):
-            return render_template("dashboard.html", user_name=session.get("user_name"), posts=posts, communities=communities)
+            return render_template("dashboard.html", user_name=session.get("user_name"), posts=posts, communities=communities, threads=recent_threads)
         return render_template("index.html", posts=posts, threads=threads, communities=communities)
 
     def communities(self):

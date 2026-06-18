@@ -90,12 +90,11 @@
                                 </button>
                                 <div class="absolute left-0 top-0 mt-8 hidden group-hover/menu:block z-20">
                                     <div class="bg-white border border-slate-100 rounded-xl shadow-xl py-2 min-w-[140px]">
-                                        <form action="{{ url_for('Thread.delete_thread', thread_id=thread.id) }}" method="POST" onsubmit="return confirm('Delete this thread permanently?')">
-                                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
-                                                <span class="material-symbols-outlined text-sm">delete</span>
-                                                Delete Thread
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="openDeleteModal('{{ url_for('Thread.delete_thread', thread_id=thread.id) }}', 'thread')"
+                                            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                                            <span class="material-symbols-outlined text-sm">delete</span>
+                                            Delete Thread
+                                        </button>
                                     </div>
                                 </div>
                             </div>

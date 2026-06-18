@@ -10,19 +10,19 @@
 <img alt="Sports Stadium" class="absolute inset-0 w-full h-full object-cover" data-alt="A wide-angle cinematic shot of a massive, modern sports stadium at dusk, with floodlights beaming down onto a pristine green pitch. The atmosphere is electric with a hazy, energetic mist in the air, captured in a high-contrast corporate modern style. The color palette features deep indigo skies and brilliant emerald turf, evoking a sense of elite athletic competition and vibrant community energy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAN0Pz_Z9HnHKgRt1w1hTAQbV5Siee4WwfASzQr7RVYy_XWCjy5Xgw3GcGgIKT8occOXumUYQBwOflzA_-pA1KKH6LwTcPSEu6yjIY5xfQ8DsphfnLLrHH302gucF3Y3gm5Q7UDWFcPyJLn3PgPIQN450e7ukujC94j7JicCsVS6jec6sm3oHZNqYCVaPzhfh309NnHdMt6arpnrz8eE2sGitbAMIrIZnlO4p50cE3_yopMRDvHCZPA6yJjDBfZTw4tSdBEXXlge1g">
 <div class="absolute inset-0 hero-gradient"></div>
 <div class="relative z-10 text-center px-6 max-w-3xl">
-<span class="inline-block px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-white font-label-bold mb-6 border border-white/30 uppercase tracking-wider">The Heart of Sports</span>
+    <span class="inline-block px-4 py-1.5 bg-white/20 rounded-full text-white font-medium mb-6 border border-white/30 uppercase tracking-wider">The Heart of Sports</span>
 <h1 class="font-display-lg text-white text-display-lg mb-6 leading-tight">Find Your Tribe in the World of Athletics</h1>
 <p class="font-body-lg text-white/90 text-body-lg mb-10 max-w-2xl mx-auto">Join over 250,000 sports enthusiasts across 1,200 specialized communities. From obscure esports to the world cup, your team is here.</p>
 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-<a href="{{ url_for('Home.trending') }}" class="w-full sm:w-auto px-8 py-4 bg-white text-primary rounded-xl font-label-bold shadow-xl hover:scale-105 transition-all active:scale-95 text-center">Discover Trending</a>
-<a href="{{ url_for('Home.communities') }}" class="w-full sm:w-auto px-8 py-4 bg-primary-container text-white rounded-xl font-label-bold shadow-xl border border-white/20 hover:bg-primary transition-all active:scale-95 text-center">Explore Communities</a>
-<a href="{{ url_for('Home.live') }}" class="w-full sm:w-auto px-8 py-4 bg-secondary text-white rounded-xl font-label-bold shadow-xl border border-secondary/20 hover:bg-secondary-container transition-all active:scale-95 text-center">Watch Live</a>
+<a href="{{ url_for('Home.trending') }}" class="w-full sm:w-auto px-8 py-4 bg-white text-primary rounded font-medium hover:scale-105 transition-all text-center">Discover Trending</a>
+<a href="{{ url_for('Home.communities') }}" class="w-full sm:w-auto px-8 py-4 bg-primary-container text-white rounded font-medium border border-white/20 hover:bg-primary transition-all text-center">Explore Communities</a>
+<a href="{{ url_for('Home.live') }}" class="w-full sm:w-auto px-8 py-4 bg-secondary text-white rounded font-medium border border-secondary/20 hover:bg-secondary-container transition-all text-center">Watch Live</a>
 </div>
 </div>
 </section>
 <section class="max-w-[1280px] mx-auto px-6 mt-10">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <a href="{{ url_for('Home.live') }}" class="block rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-lg transition-all">
+        <a href="{{ url_for('Home.live') }}" class="block rounded border border-slate-200 bg-white p-6 transition-all">
             <div class="flex items-center justify-between mb-4">
                 <span class="text-sm font-semibold text-primary uppercase">Live Matches</span>
                 <span class="text-xs font-bold text-slate-500">Real-time</span>
@@ -30,7 +30,7 @@
             <h3 class="text-2xl font-semibold mb-2">Watch live sports threads</h3>
             <p class="text-on-surface-variant text-sm">Jump into ongoing games, score updates, and live fan discussion.</p>
         </a>
-        <a href="{{ url_for('Home.trending') }}" class="block rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-lg transition-all">
+        <a href="{{ url_for('Home.trending') }}" class="block rounded border border-slate-200 bg-white p-6 transition-all">
             <div class="flex items-center justify-between mb-4">
                 <span class="text-sm font-semibold text-primary uppercase">Trending</span>
                 <span class="text-xs font-bold text-slate-500">Top picks</span>
@@ -38,7 +38,7 @@
             <h3 class="text-2xl font-semibold mb-2">See what’s trending</h3>
             <p class="text-on-surface-variant text-sm">Explore the hottest topics and most active conversations today.</p>
         </a>
-        <a href="{{ url_for('Home.communities') }}" class="block rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-lg transition-all">
+        <a href="{{ url_for('Home.communities') }}" class="block rounded border border-slate-200 bg-white p-6 transition-all">
             <div class="flex items-center justify-between mb-4">
                 <span class="text-sm font-semibold text-primary uppercase">Communities</span>
                 <span class="text-xs font-bold text-slate-500">All hubs</span>
@@ -50,7 +50,7 @@
 </section>
 <!-- World Cup 2026 — Live Goal Tracker -->
 <section class="max-w-[1280px] mx-auto px-6 mt-10">
-    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div class="rounded border border-slate-200 bg-white p-6">
         <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
             <div class="flex items-center gap-3">
                 <span class="material-symbols-outlined text-3xl text-primary">sports_soccer</span>
@@ -95,7 +95,7 @@
     function matchCard(m) {
         const minute = m.minute != null ? `${m.minute}'` : (m.status ?? 'LIVE');
         return `
-            <div class="rounded-2xl border border-slate-200 p-5 shadow-sm hover:border-primary/30 transition-all">
+            <div class="rounded border border-slate-200 p-5 hover:border-primary/30 transition-all">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] truncate">${m.round ?? 'World Cup'}</span>
                     <span class="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full whitespace-nowrap">${minute}</span>

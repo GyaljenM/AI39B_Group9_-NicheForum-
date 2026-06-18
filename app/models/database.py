@@ -56,6 +56,11 @@ class Database:
         results = cursor.fetchall()
         cursor.close()
         return results
+        """Convert sqlite3 row to dictionary."""
+        d = {}
+        for idx, col in enumerate(cursor.description):
+            d[col[0]] = row[idx]
+        return d
 
     def execute(self, query, params=None):
         """Run a query that changes data (INSERT, UPDATE, DELETE)."""

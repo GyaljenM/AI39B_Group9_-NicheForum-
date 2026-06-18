@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from '_post_parts.html' import render_media %}
 
 {% block title %}{{ profile_user.name }} - NicheForum{% endblock %}
 
@@ -83,6 +84,7 @@
                     <div class="card-body">
                         <h2 class="card-title">{{ post.title }}</h2>
                         <p class="card-text">{{ post.content|truncate(280) }}</p>
+                        {{ render_media(post.media) }}
                     </div>
                     <div class="card-actions">
                         <a class="action-btn" href="{{ url_for('Home.community_detail', community_id=post.community_id) }}">

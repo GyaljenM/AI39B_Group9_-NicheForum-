@@ -45,12 +45,12 @@
                 {{ composer(url_for('Home.create_post', community_id=community.id), 'post_type', submit_label='Post to ' ~ community.name) }}
             </div>
             {% else %}
-            <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-8 text-center mb-8">
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-8 text-center mb-8">
                 <span class="icon-chip w-16 h-16 mx-auto mb-4">
                     <span class="material-symbols-outlined text-3xl">lock</span>
                 </span>
-                <h3 class="font-headline-sm text-indigo-900 mb-2">Want to post here?</h3>
-                <p class="text-indigo-700 mb-6">You need to be a member of this community to share your thoughts.</p>
+                <h3 class="font-headline-sm text-slate-900 mb-2">Want to post here?</h3>
+                <p class="text-slate-700 mb-6">You need to be a member of this community to share your thoughts.</p>
                 <form action="{{ url_for('Home.join_community', community_id=community.id) }}" method="POST">
                     <button type="submit" class="px-6 py-2 bg-primary text-white rounded-full font-label-bold hover:bg-primary-container transition-all">
                         Join Community to Unlock

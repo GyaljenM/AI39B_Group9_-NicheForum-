@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for, session, flash, render_template
+from flask import Blueprint, request, redirect, url_for, session, flash, render_template, jsonify
 from app.models.database import Database
 from app.utils.word_censor import WordCensor
 from app.auth import login_required, admin_required
@@ -107,6 +107,8 @@ class ThreadRoutes:
         author = session.get("user_name", "Guest")
 
         if not content:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({"success": False, "error": "Reply cannot be empty"})
             return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
 
         # Apply word censoring to the reply content
@@ -119,8 +121,14 @@ class ThreadRoutes:
                 (thread_id, censored_content, author)
             )
             db.close()
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({"success": True})
+            
         except Exception as e:
             print(f"Error posting reply: {e}")
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({"success": False, "error": str(e)})
 
         return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
 
@@ -163,6 +171,8 @@ class ThreadRoutes:
         user_id = session.get("user_id")
         vote_type = request.form.get("vote_type")
         if vote_type not in ("like", "dislike"):
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({"success": False, "error": "Invalid vote"})
             flash("Invalid vote.", "warning")
             return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
 
@@ -170,6 +180,8 @@ class ThreadRoutes:
         reply = db.fetch_one("SELECT * FROM replies WHERE id = %s AND thread_id = %s", (reply_id, thread_id))
         if not reply:
             db.close()
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({"success": False, "error": "Reply not found"})
             flash("Reply not found.", "danger")
             return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
 
@@ -191,7 +203,21 @@ class ThreadRoutes:
                 (vote_type, existing['id'])
             )
 
+        # Fetch updated counts
+        like_count = db.fetch_one(
+            "SELECT COUNT(*) AS c FROM reply_votes WHERE reply_id = %s AND vote_type = 'like'",
+            (reply_id,)
+        )['c']
+        dislike_count = db.fetch_one(
+            "SELECT COUNT(*) AS c FROM reply_votes WHERE reply_id = %s AND vote_type = 'dislike'",
+            (reply_id,)
+        )['c']
+        
         db.close()
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({"success": True, "like_count": like_count, "dislike_count": dislike_count})
+        
         return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
 
     def edit_thread(self, thread_id):

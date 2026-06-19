@@ -87,14 +87,14 @@
         <!-- Reply Section -->
         <div class="bg-surface-bright p-8 md:p-12 border-t border-slate-100">
             <h3 class="text-xl font-bold mb-6">Join the conversation</h3>
-            <form action="{{ url_for('Thread.post_reply', thread_id=thread.id) }}" method="POST" class="space-y-4">
-                <textarea name="content" rows="4" placeholder="What are your thoughts?" class="w-full rounded-2xl border-slate-200 focus:ring-primary focus:border-primary p-6" required></textarea>
+            <div class="space-y-4">
+                <textarea id="reply-textarea" rows="4" placeholder="What are your thoughts?" class="w-full rounded-2xl border-slate-200 focus:ring-primary focus:border-primary p-6" required></textarea>
                 <div class="flex justify-end">
-                    <button type="submit" class="px-8 py-4 bg-primary text-white rounded font-medium hover:bg-primary-container transition-all">
+                    <button type="button" onclick="postReplyAjax({{ thread.id }})" class="px-8 py-4 bg-primary text-white rounded font-medium hover:bg-primary-container transition-all">
                         Post Reply
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
     </article>
 
@@ -129,20 +129,14 @@
                 
                 <!-- Compact Action Bar -->
                 <div class="flex items-center gap-4">
-                    <form action="{{ url_for('Thread.vote_reply', thread_id=thread.id, reply_id=reply.id) }}" method="POST" class="flex items-center gap-1">
-                        <input type="hidden" name="vote_type" value="like">
-                        <button type="submit" class="flex items-center gap-1 text-xs font-semibold text-on-surface-variant hover:text-primary transition-all">
-                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/btn:text-primary transition-all">arrow_drop_up</span>
-                            <span class="text-xs font-semibold text-on-surface-variant group-hover/btn:text-on-surface">{{ reply.like_count }}</span>
-                        </button>
-                    </form>
-                    <form action="{{ url_for('Thread.vote_reply', thread_id=thread.id, reply_id=reply.id) }}" method="POST" class="flex items-center gap-1">
-                        <input type="hidden" name="vote_type" value="dislike">
-                        <button type="submit" class="flex items-center gap-1 text-xs font-semibold text-on-surface-variant hover:text-primary transition-all">
-                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/btn:text-primary transition-all">arrow_drop_down</span>
-                            <span class="text-xs font-semibold text-on-surface-variant group-hover/btn:text-on-surface">{{ reply.dislike_count }}</span>
-                        </button>
-                    </form>
+                    <button type="button" onclick="voteReplyAjax({{ thread.id }}, {{ reply.id }}, 'like')" class="flex items-center gap-1 text-xs font-semibold text-on-surface-variant hover:text-primary transition-all vote-btn-like" data-reply-id="{{ reply.id }}">
+                        <span class="material-symbols-outlined text-[18px]">arrow_drop_up</span>
+                        <span class="like-count">{{ reply.like_count }}</span>
+                    </button>
+                    <button type="button" onclick="voteReplyAjax({{ thread.id }}, {{ reply.id }}, 'dislike')" class="flex items-center gap-1 text-xs font-semibold text-on-surface-variant hover:text-primary transition-all vote-btn-dislike" data-reply-id="{{ reply.id }}">
+                        <span class="material-symbols-outlined text-[18px]">arrow_drop_down</span>
+                        <span class="dislike-count">{{ reply.dislike_count }}</span>
+                    </button>
                     <button class="text-xs font-bold text-on-surface-variant hover:bg-slate-100 px-3 py-1.5 rounded-full transition-all">Reply</button>
                     {% if session.get('user_name', 'Guest') == reply.user_email %}
                     <a href="{{ url_for('Thread.edit_reply', thread_id=thread.id, reply_id=reply.id) }}" class="text-xs font-bold text-on-surface-variant hover:text-primary px-3 py-1.5 rounded-full transition-all">Edit</a>
@@ -157,4 +151,58 @@
         {% endfor %}
     </div>
 </div>
+
+<script>
+function postReplyAjax(threadId) {
+    const content = document.getElementById('reply-textarea').value.trim();
+    if (!content) {
+        alert('Reply cannot be empty.');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('content', content);
+    
+    fetch(`/thread/${threadId}/reply`, {
+        method: 'POST',
+        body: formData,
+        headers: {'X-Requested-With': 'XMLHttpRequest'}
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('reply-textarea').value = '';
+            alert('Reply posted successfully!');
+        } else {
+            alert('Error: ' + (data.error || 'Failed to post reply'));
+        }
+    })
+    .catch(err => console.error('Error:', err));
+}
+
+function voteReplyAjax(threadId, replyId, voteType) {
+    const formData = new FormData();
+    formData.append('vote_type', voteType);
+    
+    fetch(`/thread/${threadId}/reply/${replyId}/vote`, {
+        method: 'POST',
+        body: formData,
+        headers: {'X-Requested-With': 'XMLHttpRequest'}
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            const countSpan = voteType === 'like' 
+                ? document.querySelector(`[data-reply-id="${replyId}"] .like-count`)
+                : document.querySelector(`[data-reply-id="${replyId}"] .dislike-count`);
+            if (countSpan) {
+                countSpan.textContent = voteType === 'like' ? data.like_count : data.dislike_count;
+            }
+        } else {
+            alert('Error: ' + (data.error || 'Failed to vote'));
+        }
+    })
+    .catch(err => console.error('Error:', err));
+}
+</script>
 {% endblock %}

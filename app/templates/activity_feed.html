@@ -3,225 +3,99 @@
 
 {% block title %}{{ user.name or user_name }} — Profile | NicheForum{% endblock %}
 
-{% block content %}
-<div class="activity-dashboard">
-    <!-- Profile Header -->
-    <header class="profile-header">
-        <div class="profile-cover"></div>
-        <div class="profile-info-container">
-            <div class="profile-avatar">
-                {% if user.profile_pic %}
-                    <img src="{{ url_for('static', filename=user.profile_pic) }}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px;">
-                {% else %}
-                    {{ (user.name or session.get('user_name'))[0]|upper }}
-                {% endif %}
-            </div>
-            <div class="profile-details">
-                <h1 class="profile-name">{{ user.name or session.get('user_name') }}</h1>
-                <p class="profile-handle">@{{ (user.name or session.get('user_name')).lower().replace(' ', '_') }}</p>
-                <p class="profile-bio">{{ user.bio or 'Community enthusiast and niche forum explorer.' }}</p>
-                <div class="profile-stats">
-                    <button type="button" class="profile-stat" data-tab="posts">
-                        <strong>{{ posts|length }}</strong> Posts
-                    </button>
-                    <button type="button" class="profile-stat" data-tab="followers">
-                        <strong>{{ follower_count }}</strong> Followers
-                    </button>
-                    <button type="button" class="profile-stat" data-tab="following">
-                        <strong>{{ following_count }}</strong> Following
-                    </button>
-                </div>
-            </div>
-            <div class="profile-actions">
-                <button class="edit-profile-btn" onclick="openEditProfileModal()">Edit Profile</button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Tab Bar -->
-    <nav class="activity-tabs">
-        <div class="tabs-container">
-            <button class="tab-item active" data-tab="overview">Overview</button>
-            <button class="tab-item" data-tab="posts">Posts</button>
-            <button class="tab-item" data-tab="followers">Followers</button>
-            <button class="tab-item" data-tab="following">Following</button>
-            <button class="tab-item" data-tab="comments">Comments</button>
-        </div>
-        <div class="tabs-actions">
-            <label class="theme-switcher" for="theme-toggle">
-                <span class="theme-label">Dark mode</span>
-                <input type="checkbox" id="theme-toggle" aria-label="Toggle dark mode">
-                <span class="theme-slider" aria-hidden="true"></span>
-            </label>
-        </div>
-    </nav>
-
-    <!-- Activity Feed Content -->
-    <main class="feed-content">
-        <div id="overview-tab" class="tab-pane active">
-            {% if posts %}
-                {% for post in posts %}
-                <article class="feed-card">
-                    <div class="card-header">
-                        <span class="meta-tag">POSTED IN C/{{ post.community_name|upper }}</span>
-                        <span class="meta-time">{{ post.created_at }}</span>
-                    </div>
-                    <div class="card-body">
-                        <h2 class="card-title">{{ post.title }}</h2>
-                        <p class="card-text">{{ post.content|truncate(200) }}</p>
-                    </div>
-                    <div class="card-actions">
-                        <div class="action-group">
-                            <button class="action-btn">Upvote 0</button>
-                            <button class="action-btn"><span class="material-symbols-outlined">chat_bubble</span> 0</button>
-                        </div>
-                        <button class="action-btn"><span class="material-symbols-outlined">share</span> Share</button>
-                    </div>
-                </article>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">
-                    <span class="material-symbols-outlined">post_add</span>
-                    <p>No posts yet. Start by joining a community!</p>
-                </div>
-            {% endif %}
-        </div>
-
-        <div id="posts-tab" class="tab-pane">
-            {% if posts %}
-                {% for post in posts %}
-                <article class="feed-card">
-                    <div class="card-header">
-                        <span class="meta-tag">C/{{ post.community_name|upper }}</span>
-                        <span class="meta-time">{{ post.created_at }}</span>
-                    </div>
-                    <div class="card-body">
-                        <h2 class="card-title">{{ post.title }}</h2>
-                        <p class="card-text">{{ post.content }}</p>
-                    </div>
-                    <div class="card-actions">
-                        <button class="action-btn"><span class="material-symbols-outlined">share</span> Share</button>
-                    </div>
-                </article>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">
-                    <span class="material-symbols-outlined">edit_note</span>
-                    <p>You haven't posted anything yet.</p>
-                </div>
-            {% endif %}
-        </div>
-
-        <div id="comments-tab" class="tab-pane">
-            <div class="empty-state">
-                <span class="material-symbols-outlined">speaker_notes_off</span>
-                <p>Comment history is currently private or empty.</p>
-            </div>
-        </div>
-
-        <div id="followers-tab" class="tab-pane">
-            {% if followers %}
-                <div class="people-grid">
-                    {% for f in followers %}
-                    <a class="person-card" href="{{ url_for('User.profile', user_id=f.id) }}">
-                        <span class="person-avatar">
-                            {% if f.profile_pic %}
-                                <img src="{{ url_for('static', filename=f.profile_pic) }}" alt="">
-                            {% else %}{{ f.name[0]|upper }}{% endif %}
-                        </span>
-                        <span class="person-meta">
-                            <span class="person-name">{{ f.name }}</span>
-                            <span class="person-handle">@{{ f.name.lower().replace(' ', '_') }}</span>
-                        </span>
-                    </a>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-state">
-                    <span class="material-symbols-outlined">group</span>
-                    <p>No followers yet.</p>
-                </div>
-            {% endif %}
-        </div>
-
-        <div id="following-tab" class="tab-pane">
-            {% if following %}
-                <div class="people-grid">
-                    {% for f in following %}
-                    <a class="person-card" href="{{ url_for('User.profile', user_id=f.id) }}">
-                        <span class="person-avatar">
-                            {% if f.profile_pic %}
-                                <img src="{{ url_for('static', filename=f.profile_pic) }}" alt="">
-                            {% else %}{{ f.name[0]|upper }}{% endif %}
-                        </span>
-                        <span class="person-meta">
-                            <span class="person-name">{{ f.name }}</span>
-                            <span class="person-handle">@{{ f.name.lower().replace(' ', '_') }}</span>
-                        </span>
-                    </a>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-state">
-                    <span class="material-symbols-outlined">person_search</span>
-                    <p>You're not following anyone yet. Use search to find people.</p>
-                </div>
-            {% endif %}
-        </div>
-    </main>
-</div>
-
-<!-- Edit Profile Modal -->
-<div id="editProfileModal" class="login-modal-overlay" style="display: none;">
-    <div class="login-modal-backdrop" onclick="closeEditProfileModal()"></div>
-    <div class="login-modal-container">
-        <button class="login-modal-close" onclick="closeEditProfileModal()">
-            <span class="material-symbols-outlined">close</span>
-        </button>
-
-        <div class="login-modal-content">
-            <div class="login-modal-header">
-                <h2>Edit Profile</h2>
-                <p>Update your public information</p>
-            </div>
-
-            <form action="{{ url_for('Home.update_profile') }}" method="POST" enctype="multipart/form-data" class="login-form">
-                <div class="form-group">
-                    <label>Profile Picture</label>
-                    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
-                        <div style="width: 64px; height: 64px; border-radius: 12px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1.5px solid #e2e8f0;">
-                            {% if user.profile_pic %}
-                                <img id="preview-img" src="{{ url_for('static', filename=user.profile_pic) }}" style="width: 100%; height: 100%; object-fit: cover;">
-                            {% else %}
-                                <span id="preview-placeholder" class="material-symbols-outlined" style="color: #94a3b8; font-size: 32px;">account_circle</span>
-                                <img id="preview-img" style="width: 100%; height: 100%; object-fit: cover; display: none;">
-                            {% endif %}
-                        </div>
-                        <input type="file" id="edit-pic" name="profile_pic" accept="image/*" style="font-size: 13px; color: #64748b;" onchange="previewImage(this)">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="edit-name">Display Name</label>
-                    <input type="text" id="edit-name" name="name" value="{{ user_name }}" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit-bio">Bio</label>
-                    <textarea id="edit-bio" name="bio" placeholder="Tell us about yourself..." 
-                        style="width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 15px; min-height: 100px; resize: vertical;">{{ user.bio or '' }}</textarea>
-                </div>
-                <button type="submit" class="submit-btn">Save Changes</button>
-            </form>
-        </div>
-    </div>
-</div>
-
+{% block styles %}
 <style>
-/* Layout Styles */
-.activity-dashboard {
-    max-width: 100%;
-    margin: 0;
-    background: #f8fafc;
-    min-height: 100vh;
+/* ═══════════════════════════════════════════════════════════════════
+   Profile Page — Premium Personal Dashboard
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Hero Section ─────────────────────────────────────────────────── */
+.prof-hero {
+    position: relative;
+    overflow: hidden;
+    background: var(--prof-bg, linear-gradient(135deg, #0C0A09 0%, #1C1917 30%, #292524 60%, #0C0A09 100%));
+    min-height: 340px;
+    transition: background 0.5s ease;
+}
+
+.prof-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--prof-glow, 
+        radial-gradient(ellipse at 25% 40%, rgba(194, 65, 12, 0.28) 0%, transparent 50%),
+        radial-gradient(ellipse at 75% 70%, rgba(249, 115, 22, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 50% 30%, rgba(194, 65, 12, 0.06) 0%, transparent 60%));
+    transition: background 0.5s ease;
+}
+
+.prof-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(to top, var(--nf-bg, #FAFAF9), transparent);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.prof-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.22;
+    animation: float 9s ease-in-out infinite;
+    transition: background 0.5s ease;
+}
+
+/* ── Color Picker Swatches ────────────────────────────────────────── */
+.color-swatches {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.color-swatch {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+}
+
+.color-swatch:hover {
+    transform: scale(1.15);
+}
+
+.color-swatch.active {
+    border-color: #1C1917;
+    box-shadow: 0 0 0 3px white, 0 0 0 5px #1C1917;
+}
+
+.color-swatch.active::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    font-weight: 800;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+/* ── Profile Card (overlaps hero) ─────────────────────────────────── */
+.prof-card {
+    max-width: 1280px;
+    margin: -60px auto 0;
+    padding: 0 24px;
+    position: relative;
+    z-index: 2;
 }
 
 .prof-card-inner {
@@ -419,117 +293,98 @@
     animation: fadeInUp 0.4s ease-out;
 }
 
-/* Feed Cards */
-.feed-card {
-    background: white;
-    border: 1px solid #e2e8f0;
+/* ── Post Cards ───────────────────────────────────────────────────── */
+.prof-post {
+    background: var(--nf-surface, #fff);
+    border: 1px solid var(--nf-border, #E7E5E4);
     border-radius: 20px;
-    padding: 24px;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.feed-card:hover {
-    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.05);
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     margin-bottom: 16px;
 }
 
-.meta-tag {
+.prof-post:hover {
+    border-color: rgba(194, 65, 12, 0.15);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+}
+
+.prof-post-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid #F5F5F4;
+}
+
+.prof-community-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    border-radius: 100px;
+    background: rgba(194, 65, 12, 0.06);
     font-size: 11px;
     font-weight: 700;
-    color: #64748b;
+    color: #C2410C;
+    text-decoration: none;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    background: #f3f2fd;
-    padding: 4px 10px;
-    border-radius: 6px;
+    letter-spacing: 0.04em;
 }
 
-.meta-time {
-    font-size: 12px;
-    color: #94a3b8;
+.prof-community-chip:hover {
+    background: rgba(194, 65, 12, 0.12);
 }
 
-.card-title {
-    font-size: 20px;
+.prof-post-body {
+    padding: 22px;
+}
+
+.prof-post-title {
+    font-size: 18px;
     font-weight: 700;
-    color: #1e293b;
+    color: #1C1917;
     margin-bottom: 8px;
     line-height: 1.4;
 }
 
-.card-text {
-    color: #475569;
+.prof-post-excerpt {
+    font-size: 14px;
+    color: #78716C;
     line-height: 1.6;
-    font-size: 15px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-.card-actions {
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid #f1f5f9;
+.prof-post-footer {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    padding: 14px 22px;
+    border-top: 1px solid #F5F5F4;
 }
 
-.action-group {
+.prof-post-actions {
     display: flex;
-    gap: 16px;
+    gap: 8px;
 }
 
-.action-btn {
-    display: flex;
+.prof-action-btn {
+    display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: none;
-    border: none;
-    color: #64748b;
-    font-size: 14px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: #FAFAF9;
+    border: 1px solid #F5F5F4;
+    font-size: 12px;
     font-weight: 600;
+    color: #78716C;
     cursor: pointer;
-    padding: 6px 12px;
-    border-radius: 8px;
     transition: all 0.2s;
-}
-
-.action-btn:hover {
-    background: #f1f5f9;
-    color: #64748b;
-}
-
-.action-btn .material-symbols-outlined {
-    font-size: 20px;
-}
-
-.dark .feed-card {
-    background: #1a1a1b;
-    border-color: #343536;
-}
-
-.dark .feed-card:hover {
-    border-color: #444546;
-}
-
-.dark .card-title-new {
-    color: #d7dadc;
-}
-
-.dark .action-item {
-    color: #818384;
-}
-
-.dark .action-item:hover {
-    background: #272729;
-}
-
-.dark .meta-tag {
-    background: #272729;
-    color: #d7dadc;
+    text-decoration: none;
 }
 
 .prof-action-btn:hover {
@@ -1190,7 +1045,7 @@
                 <div class="prof-post-footer">
                     <div class="prof-post-actions">
                         <span class="prof-action-btn">
-                            Upvote
+                            <span class="material-symbols-outlined text-sm">thumb_up</span> Like
                         </span>
                         <span class="prof-action-btn">
                             <span class="material-symbols-outlined text-sm">chat_bubble</span> Comment

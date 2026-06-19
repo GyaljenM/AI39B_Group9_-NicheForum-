@@ -109,7 +109,7 @@
         </div>
 
         {% for reply in replies %}
-        <div class="flex gap-4 group animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div class="flex gap-4 group animate-in fade-in slide-in-from-bottom-2 duration-300" id="reply-row-{{ reply.id }}">
             <!-- Compact Avatar -->
             <div class="flex-shrink-0">
                 <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold border border-slate-50">
@@ -128,14 +128,15 @@
                 </p>
                 
                 <!-- Compact Action Bar -->
-                <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-1 group/btn cursor-pointer">
+                <div class="flex items-center gap-4" data-reply-id="{{ reply.id }}">
+                    <button type="button" class="reply-vote-btn flex items-center gap-1 group/btn cursor-pointer" data-reply-id="{{ reply.id }}" data-vote-type="like">
                         <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/btn:text-primary transition-all">thumb_up</span>
-                        <span class="text-xs font-semibold text-on-surface-variant group-hover/btn:text-on-surface">0</span>
-                    </div>
-                    <div class="flex items-center gap-1 group/btn cursor-pointer">
+                        <span class="reply-like-count text-xs font-semibold text-on-surface-variant group-hover/btn:text-on-surface">{{ reply.like_count or 0 }}</span>
+                    </button>
+                    <button type="button" class="reply-vote-btn flex items-center gap-1 group/btn cursor-pointer" data-reply-id="{{ reply.id }}" data-vote-type="dislike">
                         <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/btn:text-primary transition-all">thumb_down</span>
-                    </div>
+                        <span class="reply-dislike-count text-xs font-semibold text-on-surface-variant group-hover/btn:text-on-surface">{{ reply.dislike_count or 0 }}</span>
+                    </button>
                     <button class="text-xs font-bold text-on-surface-variant hover:bg-slate-100 px-3 py-1.5 rounded-full transition-all">Reply</button>
                     {% if session.get('user_name', 'Guest') == reply.user_email %}
                     <a href="{{ url_for('Thread.edit_reply', thread_id=thread.id, reply_id=reply.id) }}" class="text-xs font-bold text-on-surface-variant hover:text-primary px-3 py-1.5 rounded-full transition-all">Edit</a>
@@ -150,4 +151,49 @@
         {% endfor %}
     </div>
 </div>
+
+<script>
+    async function voteReply(replyId, voteType, button) {
+        try {
+            const response = await fetch(`/thread/{{ thread.id }}/reply/${replyId}/vote`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vote_type: voteType })
+            });
+            const data = await response.json();
+            if (!data.success) {
+                if (data.error) alert(data.error);
+                return;
+            }
+
+            const replyRow = document.getElementById(`reply-row-${replyId}`);
+            if (!replyRow) return;
+            replyRow.querySelector('.reply-like-count').innerText = data.like_count;
+            replyRow.querySelector('.reply-dislike-count').innerText = data.dislike_count;
+
+            const likeButton = replyRow.querySelector('[data-vote-type="like"]');
+            const dislikeButton = replyRow.querySelector('[data-vote-type="dislike"]');
+            if (data.user_vote === 'like') {
+                likeButton.classList.add('bg-green-50', 'border', 'border-green-200', 'text-green-700');
+                dislikeButton.classList.remove('bg-red-50', 'border', 'border-red-200', 'text-red-700');
+            } else if (data.user_vote === 'dislike') {
+                dislikeButton.classList.add('bg-red-50', 'border', 'border-red-200', 'text-red-700');
+                likeButton.classList.remove('bg-green-50', 'border', 'border-green-200', 'text-green-700');
+            } else {
+                likeButton.classList.remove('bg-green-50', 'border', 'border-green-200', 'text-green-700');
+                dislikeButton.classList.remove('bg-red-50', 'border', 'border-red-200', 'text-red-700');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    document.querySelectorAll('.reply-vote-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const replyId = btn.dataset.replyId;
+            const voteType = btn.dataset.voteType;
+            voteReply(replyId, voteType, btn);
+        });
+    });
+</script>
 {% endblock %}

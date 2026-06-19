@@ -186,6 +186,19 @@ class Database:
         """)
 
         db.execute("""
+            CREATE TABLE IF NOT EXISTS reply_votes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                reply_id INT NOT NULL,
+                vote_type ENUM('like', 'dislike') NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_reply (user_id, reply_id),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (reply_id) REFERENCES replies(id) ON DELETE CASCADE
+            )
+        """)
+
+        db.execute("""
             CREATE TABLE IF NOT EXISTS community_members (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 user_id INT NOT NULL,

@@ -12,7 +12,6 @@ class AuthController:
 
             db = Database()
             user = db.fetch_one("SELECT * FROM users WHERE email = %s", (email,))
-            db.close()
 
             print(f"DEBUG login attempt: email={email!r}, password provided={'yes' if password else 'no'}")
             print(f"DEBUG fetched user: {user}")
@@ -38,9 +37,12 @@ class AuthController:
 
                 session["profile_pic"] = user.get("profile_pic")
                 flash(f"Welcome back, {user['name']}!", "success")
+                db.close()
                 return redirect(url_for("Home.home"))
             else:
                 flash("Incorrect email or password.", "danger")
+            
+            db.close()
 
         # Fetch live stats for auth page displays
         db = Database()

@@ -1,0 +1,244 @@
+/* ═══════════════════════════════════════════════════════════════════
+   animations.css — Keyframes, Reveal Animations & Micro-interactions
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Keyframe Animations ────────────────────────────────────────── */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes scaleInBounce {
+    0% { opacity: 0; transform: scale(0.3); }
+    50% { transform: scale(1.05); }
+    70% { transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
+
+@keyframes rotateIn {
+    from { opacity: 0; transform: rotate(-10deg) scale(0.9); }
+    to { opacity: 1; transform: rotate(0) scale(1); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes pulse-ring {
+    0% { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(194, 65, 12, 0.3); }
+    50% { box-shadow: 0 0 20px rgba(194, 65, 12, 0.6), 0 0 40px rgba(194, 65, 12, 0.3); }
+}
+
+@keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes bounce-subtle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+@keyframes ripple {
+    to { transform: scale(4); opacity: 0; }
+}
+
+@keyframes live-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.6; }
+}
+
+/* ── Animation Utility Classes ──────────────────────────────────── */
+.anim-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+.anim-fade-in-down { animation: fadeInDown 0.6s ease-out forwards; }
+.anim-fade-in-left { animation: fadeInLeft 0.6s ease-out forwards; }
+.anim-fade-in-right { animation: fadeInRight 0.6s ease-out forwards; }
+.anim-scale-in { animation: scaleIn 0.5s ease-out forwards; }
+.anim-scale-in-bounce { animation: scaleInBounce 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards; }
+.anim-slide-in-up { animation: slideInUp 0.5s ease-out forwards; }
+.anim-rotate-in { animation: rotateIn 0.6s ease-out forwards; }
+.anim-float { animation: float 3s ease-in-out infinite; }
+.anim-glow { animation: glow 2s ease-in-out infinite; }
+.anim-spin-slow { animation: spin-slow 20s linear infinite; }
+.anim-bounce-subtle { animation: bounce-subtle 2s ease-in-out infinite; }
+
+/* Legacy micro-interaction classes (used in some templates) */
+.animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+.animate-scale-in { animation: scaleIn 0.3s ease-out forwards; }
+.animate-slide-in-right { animation: fadeInRight 0.3s ease-out forwards; }
+
+/* ── Staggered Children Animation ───────────────────────────────── */
+.stagger-children > * {
+    opacity: 0;
+    animation: fadeInUp 0.4s ease-out forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+
+/* ── Scroll Reveal (triggered by JS) ────────────────────────────── */
+.reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.reveal-left {
+    opacity: 0;
+    transform: translateX(-40px);
+    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-left.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.reveal-right {
+    opacity: 0;
+    transform: translateX(40px);
+    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-right.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.reveal-scale {
+    opacity: 0;
+    transform: scale(0.85);
+    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-scale.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Staggered reveal delays */
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+
+/* ── Flash Ticker (single horizontal scroll, then disappears) ───── */
+@keyframes flash-marquee {
+    from { transform: translateX(100vw); }
+    to   { transform: translateX(-100%); }
+}
+
+.flash-ticker {
+    position: fixed;
+    top: 4rem;                 /* sits just below the fixed header (h-16) */
+    left: 0;
+    right: 0;
+    z-index: 60;
+    width: 100%;               /* full-length horizontal bar */
+    overflow: hidden;          /* clip the scrolling text */
+    white-space: nowrap;
+    pointer-events: none;      /* never blocks clicks underneath */
+}
+
+.flash-ticker__bar {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 0.3rem 0;         /* thin bar */
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.flash-ticker__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+    font-size: 0.8rem;         /* a bit smaller */
+    /* start off-screen right; scroll across once; hold the end state (off-screen left) */
+    transform: translateX(100vw);
+    animation: flash-marquee 7s linear forwards;
+}
+
+/* ── Live Pulse Indicator ───────────────────────────────────────── */
+.live-dot {
+    width: 8px;
+    height: 8px;
+    background: #EF4444;
+    border-radius: 50%;
+    position: relative;
+    animation: live-pulse 2s ease-in-out infinite;
+}
+
+.live-dot::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: #EF4444;
+    animation: pulse-ring 1.5s ease-out infinite;
+}

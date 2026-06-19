@@ -1,188 +1,735 @@
 {% extends "base.html" %}
 
-{% block title %}Chat | NicheForum{% endblock %}
+{% block title %}Messages — NicheForum{% endblock %}
+
+{% block styles %}
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   Chat Page — Modern Messaging UI
+   ═══════════════════════════════════════════════════════════════════ */
+
+.chat-layout {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 16px;
+    height: calc(100vh - 80px);
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 0;
+}
+
+
+@media (max-width: 768px) {
+    .chat-layout { grid-template-columns: 1fr; height: auto; }
+    .chat-sidebar { display: none; }
+    .chat-main { border-radius: 20px !important; }
+}
+
+/* ── Left Sidebar: Conversations ──────────────────────────────────── */
+.chat-sidebar {
+    background: var(--nf-surface, #fff);
+    border-right: 1px solid var(--nf-border, #E7E5E4);
+    border-radius: 20px 0 0 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chat-sidebar-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid #F5F5F4;
+}
+
+.chat-sidebar-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.chat-sidebar-title h2 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1C1917;
+}
+
+.chat-sidebar-title .badge {
+    background: linear-gradient(135deg, #C2410C, #EA580C);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 100px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.chat-search {
+    position: relative;
+}
+
+.chat-search input {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    border-radius: 12px;
+    border: 1px solid #E7E5E4;
+    background: #FAFAF9;
+    font-size: 13px;
+    color: #1C1917;
+    transition: all 0.2s;
+    outline: none;
+}
+
+.chat-search input:focus {
+    border-color: #C2410C;
+    box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.1);
+}
+
+.chat-search .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #A8A29E;
+}
+
+/* Contact list */
+.chat-contacts {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.chat-contact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.chat-contact:hover {
+    background: #F5F5F4;
+}
+
+.chat-contact.active {
+    background: linear-gradient(135deg, rgba(194, 65, 12, 0.08), rgba(234, 88, 12, 0.06));
+    border: 1px solid rgba(194, 65, 12, 0.15);
+}
+
+.chat-contact:not(.active) {
+    border: 1px solid transparent;
+}
+
+.chat-contact-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C2410C, #EA580C);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.chat-contact-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.chat-contact-status {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #22c55e;
+    border: 2px solid white;
+}
+
+.chat-contact-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.chat-contact-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1C1917;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-contact-preview {
+    font-size: 12px;
+    color: #A8A29E;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-contact-time {
+    font-size: 11px;
+    color: #A8A29E;
+    flex-shrink: 0;
+}
+
+/* Empty contacts */
+.chat-contacts-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.chat-contacts-empty-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #FFF7ED, #FEF3C7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+/* ── Main Chat Area ───────────────────────────────────────────────── */
+.chat-main {
+    background: #FAFAF9;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.chat-main:last-child {
+    border-radius: 0 20px 20px 0;
+}
+
+/* Chat header */
+.chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: var(--nf-surface, #fff);
+    border-bottom: 1px solid #F5F5F4;
+    z-index: 10;
+}
+
+.chat-header-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.chat-header-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C2410C, #EA580C);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.chat-header-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.chat-header-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1C1917;
+}
+
+.chat-header-status {
+    font-size: 12px;
+    color: #22c55e;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.chat-header-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+}
+
+.chat-header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.chat-header-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #F5F5F4;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #78716C;
+    transition: all 0.2s;
+}
+
+.chat-header-btn:hover {
+    background: rgba(194, 65, 12, 0.1);
+    color: #C2410C;
+}
+
+/* Message area */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chat-messages::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(194, 65, 12, 0.02) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(249, 115, 22, 0.02) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+/* Message bubbles */
+.chat-msg {
+    display: flex;
+    flex-direction: column;
+    max-width: 70%;
+    width: fit-content;
+    animation: msgFadeIn 0.3s ease-out;
+}
+
+@keyframes msgFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-msg.mine {
+    align-self: flex-end;
+    align-items: flex-end;
+    margin-left: auto;
+}
+
+.chat-msg.theirs {
+    align-self: flex-start;
+    align-items: flex-start;
+}
+
+.chat-bubble {
+    padding: 12px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+    position: relative;
+}
+
+.chat-msg.mine .chat-bubble {
+    background: linear-gradient(135deg, #C2410C, #EA580C);
+    color: white;
+    border-bottom-right-radius: 6px;
+    box-shadow: 0 4px 12px rgba(194, 65, 12, 0.25);
+}
+
+.chat-msg.theirs .chat-bubble {
+    background: white;
+    color: #1C1917;
+    border-bottom-left-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid #F5F5F4;
+}
+
+.chat-time {
+    font-size: 10px;
+    color: #A8A29E;
+    margin-top: 4px;
+    padding: 0 4px;
+}
+
+/* Share cards in messages */
+.chat-share-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    text-decoration: none;
+    margin-top: 4px;
+}
+
+.chat-msg.mine .chat-share-card {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.chat-msg.theirs .chat-share-card {
+    background: #FAFAF9;
+    color: #1C1917;
+}
+
+/* Message input */
+.chat-input-area {
+    padding: 16px 24px;
+    background: var(--nf-surface, #fff);
+    border-top: 1px solid #F5F5F4;
+}
+
+.chat-input-form {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #FAFAF9;
+    border: 1px solid #E7E5E4;
+    border-radius: 16px;
+    padding: 6px 6px 6px 18px;
+    transition: all 0.2s;
+}
+
+.chat-input-form:focus-within {
+    border-color: #C2410C;
+    box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.1);
+    background: white;
+}
+
+.chat-input-form input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    color: #1C1917;
+    outline: none;
+    text-align: right;
+}
+
+.chat-input-form input::placeholder {
+    color: #A8A29E;
+}
+
+.chat-send-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #C2410C, #EA580C);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.chat-send-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(194, 65, 12, 0.3);
+}
+
+/* ── Empty Chat State ─────────────────────────────────────────────── */
+.chat-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+}
+
+.chat-empty-icon {
+    width: 100px;
+    height: 100px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #FFF7ED, #FEF3C7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    animation: float 3s ease-in-out infinite;
+}
+
+/* ── Right Panel: Profile ─────────────────────────────────────────── */
+    text-align: center;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #F5F5F4;
+    margin-bottom: 24px;
+}
+
+.profile-avatar-lg {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C2410C, #EA580C);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+    margin: 0 auto 14px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(194, 65, 12, 0.2);
+}
+
+.profile-avatar-lg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-name-lg {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1C1917;
+}
+
+.profile-bio {
+    font-size: 13px;
+    color: #78716C;
+    margin-top: 6px;
+    line-height: 1.5;
+}
+
+/* Panel section */
+.panel-section {
+    margin-bottom: 24px;
+}
+
+.panel-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.panel-section-title h3 {
+    font-size: 11px;
+    font-weight: 700;
+    color: #78716C;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* Mutual community item */
+.mutual-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: 1px solid #F5F5F4;
+    margin-bottom: 8px;
+}
+
+.mutual-item:hover {
+    background: #FAFAF9;
+    border-color: rgba(194, 65, 12, 0.15);
+}
+
+.mutual-item-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(194, 65, 12, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.mutual-item-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1C1917;
+}
+
+.mutual-item-desc {
+    font-size: 11px;
+    color: #A8A29E;
+    margin-top: 2px;
+}
+
+/* Share form */
+.share-form {
+    padding: 16px;
+    border-radius: 14px;
+    background: #FAFAF9;
+    border: 1px solid #E7E5E4;
+}
+
+.share-form select {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #E7E5E4;
+    font-size: 13px;
+    background: white;
+    outline: none;
+}
+
+.share-form select:focus {
+    border-color: #C2410C;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="max-w-[1280px] mx-auto px-6 py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-[320px_1fr] xl:grid-cols-[320px_1fr_320px] gap-6 items-start">
+<div class="chat-layout">
 
-        <!-- ── Left: Chat tab / user list ─────────────────────────────── -->
-        <aside class="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden lg:sticky lg:top-24">
-            <div class="px-6 py-5 border-b border-slate-100">
-                <p class="text-sm uppercase tracking-[0.3em] text-on-surface-variant">Messages</p>
-                <h2 class="text-2xl font-semibold text-on-background mt-1 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary">chat</span>Chat
-                </h2>
-                <p class="text-sm text-on-surface-variant mt-1">Talk with other members and share your thoughts.</p>
+    <!-- ── LEFT: Conversations ──────────────────────────────────── -->
+    <aside class="chat-sidebar">
+        <div class="chat-sidebar-header">
+            <div class="chat-sidebar-title">
+                <h2>Messages</h2>
+                {# badge removed per UX request #}
             </div>
-            <div class="max-h-[60vh] overflow-y-auto divide-y divide-slate-100">
-                {% for c in conversations %}
-                <a href="{{ url_for('Chat.conversation', other_id=c.id) }}"
-                   class="flex items-center gap-3 px-5 py-4 hover:bg-surface-bright transition-all
-                          {% if other and other.id == c.id %}bg-primary/5 border-l-4 border-primary{% endif %}">
-                    <span class="h-11 w-11 shrink-0 rounded-full bg-primary text-white flex items-center justify-center font-semibold overflow-hidden">
-                        {% if c.profile_pic %}
-                            <img src="{{ url_for('static', filename=c.profile_pic) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
-                        {% else %}{{ c.name[0]|upper }}{% endif %}
-                    </span>
-                    <div class="min-w-0">
-                        <p class="font-semibold text-on-background truncate">{{ c.name }}</p>
-                        <p class="text-xs text-on-surface-variant">
-                            {% if c.last_at %}Tap to continue{% else %}Start a conversation{% endif %}
-                        </p>
-                    </div>
-                </a>
-                {% else %}
-                <p class="px-5 py-8 text-center text-sm text-slate-400">No other members yet.</p>
-                {% endfor %}
+            <div class="chat-search">
+                <span class="material-symbols-outlined search-icon text-base">search</span>
+                <input type="text" id="chatSearch" placeholder="Search conversations..." autocomplete="off">
             </div>
-        </aside>
-
-        <!-- ── Middle: Conversation ───────────────────────────────────── -->
-        <div class="bg-white rounded-[28px] shadow-sm border border-slate-200 flex flex-col min-h-[70vh]">
-            {% if other %}
-            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                <!-- Clicking the profile toggles the mutual-communities panel -->
-                <button type="button" onclick="toggleProfilePanel()" class="flex items-center gap-3 group text-left">
-                    <span class="h-12 w-12 rounded-full bg-primary text-white flex items-center justify-center font-semibold overflow-hidden">
-                        {% if other.profile_pic %}
-                            <img src="{{ url_for('static', filename=other.profile_pic) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
-                        {% else %}{{ other.name[0]|upper }}{% endif %}
-                    </span>
-                    <div>
-                        <p class="font-semibold text-on-background group-hover:text-primary transition-colors">{{ other.name }}</p>
-                        <p class="text-xs text-on-surface-variant">View shared communities</p>
-                    </div>
-                </button>
-                <button type="button" onclick="toggleProfilePanel()"
-                        class="xl:hidden rounded-full bg-primary/10 px-4 py-2 text-primary text-sm font-semibold">
-                    Profile
-                </button>
-            </div>
-
-            <div id="messageList" class="flex-1 overflow-y-auto px-6 py-5 space-y-3 max-h-[55vh]">
-                {% for m in messages %}
-                    {% include "_chat_message.html" %}
-                {% endfor %}
-            </div>
-
-            <div class="border-t border-slate-100 px-6 py-4">
-                <form action="{{ url_for('Chat.send_message', other_id=other.id) }}" method="POST" class="flex items-center gap-3">
-                    <input type="text" name="content" autocomplete="off" placeholder="Write a message..."
-                           class="flex-1 rounded-full bg-surface-container border-none py-3 px-5 focus:ring-2 focus:ring-primary text-body-md">
-                    <button type="submit" class="rounded-full bg-primary text-white p-3 hover:bg-primary-container transition-all">
-                        <span class="material-symbols-outlined">send</span>
-                    </button>
-                </form>
-            </div>
-            {% else %}
-            <div class="flex-1 flex flex-col items-center justify-center text-center px-8 py-16">
-                <span class="material-symbols-outlined text-6xl text-slate-300">forum</span>
-                <h3 class="mt-4 text-xl font-semibold text-on-background">Pick someone to chat with</h3>
-                <p class="mt-2 text-on-surface-variant max-w-sm">Choose a member from the list to start sharing thoughts. Click their profile to see the communities you both belong to.</p>
-            </div>
-            {% endif %}
         </div>
 
-        <!-- ── Right: Profile panel (mutual communities + share shortcuts) ── -->
+        <div class="chat-contacts" id="chatContacts">
+            {% for c in conversations %}
+            <a href="{{ url_for('Chat.conversation', other_id=c.id) }}"
+               class="chat-contact {% if other and other.id == c.id %}active{% endif %}"
+               data-name="{{ c.name|lower }}">
+                <div class="chat-contact-avatar">
+                    {% if c.profile_pic %}
+                        <img src="{{ url_for('static', filename=c.profile_pic) }}" alt="">
+                    {% else %}{{ c.name[0]|upper }}{% endif %}
+                    <div class="chat-contact-status"></div>
+                </div>
+                <div class="chat-contact-info">
+                    <p class="chat-contact-name">{{ c.name }}</p>
+                    <p class="chat-contact-preview">
+                        {% if c.last_at %}{{ c.last_message|default('') }}{% else %}Start a conversation{% endif %}
+                    </p>
+                </div>
+            </a>
+            {% else %}
+            <div class="chat-contacts-empty">
+                <div class="chat-contacts-empty-icon">
+                    <span class="material-symbols-outlined text-3xl text-[#C2410C]" style="font-variation-settings:'FILL' 1;">person_search</span>
+                </div>
+                <p class="text-sm font-semibold text-[#1C1917]">No conversations yet</p>
+                <p class="text-xs text-[#A8A29E] mt-2 max-w-[200px]">Follow someone who follows you back to start chatting.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </aside>
+
+    <!-- ── MAIN: Chat Area ──────────────────────────────────────── -->
+    <div class="chat-main">
         {% if other %}
-        <aside id="profilePanel" class="hidden xl:block space-y-6 lg:sticky lg:top-24">
-            <div class="bg-white rounded-[28px] p-6 shadow-sm border border-slate-200">
-                <div class="flex items-center gap-4 mb-4">
-                    <span class="h-14 w-14 rounded-full bg-primary text-white flex items-center justify-center text-2xl font-semibold overflow-hidden">
-                        {% if other.profile_pic %}
-                            <img src="{{ url_for('static', filename=other.profile_pic) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
-                        {% else %}{{ other.name[0]|upper }}{% endif %}
-                    </span>
-                    <div>
-                        <p class="text-sm text-on-surface-variant uppercase tracking-[0.24em]">Profile</p>
-                        <p class="text-lg font-semibold text-on-background">{{ other.name }}</p>
-                    </div>
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <button type="button" onclick="toggleProfilePanel()" class="chat-header-user">
+                <div class="chat-header-avatar">
+                    {% if other.profile_pic %}
+                        <img src="{{ url_for('static', filename=other.profile_pic) }}" alt="">
+                    {% else %}{{ other.name[0]|upper }}{% endif %}
                 </div>
-                {% if other.bio %}<p class="text-sm text-on-surface-variant">{{ other.bio }}</p>{% endif %}
-
-                <p class="mt-5 text-sm uppercase tracking-[0.24em] text-primary/90 font-semibold">Communities you both joined</p>
-                <div class="mt-3 space-y-2">
-                    {% for c in mutual_communities %}
-                    <a href="{{ url_for('Home.community_detail', community_id=c.id) }}"
-                       class="block rounded-2xl border border-slate-200 px-4 py-3 hover:bg-surface-bright transition-all">
-                        <p class="font-semibold text-on-background">c/{{ c.name }}</p>
-                        {% if c.description %}<p class="text-xs text-on-surface-variant line-clamp-1">{{ c.description }}</p>{% endif %}
-                    </a>
-                    {% else %}
-                    <p class="text-sm text-slate-400">You two don't share any communities yet.</p>
-                    {% endfor %}
+                <div>
+                    <p class="chat-header-name">{{ other.name }}</p>
+                    <p class="chat-header-status">Online</p>
                 </div>
+            </button>
+            <div class="chat-header-actions">
+                <button type="button" onclick="toggleProfilePanel()" class="chat-header-btn" title="View Profile">
+                    <span class="material-symbols-outlined text-lg">info</span>
+                </button>
+                <a href="{{ url_for('User.profile', user_id=other.id) }}" class="chat-header-btn" title="Full Profile">
+                    <span class="material-symbols-outlined text-lg">person</span>
+                </a>
             </div>
+        </div>
 
-            <!-- Share shortcuts: Live match + Create thread -->
-            <div class="bg-white rounded-[28px] p-6 shadow-sm border border-slate-200">
-                <p class="text-sm uppercase tracking-[0.3em] text-on-surface-variant">Share into chat</p>
-                <h3 class="text-lg font-semibold text-on-background mt-1">Quick shortcuts</h3>
+        <!-- Messages -->
+        <div class="chat-messages" id="messageList">
+            {% for m in messages %}
+                {% include "_chat_message.html" %}
+            {% endfor %}
+        </div>
 
-                <div class="mt-4 grid grid-cols-2 gap-3">
-                    <button type="button" onclick="openShare('live')"
-                            class="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 px-3 py-4 hover:border-primary/40 hover:bg-surface-bright transition-all">
-                        <span class="material-symbols-outlined text-2xl text-red-500">live_tv</span>
-                        <span class="text-sm font-semibold">Live match</span>
-                    </button>
-                    <button type="button" onclick="openShare('thread')"
-                            class="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 px-3 py-4 hover:border-primary/40 hover:bg-surface-bright transition-all">
-                        <span class="material-symbols-outlined text-2xl text-primary">edit_square</span>
-                        <span class="text-sm font-semibold">Create thread</span>
-                    </button>
-                </div>
+        <!-- Input -->
+        <div class="chat-input-area">
+            <form action="{{ url_for('Chat.send_message', other_id=other.id) }}" method="POST" class="chat-input-form">
+                <input type="text" name="content" autocomplete="off" placeholder="Type a message..." autofocus>
+                <button type="submit" class="chat-send-btn">
+                    <span class="material-symbols-outlined">send</span>
+                </button>
+            </form>
+        </div>
 
-                <!-- Community picker (revealed when a shortcut is pressed) -->
-                <form id="shareForm" action="{{ url_for('Chat.share_card', other_id=other.id) }}" method="POST" class="hidden mt-4 space-y-3">
-                    <input type="hidden" name="share_type" id="shareType" value="">
-                    <p id="sharePrompt" class="text-sm text-on-surface-variant">Select one of your communities to share.</p>
-                    {% if my_communities %}
-                    <select name="community_id" required
-                            class="w-full rounded-2xl border border-slate-200 px-4 py-2 focus:ring-2 focus:ring-primary text-sm">
-                        {% for c in my_communities %}
-                        <option value="{{ c.id }}">c/{{ c.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="flex justify-end gap-2">
-                        <button type="button" onclick="closeShare()" class="px-4 py-2 rounded-full border border-slate-200 text-on-surface-variant text-sm font-semibold hover:bg-slate-50">Cancel</button>
-                        <button type="submit" class="px-4 py-2 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-container">Share</button>
-                    </div>
-                    {% else %}
-                    <p class="text-sm text-slate-400">Join a community first to share threads or live matches.</p>
-                    {% endif %}
-                </form>
+        {% else %}
+        <!-- Empty State -->
+        <div class="chat-empty">
+            <div class="chat-empty-icon">
+                <span class="material-symbols-outlined text-5xl text-[#C2410C]" style="font-variation-settings:'FILL' 1;">forum</span>
             </div>
-        </aside>
+            <h3 class="text-xl font-bold text-[#1C1917] mb-2">Select a conversation</h3>
+            <p class="text-sm text-[#78716C] max-w-sm">
+                Choose a mutual follower from the list to start messaging. Your conversations are private and secure.
+            </p>
+        </div>
         {% endif %}
     </div>
-</section>
+
+</div>
 
 {% if other %}
 <script>
-    // ── Toggle the profile / mutual-communities panel ────────────────────
-    function toggleProfilePanel() {
-        const panel = document.getElementById('profilePanel');
-        if (!panel) return;
-        panel.classList.toggle('hidden');
-    }
+    // ── Search Conversations ──────────────────────────────────────────
+    // ── Search Conversations ──────────────────────────────────────────
+    document.getElementById('chatSearch')?.addEventListener('input', function(e) {
+        const q = e.target.value.toLowerCase();
+        document.querySelectorAll('.chat-contact').forEach(function(el) {
+            const name = el.getAttribute('data-name') || '';
+            el.style.display = name.includes(q) ? '' : 'none';
+        });
+    });
 
-    // ── Share shortcut: reveal picker and set the share type ─────────────
-    function openShare(type) {
-        const form = document.getElementById('shareForm');
-        document.getElementById('shareType').value = type;
-        document.getElementById('sharePrompt').textContent =
-            type === 'live'
-                ? 'Share a live match from one of your communities:'
-                : 'Share a create-thread link from one of your communities:';
-        form.classList.remove('hidden');
-        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    function closeShare() {
-        document.getElementById('shareForm').classList.add('hidden');
-    }
-
-    // ── Auto-refresh (polling) ───────────────────────────────────────────
+    // ── Auto-Refresh Polling ──────────────────────────────────────────
     const POLL_URL = "{{ url_for('Chat.poll_messages', other_id=other.id) }}";
     const list = document.getElementById('messageList');
 
@@ -193,24 +740,20 @@
     }
 
     function renderMessage(m) {
-        const side = m.mine ? 'items-end' : 'items-start';
-        const bubble = m.mine
-            ? 'bg-primary text-white rounded-br-md'
-            : 'bg-surface-container text-on-background rounded-bl-md';
+        const cls = m.mine ? 'mine' : 'theirs';
         let body;
         if (m.share_type) {
-            body =
-                '<a href="' + escapeHtml(m.share_url) + '" class="flex items-center gap-2 underline decoration-white/50">' +
-                '<span class="material-symbols-outlined text-base">' +
-                (m.share_type === 'live' ? 'live_tv' : 'edit_square') + '</span>' +
-                escapeHtml(m.share_label) + '</a>';
+            body = '<a href="' + escapeHtml(m.share_url) + '" class="chat-share-card">' +
+                   '<span class="material-symbols-outlined text-base">' +
+                   (m.share_type === 'live' ? 'sensors' : 'edit_note') + '</span>' +
+                   escapeHtml(m.share_label) + '</a>';
         } else {
             body = escapeHtml(m.content);
         }
         return (
-            '<div class="flex flex-col ' + side + '">' +
-              '<div class="max-w-[75%] px-4 py-2 rounded-2xl ' + bubble + ' text-sm break-words">' + body + '</div>' +
-              '<span class="mt-1 text-[11px] text-slate-400">' + escapeHtml(m.created_at) + '</span>' +
+            '<div class="chat-msg ' + cls + '">' +
+              '<div class="chat-bubble">' + body + '</div>' +
+              '<span class="chat-time">' + escapeHtml(m.created_at) + '</span>' +
             '</div>'
         );
     }
@@ -229,7 +772,7 @@
                 list.scrollTop = list.scrollHeight;
             }
             lastCount = data.messages.length;
-        } catch (e) { /* ignore transient network errors */ }
+        } catch (e) { /* ignore */ }
     }
 
     if (list) {

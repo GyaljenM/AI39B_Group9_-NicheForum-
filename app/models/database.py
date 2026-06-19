@@ -127,7 +127,10 @@ class Database:
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(100) NOT NULL UNIQUE,
                 description TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                category VARCHAR(100) DEFAULT 'Sports',
+                owner_id INT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL
             )
         """)
 
@@ -182,19 +185,6 @@ class Database:
                 user_email VARCHAR(100) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE
-            )
-        """)
-
-        db.execute("""
-            CREATE TABLE IF NOT EXISTS reply_votes (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NOT NULL,
-                reply_id INT NOT NULL,
-                vote_type ENUM('like', 'dislike') NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE KEY unique_user_reply (user_id, reply_id),
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                FOREIGN KEY (reply_id) REFERENCES replies(id) ON DELETE CASCADE
             )
         """)
 
@@ -558,6 +548,13 @@ class Database:
             if 'description' not in community_column_names:
                 print("Adding missing description column to communities table...")
                 db.execute("ALTER TABLE communities ADD COLUMN description TEXT")
+            if 'category' not in community_column_names:
+                print("Adding missing category column to communities table...")
+                db.execute("ALTER TABLE communities ADD COLUMN category VARCHAR(100) DEFAULT 'Sports'")
+            if 'owner_id' not in community_column_names:
+                print("Adding missing owner_id column to communities table...")
+                db.execute("ALTER TABLE communities ADD COLUMN owner_id INT NULL AFTER category")
+                db.execute("ALTER TABLE communities ADD CONSTRAINT fk_community_owner FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL")
         except Exception:
             pass
 
@@ -576,24 +573,56 @@ class Database:
         except Exception:
             pass
 
-        # Seed categories if they don't exist
+        # Seed core community categories
         try:
             existing_cats = db.fetch_all("SELECT name FROM categories")
             cat_names = [c['name'] for c in existing_cats]
-            for cat in ['Sports', 'eSports', 'Strategy', 'News']:
+            for cat in ['Football', 'Basketball', 'Tennis', 'Cricket', 'eSports', 'Combat Sports', 'Fitness']:
                 if cat not in cat_names:
                     db.execute("INSERT INTO categories (name) VALUES (%s)", (cat,))
         except Exception as e:
             print(f"Error seeding categories: {e}")
 
+        # Remove legacy placeholder communities that should no longer exist
+        try:
+            db.execute(
+                "DELETE FROM communities WHERE name IN (%s, %s, %s, %s)",
+                ('General Sports', 'eSports Hub', 'Strategy Lounge', 'Sports Newsroom')
+            )
+        except Exception as e:
+            print(f"Error removing legacy communities: {e}")
+
         # Seed default communities if none exist
         try:
             existing_communities = db.fetch_all("SELECT name FROM communities")
             community_names = [c['name'] for c in existing_communities]
-            default_comms = ['General Sports', 'eSports Hub', 'Strategy Lounge', 'Sports Newsroom']
+            # Ensure common sport hubs exist so the All Sports tab is populated
+            default_comms = [
+                'Basket Hub', 'Basketball Fanatics', 'Hoops Central',
+                'Football Leagues', 'Football Fans', 'Soccer Tactics',
+                'Tennis Club', 'Tennis Courts',
+                'Cricket Grounds', 'Cricket Leagues', 'Cricket Fans',
+                'Fitness & Training', 'Combat Arena'
+            ]
             for comm in default_comms:
                 if comm not in community_names:
-                    db.execute("INSERT INTO communities (name) VALUES (%s)", (comm,))
+                    # Determine a sensible category for seeded community names
+                    cname = comm.lower()
+                    if 'football' in cname or 'soccer' in cname:
+                        cat = 'Football'
+                    elif 'basket' in cname or 'hoop' in cname:
+                        cat = 'Basketball'
+                    elif 'tennis' in cname:
+                        cat = 'Tennis'
+                    elif 'cricket' in cname:
+                        cat = 'Cricket'
+                    elif 'combat' in cname or 'mma' in cname or 'box' in cname:
+                        cat = 'Combat Sports'
+                    elif 'fit' in cname or 'training' in cname or 'gym' in cname:
+                        cat = 'Fitness'
+                    else:
+                        cat = 'Football'
+                    db.execute("INSERT INTO communities (name, description, category) VALUES (%s, %s, %s)", (comm, f"The official hub for {comm} fans and discussion.", cat))
         except Exception as e:
             print(f"Error seeding communities: {e}")
 

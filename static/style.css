@@ -1,3 +1,58 @@
+/* ═══════════════════════════════════════════════════════════════════
+   OTP / Verification Page Styles (scoped to .otp-card)
+   Previously had destructive global selectors — now properly scoped.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Scoped card for OTP/verification pages */
+.otp-card {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    border: 1px solid #eef2f5;
+    margin: 0 auto;
+}
+
+.otp-card h2 {
+    color: #C2410C;
+    margin-bottom: 8px;
+}
+
+.otp-card p {
+    color: #78716C;
+    font-size: 14px;
+}
+
+.otp-card input[type="text"] {
+    width: 80%;
+    padding: 12px;
+    font-size: 20px;
+    text-align: center;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+}
+
+.otp-card button {
+    background-color: #C2410C;
+    color: white;
+    border: none;
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.otp-card button:hover {
+    background-color: #9a3412;
+}
 /* Clean fonts and subtle background color */
 body {
     font-family: Arial, sans-serif;
@@ -15,7 +70,7 @@ body {
 .card {
     background: #ffffff;
     padding: 30px;
-    border-radius: 12px;
+    border-radius: 4px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     width: 100%;
     max-width: 400px;
@@ -41,7 +96,7 @@ input[type="text"] {
     font-size: 20px;
     text-align: center;
     border: 2px solid #e2e8f0;
-    border-radius: 8px;
+    border-radius: 4px;
     letter-spacing: 4px;
     margin-bottom: 20px;
 }
@@ -54,7 +109,7 @@ button {
     padding: 14px 20px;
     font-size: 16px;
     font-weight: bold;
-    border-radius: 8px;
+    border-radius: 4px;
     width: 100%;
     cursor: pointer;
 }

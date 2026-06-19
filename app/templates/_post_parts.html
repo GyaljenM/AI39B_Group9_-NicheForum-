@@ -7,9 +7,9 @@
     {% for m in media %}
         {% if m.media_type == 'image' %}
         <img src="{{ url_for('static', filename=m.file_path) }}" alt="Attached image"
-             class="rounded-xl w-full max-h-96 object-cover border border-slate-100">
+             class="rounded w-full max-h-96 object-cover border border-slate-100">
         {% else %}
-        <video controls class="rounded-xl w-full max-h-96 bg-black border border-slate-100">
+        <video controls class="rounded w-full max-h-96 bg-black border border-slate-100">
             <source src="{{ url_for('static', filename=m.file_path) }}">
             Your browser does not support embedded videos.
         </video>
@@ -26,7 +26,7 @@
 <div class="mt-4 space-y-2">
     {% if item.show_results %}
         {% for o in item.poll_options %}
-        <div class="relative border border-slate-200 rounded-xl overflow-hidden">
+        <div class="relative border border-slate-200 rounded overflow-hidden">
             <div class="absolute inset-0 bg-primary/10" style="width: {{ o.pct }}%"></div>
             <div class="relative flex items-center justify-between px-4 py-2 text-sm">
                 <span class="font-medium {% if o.id == item.user_poll_vote %}text-primary{% else %}text-on-surface{% endif %}">
@@ -42,7 +42,7 @@
         <form action="{{ vote_action }}" method="POST">
             <input type="hidden" name="option_id" value="{{ o.id }}">
             <button type="submit"
-                    class="w-full text-left px-4 py-2 border border-slate-200 rounded-xl text-sm hover:border-primary hover:bg-indigo-50/40 transition-all">
+                    class="w-full text-left px-4 py-2 border border-slate-200 rounded text-sm hover:border-primary hover:bg-indigo-50/40 transition-all">
                 {{ o.option_text }}
             </button>
         </form>
@@ -50,7 +50,7 @@
         <p class="text-xs text-slate-400">Vote to see the results.</p>
     {% else %}
         {% for o in item.poll_options %}
-        <div class="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm text-slate-400">{{ o.option_text }}</div>
+        <div class="w-full px-4 py-2 border border-slate-200 rounded text-sm text-slate-400">{{ o.option_text }}</div>
         {% endfor %}
         <p class="text-xs text-slate-400">Log in to vote in this poll.</p>
     {% endif %}
@@ -74,7 +74,7 @@
 
 {# 1. Promoted banner — visible to everyone once a note is rated helpful enough. #}
 {% if item.top_note %}
-<div class="mt-4 border border-amber-200 bg-amber-50 rounded-xl p-4">
+<div class="mt-4 border border-amber-200 bg-amber-50 rounded p-4">
     <div class="flex items-center gap-2 mb-1.5">
         <span class="material-symbols-outlined text-amber-600 text-xl">fact_check</span>
         <div>
@@ -103,7 +103,7 @@
 
     <div id="notes-{{ kind }}-{{ item.id }}" class="hidden mt-3 space-y-3">
         {% for note in item.notes %}
-        <div class="border border-slate-200 rounded-xl p-4">
+        <div class="border border-slate-200 rounded p-4">
             <div class="flex items-center justify-between mb-1">
                 <p class="text-xs text-slate-500">Note by <span class="font-semibold text-slate-700">{{ note.author_name }}</span> &middot; {{ note.created_at }}</p>
                 {% if note.promoted %}
@@ -124,7 +124,7 @@
                 <form action="{{ url_for(rate_endpoint, note_id=note.id) }}" method="POST">
                     <input type="hidden" name="rating" value="helpful">
                     <button type="submit"
-                        class="flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs transition-all active:scale-95
+                        class="flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs transition-all
                         {% if note.user_rating == 'helpful' %}bg-green-50 border-green-200 text-green-700{% else %}border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
                         <span class="material-symbols-outlined text-sm">check_circle</span>
                         <span>Helpful ({{ note.helpful_count }})</span>
@@ -133,7 +133,7 @@
                 <form action="{{ url_for(rate_endpoint, note_id=note.id) }}" method="POST">
                     <input type="hidden" name="rating" value="not_helpful">
                     <button type="submit"
-                        class="flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs transition-all active:scale-95
+                        class="flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs transition-all
                         {% if note.user_rating == 'not_helpful' %}bg-red-50 border-red-200 text-red-700{% else %}border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
                         <span class="material-symbols-outlined text-sm">cancel</span>
                         <span>Not helpful ({{ note.not_helpful_count }})</span>
@@ -149,13 +149,13 @@
         {% endfor %}
 
         {% if logged_in %}
-        <form action="{{ add_action }}" method="POST" class="border border-dashed border-slate-200 rounded-xl p-4 space-y-2">
+        <form action="{{ add_action }}" method="POST" class="border border-dashed border-slate-200 rounded p-4 space-y-2">
             <p class="text-sm font-semibold text-on-surface">Add a community note</p>
             <textarea name="content" rows="3" required placeholder="Add context other readers should know. Be helpful and cite sources."
-                class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm"></textarea>
+                class="w-full px-4 py-2 rounded border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm"></textarea>
             <input type="url" name="source" placeholder="Source link (optional)"
-                class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm">
-            <button type="submit" class="px-5 py-2 bg-primary text-white rounded-full font-label-bold text-sm hover:bg-primary-container transition-all">
+                class="w-full px-4 py-2 rounded border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm">
+            <button type="submit" class="px-5 py-2 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary-container transition-all">
                 Submit note
             </button>
         </form>
@@ -173,7 +173,7 @@
      • Report → opens the shared report modal (defined once in base.html).
      • Delete → existing owner-only delete form.
    Click-to-toggle (mobile friendly); base.html closes open menus on outside click. #}
-{% macro render_actions_menu(item, kind, logged_in, is_owner=False, delete_action=None) %}
+{% macro render_actions_menu(item, kind, logged_in, is_owner=False, delete_action=None, edit_action=None) %}
 {% if kind == 'post' %}
     {% set report_action = url_for('Home.report_post', post_id=item.id) %}
 {% else %}
@@ -198,6 +198,12 @@
             <span class="material-symbols-outlined text-base text-slate-500">flag</span>
             Report {{ 'post' if kind == 'post' else 'thread' }}
         </button>
+        {% endif %}
+        {% if is_owner and edit_action %}
+        <a href="{{ edit_action }}" class="w-full block text-left px-4 py-2 text-sm text-on-surface hover:bg-slate-50 flex items-center gap-2 transition-colors">
+            <span class="material-symbols-outlined text-base">edit</span>
+            Edit {{ 'post' if kind == 'post' else 'thread' }}
+        </a>
         {% endif %}
         {% if is_owner and delete_action %}
         <div class="my-1 border-t border-slate-100"></div>

@@ -1,104 +1,781 @@
 {% extends "base.html" %}
+{% from '_composer.html' import composer, composer_script %}
+{% from '_post_parts.html' import render_media, render_poll, render_actions_menu, render_notes %}
 
-{% block title %}Home | NicheForum{% endblock %}
+{% block title %}Dashboard — NicheForum{% endblock %}
+
+{% block styles %}
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   Dashboard — Personalized Home Feed
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Hero Section ─────────────────────────────────────────────────── */
+.dash-hero {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #1C1917 0%, #292524 35%, #44403C 65%, #1C1917 100%);
+    min-height: 320px;
+}
+
+.dash-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 20% 10%, rgba(194, 65, 12, 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 90%, rgba(120, 113, 108, 0.15) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(194, 65, 12, 0.06) 0%, transparent 60%);
+}
+
+.dash-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(to top, var(--nf-bg, #FAFAF9), transparent);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.dash-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.22;
+    animation: float 9s ease-in-out infinite;
+}
+
+.dash-hero-inner {
+    position: relative;
+    z-index: 1;
+}
+
+/* Welcome badge */
+.dash-welcome {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 100px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    margin-bottom: 20px;
+}
+
+.dash-welcome-dot {
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+    animation: live-pulse 2s ease-in-out infinite;
+}
+
+.dash-welcome-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.75);
+}
+
+/* Quick nav icons */
+.dash-quick {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.dash-quick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 20px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    min-width: 90px;
+}
+
+.dash-quick-btn:hover {
+    background: rgba(255,255,255,0.14);
+    border-color: rgba(255,255,255,0.2);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+}
+
+.dash-quick-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dash-quick-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* ── Stats Strip ──────────────────────────────────────────────────── */
+.dash-stat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-radius: 16px;
+    background: var(--nf-surface, #fff);
+    border: 1px solid var(--nf-border, #E7E5E4);
+    transition: all 0.3s ease;
+}
+
+.dash-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--nf-shadow-md);
+    border-color: var(--nf-primary-glow);
+}
+
+.dash-stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.dash-stat-num {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1C1917;
+    line-height: 1;
+}
+
+.dash-stat-label {
+    font-size: 11px;
+    color: #78716C;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+}
+
+/* ── Create Post CTA ──────────────────────────────────────────────── */
+.dash-cta {
+    background: linear-gradient(135deg, #FFF7ED, #FFFBEB);
+    border: 1px solid rgba(194, 65, 12, 0.12);
+    border-radius: 20px;
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.dark .dash-cta {
+    background: linear-gradient(135deg, #2A2520, #3C3835);
+    border-color: rgba(194, 65, 12, 0.25);
+}
+
+.dash-cta h3 {
+    color: #1C1917;
+    transition: color 0.3s ease;
+}
+
+.dark .dash-cta h3 {
+    color: #FFFFFF;
+}
+
+.dash-cta p {
+    color: #78716C;
+    transition: color 0.3s ease;
+}
+
+.dark .dash-cta p {
+    color: #A8A29E;
+}
+
+.dash-cta-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #C2410C, #EA580C);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 20px rgba(194, 65, 12, 0.25);
+    flex-shrink: 0;
+}
+
+/* ── Post Feed Cards ──────────────────────────────────────────────── */
+.feed-card {
+    background: var(--nf-surface, #fff);
+    border: 1px solid var(--nf-border, #E7E5E4);
+    border-radius: 18px;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.feed-card:hover {
+    border-color: var(--nf-primary-glow, rgba(194,65,12,0.2));
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    transform: translateX(4px);
+}
+
+.feed-card-inner {
+    padding: 22px;
+}
+
+.feed-community-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    background: rgba(194, 65, 12, 0.06);
+    font-size: 11px;
+    font-weight: 700;
+    color: #C2410C;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.feed-community-chip:hover {
+    background: rgba(194, 65, 12, 0.12);
+}
+
+.feed-time {
+    font-size: 11px;
+    color: #A8A29E;
+}
+
+.feed-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1C1917;
+    line-height: 1.4;
+    margin-top: 10px;
+    margin-bottom: 8px;
+}
+
+.feed-title a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.feed-title a:hover {
+    color: #C2410C;
+}
+
+.feed-excerpt {
+    font-size: 14px;
+    color: #78716C;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.feed-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid #F5F5F4;
+}
+
+.feed-author {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.feed-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C2410C, #F97316);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+}
+
+.feed-author-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #44403C;
+}
+
+.feed-read-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #C2410C;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.feed-read-more:hover {
+    gap: 8px;
+}
+
+/* Menu dropdown */
+.feed-menu-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #A8A29E;
+    padding: 4px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.feed-menu-btn:hover {
+    background: #F5F5F4;
+    color: #1C1917;
+}
+
+.feed-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 4px;
+    background: white;
+    border: 1px solid #E7E5E4;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    min-width: 160px;
+    overflow: hidden;
+    z-index: 20;
+    display: none;
+}
+
+.feed-dropdown.show {
+    display: block;
+    animation: fadeInDown 0.2s ease-out;
+}
+
+.feed-dropdown button {
+    width: 100%;
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #DC2626;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s;
+}
+
+.feed-dropdown button:hover {
+    background: #FEF2F2;
+}
+
+/* ── Empty State ──────────────────────────────────────────────────── */
+.dash-empty {
+    text-align: center;
+    padding: 60px 24px;
+}
+
+.dash-empty-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #FFF7ED, #FEF3C7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    animation: float 3s ease-in-out infinite;
+}
+
+/* ── Sidebar Profile Card ─────────────────────────────────────────── */
+.profile-mini {
+    text-align: center;
+    padding: 28px 20px;
+}
+
+.profile-mini-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C2410C, #EA580C);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+    font-size: 28px;
+    font-weight: 800;
+    color: white;
+    box-shadow: 0 6px 20px rgba(194, 65, 12, 0.25);
+}
+
+/* Section heading */
+.dash-section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.dash-section-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dash-section-head h2 {
+    font-size: 13px;
+    font-weight: 800;
+    color: #1C1917;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .dash-sidebar { display: none; }
+    .dash-main { grid-column: span 12 !important; }
+}
+
+@media (max-width: 640px) {
+    .dash-quick { gap: 8px; }
+    .dash-quick-btn { min-width: 76px; padding: 12px 14px; }
+    .dash-cta { flex-direction: column; text-align: center; }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="max-w-[1280px] mx-auto px-6 py-8">
-    <div class="grid grid-cols-1 xl:grid-cols-[1.5fr_0.9fr] gap-6">
-        <div class="space-y-6">
-            <div class="rounded-[32px] bg-gradient-to-r from-primary to-secondary p-8 text-white shadow-2xl overflow-hidden">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                    <div>
-                        <p class="text-sm font-semibold uppercase tracking-[0.3em] text-white/80">Your community feed</p>
-                        <h1 class="mt-4 text-4xl font-bold">Welcome back, {{ user_name }}.</h1>
-                        <p class="mt-3 max-w-2xl text-white/90 text-body-lg">Explore the latest posts, trending conversations and community updates tailored for you. Stay engaged with your favorite topics and discover more niche forums.</p>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <a href="{{ url_for('Home.communities') }}" class="rounded-full bg-white/15 p-4 shadow-lg border border-white/10 hover:bg-white/25 transition-all group" title="Communities">
-                            <span class="material-symbols-outlined text-4xl">forum</span>
-                        </a>
-                        <a href="{{ url_for('Home.trending') }}" class="rounded-full bg-white/15 p-4 shadow-lg border border-white/10 hover:bg-white/25 transition-all group" title="Trending">
-                            <span class="material-symbols-outlined text-4xl">whatshot</span>
-                        </a>
-                        <a href="{{ url_for('Home.live') }}" class="rounded-full bg-white/15 p-4 shadow-lg border border-white/10 hover:bg-white/25 transition-all group" title="Live Matches">
-                            <span class="material-symbols-outlined text-4xl">live_tv</span>
-                        </a>
-                    </div>
+<!-- ═══════════════════════════════════════════════════════════════════
+     HERO SECTION
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="dash-hero flex items-center">
+    <!-- Orbs -->
+    <div class="dash-orb" style="width:280px;height:280px;background:#C2410C;top:5%;left:8%;animation-delay:0s;"></div>
+    <div class="dash-orb" style="width:180px;height:180px;background:#F97316;bottom:15%;right:12%;animation-delay:3s;"></div>
+    <div class="dash-orb" style="width:120px;height:120px;background:#FBBF24;top:45%;right:38%;animation-delay:5s;"></div>
+
+    <div class="dash-hero-inner max-w-[1280px] mx-auto px-6 py-14 w-full">
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10">
+            <div class="max-w-xl">
+                <div class="dash-welcome">
+                    <div class="dash-welcome-dot"></div>
+                    <span class="dash-welcome-text">Your personalized feed</span>
                 </div>
+
+                <h1 class="text-4xl md:text-5xl font-bold text-white leading-[1.1] tracking-tight mb-4">
+                    Welcome back,<br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">{{ user_name }}</span>
+                </h1>
+
+                <p class="text-base text-white/55 leading-relaxed max-w-md">
+                    Here's what's happening in your communities today. Dive into trending discussions, catch live matches, and connect with your tribe.
+                </p>
             </div>
 
-            <div class="grid gap-6">
-                <div class="bg-white rounded-[28px] p-6 shadow-sm border border-slate-200">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
-                        <div>
-                            <p class="text-sm uppercase tracking-[0.24em] text-primary/90 font-semibold">Join the conversation</p>
-                            <h2 class="text-2xl font-semibold text-on-background mt-2">Ready to share something?</h2>
+            <!-- Quick Navigation -->
+            <div class="dash-quick">
+                <a href="{{ url_for('Home.communities') }}" class="dash-quick-btn">
+                    <div class="dash-quick-icon" style="background:rgba(249,115,22,0.2);">
+                        <span class="material-symbols-outlined text-orange-300 text-2xl" style="font-variation-settings:'FILL' 1;">hub</span>
+                    </div>
+                    <span class="dash-quick-label">Communities</span>
+                </a>
+                <a href="{{ url_for('Home.trending') }}" class="dash-quick-btn">
+                    <div class="dash-quick-icon" style="background:rgba(239,68,68,0.2);">
+                        <span class="material-symbols-outlined text-red-300 text-2xl" style="font-variation-settings:'FILL' 1;">whatshot</span>
+                    </div>
+                    <span class="dash-quick-label">Trending</span>
+                </a>
+                <a href="{{ url_for('Home.live') }}" class="dash-quick-btn">
+                    <div class="dash-quick-icon" style="background:rgba(74,222,128,0.2);">
+                        <span class="material-symbols-outlined text-green-300 text-2xl" style="font-variation-settings:'FILL' 1;">sensors</span>
+                    </div>
+                    <span class="dash-quick-label">Live</span>
+                </a>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     MAIN CONTENT — FEED + SIDEBAR
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="max-w-[1280px] mx-auto px-6 grid grid-cols-12 gap-8 pb-20">
+
+    <!-- ── LEFT: Feed ───────────────────────────────────────────── -->
+    <div class="dash-main col-span-12 lg:col-span-8">
+
+        <!-- Create Post CTA -->
+        <div class="dash-cta mb-8 reveal">
+            <div class="dash-cta-icon">
+                <span class="material-symbols-outlined text-white text-2xl">edit_note</span>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-base font-bold text-[#1C1917] mb-1">Ready to share something?</h3>
+                <p class="text-sm text-[#78716C]">Start a discussion, ask a question, or share your take.</p>
+            </div>
+            <a href="{{ url_for('Home.communities') }}" class="nf-btn nf-btn-primary" style="white-space:nowrap;">
+                <span class="material-symbols-outlined text-lg">explore</span>
+                Explore Communities
+            </a>
+        </div>
+
+        <!-- Feed Header -->
+        <div class="dash-section-head">
+            <div class="dash-section-icon" style="background:rgba(194,65,12,0.08);">
+                <span class="material-symbols-outlined text-[#C2410C] text-base" style="font-variation-settings:'FILL' 1;">dynamic_feed</span>
+            </div>
+            <h2>Latest Activity</h2>
+            <span class="ml-auto text-xs text-[#A8A29E]">Auto-updates</span>
+        </div>
+
+        <!-- Post Feed -->
+        <div class="flex flex-col gap-4">
+            {% if posts %}
+            {% for post in posts %}
+            <article class="feed-card reveal" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                <div class="feed-card-inner">
+                    <!-- Header: Community + Time + Menu -->
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-3">
+                            <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="feed-community-chip">
+                                <span class="material-symbols-outlined text-sm">hub</span>
+                                {{ post.community_name }}
+                            </a>
+                            <span class="feed-time">{{ post.created_at }}</span>
                         </div>
-                        <a href="{{ url_for('Home.communities') }}" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-white font-semibold shadow-lg hover:bg-primary-container transition-all">
-                            <span class="material-symbols-outlined">explore</span>
-                            Explore Communities to Post
+
+                        {% if session.get('user_id') %}
+                            {{ render_actions_menu(
+                                post,
+                                'post',
+                                session.get('user_id'),
+                                session.get('user_id') == post.user_id,
+                                url_for('Home.delete_post', post_id=post.id),
+                                url_for('Home.edit_post', post_id=post.id)
+                            ) }}
+                        {% endif %}
+                    </div>
+
+                    <!-- Title -->
+                    <h3 class="feed-title">
+                        <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}">{{ post.title }}</a>
+                    </h3>
+
+                    <!-- Excerpt -->
+                    <p class="feed-excerpt">{{ post.content }}</p>
+
+                    {{ render_media(post.media) }}
+                    {{ render_poll(post, url_for('Home.vote_poll', post_id=post.id), session.get('user_id')) }}
+                    {{ render_notes(post, 'post', session.get('user_id')) }}
+
+                    <div class="flex flex-wrap gap-2 items-center mt-4 pt-4 border-t border-slate-100">
+                        <form action="{{ url_for('Home.vote_post', post_id=post.id) }}" method="POST">
+                            <input type="hidden" name="vote_type" value="like">
+                            <button type="submit"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition-all active:scale-95
+                                {% if post.user_vote == 'like' %}bg-green-50 border-green-200 text-green-700{% else %}border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
+                                <span class="material-symbols-outlined text-base">thumb_up</span>
+                                <span>{{ post.like_count }}</span>
+                            </button>
+                        </form>
+                        <form action="{{ url_for('Home.vote_post', post_id=post.id) }}" method="POST">
+                            <input type="hidden" name="vote_type" value="dislike">
+                            <button type="submit"
+                                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition-all
+                                {% if post.user_vote == 'dislike' %}bg-red-50 border-red-200 text-red-700{% else %}border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
+                                <span class="material-symbols-outlined text-base">thumb_down</span>
+                                <span>{{ post.dislike_count }}</span>
+                            </button>
+                        </form>
+                        <button type="button" onclick="document.getElementById('replies-{{ post.id }}').classList.toggle('hidden')"
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm transition-all">
+                            <span class="material-symbols-outlined text-base">chat_bubble</span>
+                            <span>{{ post.comments|length }} {{ 'Reply' if post.comments|length == 1 else 'Replies' }}</span>
+                        </button>
+                    </div>
+
+                    <div id="replies-{{ post.id }}" class="hidden mt-4 space-y-4">
+                        {% for comment in post.comments %}
+                        <div class="flex gap-3">
+                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-sm shrink-0">
+                                {{ comment.user_name[0]|upper }}
+                            </div>
+                            <div class="flex-1 bg-slate-50 rounded-xl px-4 py-2">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <p class="text-sm font-semibold">{{ comment.user_name }}</p>
+                                    <p class="text-xs text-slate-400">{{ comment.created_at }}</p>
+                                </div>
+                                <p class="text-sm text-on-surface-variant whitespace-pre-line">{{ comment.content }}</p>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-sm text-slate-400 pl-1">No replies yet. Start the conversation!</p>
+                        {% endfor %}
+
+                        {% if session.get('user_id') %}
+                        <form action="{{ url_for('Home.comment_post', post_id=post.id) }}" method="POST" class="flex gap-2 pt-2">
+                            <input type="text" name="content" placeholder="Write a reply..." required
+                                class="flex-1 px-4 py-2 rounded-full border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm">
+                            <button type="submit" class="px-5 py-2 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary-container transition-all">
+                                Reply
+                            </button>
+                        </form>
+                        {% else %}
+                        <p class="text-sm text-slate-400 pl-1">Please log in to reply.</p>
+                        {% endif %}
+
+                    </div>
+
+                    <!-- Footer: Author + Read More -->
+                    <div class="feed-meta">
+                        <div class="feed-author">
+                            <div class="feed-avatar">{{ post.user_name[0]|upper }}</div>
+                            <span class="feed-author-name">@{{ post.user_name }}</span>
+                        </div>
+                        <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="feed-read-more">
+                            Read more
+                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
                         </a>
                     </div>
                 </div>
+            </article>
+            {% endfor %}
 
-                <div class="bg-white rounded-[28px] p-6 shadow-sm border border-slate-200">
-                    <div class="flex items-center justify-between mb-6">
-                        <div>
-                            <p class="text-sm uppercase tracking-[0.3em] text-on-surface-variant">Recent Activity</p>
-                            <h2 class="text-2xl font-semibold text-on-background mt-1">Latest from NicheForum</h2>
-                        </div>
-                    </div>
-
-                    <div class="space-y-5">
-                        {% if posts %}
-                            {% for post in posts %}
-                            <article class="rounded-3xl border border-slate-200 p-6 hover:border-primary/20 transition-all relative">
-                                <div class="flex items-start gap-4">
-                                    <div class="flex-1">
-                                        <div class="flex items-center justify-between mb-3">
-                                            <div class="flex flex-wrap items-center gap-2 text-xs text-on-surface-variant uppercase tracking-[0.18em] font-semibold">
-                                                <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="rounded-full bg-primary/10 text-primary px-3 py-1 hover:bg-primary hover:text-white transition-colors">c/{{ post.community_name }}</a>
-                                                <span>• {{ post.created_at }}</span>
-                                            </div>
-                                            {% if session.get('user_id') == post.user_id %}
-                                            <div class="relative group">
-                                                <button class="p-1 hover:bg-slate-50 rounded-full transition-all">
-                                                    <span class="material-symbols-outlined text-xl">more_vert</span>
-                                                </button>
-                                                <div class="absolute right-0 top-0 mt-8 hidden group-hover:block z-20">
-                                                    <div class="bg-white border border-slate-100 rounded-xl shadow-xl py-2 min-w-[140px]">
-                                                        <form action="{{ url_for('Home.delete_post', post_id=post.id) }}" method="POST" onsubmit="return confirm('Delete this post permanently?')">
-                                                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
-                                                                <span class="material-symbols-outlined text-sm">delete</span>
-                                                                Delete Post
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                        <h3 class="text-xl font-semibold text-on-background">{{ post.title }}</h3>
-                                        <p class="mt-3 text-body-md text-on-surface-variant line-clamp-2">{{ post.content }}</p>
-                                        <div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-on-surface-variant">
-                                            <span class="flex items-center gap-2"><span class="material-symbols-outlined">account_circle</span> @{{ post.user_name }}</span>
-                                            <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="text-primary font-semibold hover:underline">Read more</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </article>
-                            {% endfor %}
-                        {% else %}
-                            <div class="text-center py-12">
-                                <p class="text-slate-400">No posts yet. Join a community and start posting!</p>
-                            </div>
-                        {% endif %}
-                    </div>
+            {% else %}
+            <!-- Empty State -->
+            <div class="dash-empty nf-card p-12">
+                <div class="dash-empty-icon">
+                    <span class="material-symbols-outlined text-4xl text-[#C2410C]" style="font-variation-settings:'FILL' 1;">dynamic_feed</span>
                 </div>
+                <h3 class="text-lg font-bold text-[#1C1917] mb-2">Your feed is empty</h3>
+                <p class="text-sm text-[#78716C] mb-6 max-w-sm mx-auto">Join communities and start following people to see posts tailored for you.</p>
+                <a href="{{ url_for('Home.communities') }}" class="nf-btn nf-btn-primary inline-flex items-center gap-2">
+                    <span class="material-symbols-outlined text-lg">hub</span>
+                    Explore Communities
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ── RIGHT: Sidebar ───────────────────────────────────────── -->
+    <aside class="dash-sidebar col-span-12 lg:col-span-4 flex flex-col gap-6">
+
+        <!-- Your Communities -->
+        <div class="nf-card p-6">
+            <div class="dash-section-head mb-4">
+                <div class="dash-section-icon" style="background:rgba(249,115,22,0.1);">
+                    <span class="material-symbols-outlined text-orange-500 text-base" style="font-variation-settings:'FILL' 1;">hub</span>
+                </div>
+                <h2>Your Communities</h2>
+            </div>
+            <div class="flex flex-col gap-1 stagger-children">
+                {% for community in communities %}
+                <a href="{{ url_for('Home.community_detail', community_id=community.id) }}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F5F5F4] transition-all group">
+                    {% if community.name == 'Football' %}
+                    <span class="material-symbols-outlined text-[#16a34a]" style="font-variation-settings:'FILL' 1;">sports_soccer</span>
+                    {% elif community.name == 'Basketball' %}
+                    <span class="material-symbols-outlined text-[#2563EB]" style="font-variation-settings:'FILL' 1;">sports_basketball</span>
+                    {% elif community.name == 'Tennis' %}
+                    <span class="material-symbols-outlined text-[#CA8A04]" style="font-variation-settings:'FILL' 1;">sports_tennis</span>
+                    {% elif community.name == 'Cricket' %}
+                    <span class="material-symbols-outlined text-[#059669]" style="font-variation-settings:'FILL' 1;">sports_cricket</span>
+                    {% elif community.name == 'eSports' %}
+                    <span class="material-symbols-outlined text-[#7C3AED]" style="font-variation-settings:'FILL' 1;">sports_esports</span>
+                    {% else %}
+                    <span class="material-symbols-outlined text-[#C2410C]" style="font-variation-settings:'FILL' 1;">groups</span>
+                    {% endif %}
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-[#1C1917] truncate group-hover:text-[#C2410C] transition-colors">{{ community.name }}</p>
+                    </div>
+                    <span class="material-symbols-outlined text-[#A8A29E] text-base group-hover:text-[#C2410C] transition-colors">chevron_right</span>
+                </a>
+                {% endfor %}
+            </div>
+            <a href="{{ url_for('Home.communities') }}" class="mt-3 block text-center w-full py-2.5 text-[#C2410C] font-semibold text-sm border border-[#C2410C]/20 rounded-xl hover:bg-[#C2410C]/5 transition-all">
+                Browse All
+            </a>
+        </div>
+
+        <!-- Trending Topics -->
+        <div class="nf-card p-6">
+            <div class="dash-section-head mb-4">
+                <div class="dash-section-icon" style="background:rgba(239,68,68,0.1);">
+                    <span class="material-symbols-outlined text-red-500 text-base" style="font-variation-settings:'FILL' 1;">whatshot</span>
+                </div>
+                <h2>Trending Now</h2>
+            </div>
+            <div class="flex flex-col gap-2">
+                <a href="{{ url_for('Home.trending') }}" class="flex items-start gap-3 p-3 rounded-xl hover:bg-[#F5F5F4] transition-all group">
+                    <span class="text-sm font-bold text-[#A8A29E] mt-0.5">01</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-[#1C1917] group-hover:text-[#C2410C] transition-colors">#WorldCup2026</p>
+                    </div>
+                </a>
+                {# Only World Cup trending shown on home page per request #}
             </div>
         </div>
 
-        {% include "_sidebar.html" %}
-    </div>
-</section>
+        <!-- Removed Explore quick links as requested -->
+    </aside>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCRIPTS — Scroll Reveal + Close dropdowns
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+    /* ── Scroll Reveal ────────────────────────────────────────────── */
+    var revealEls = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window && revealEls.length) {
+        var obs = new IntersectionObserver(function(entries) {
+            entries.forEach(function(e) {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    obs.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        revealEls.forEach(function(el) { obs.observe(el); });
+    } else {
+        revealEls.forEach(function(el) { el.classList.add('visible'); });
+    }
+
+    /* ── Close feed dropdowns on outside click ────────────────────── */
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.feed-menu-btn')) {
+            document.querySelectorAll('.feed-dropdown.show').forEach(function(d) {
+                d.classList.remove('show');
+            });
+        }
+    });
+})();
+</script>
 {% endblock %}

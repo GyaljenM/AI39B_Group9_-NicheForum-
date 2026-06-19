@@ -14,10 +14,19 @@ EMAIL_SMTP_SERVER = "smtp.gmail.com"
 EMAIL_SMTP_PORT = 587
 EMAIL_SERVICE_API_KEY = "tecr fpns leas rzzr"
 
-# API-Football key for live World Cup 2026 scores on the home page.
-# Get a free key at https://www.api-football.com/ (or dashboard.api-football.com).
+# football-data.org token for live World Cup scores on the /live page.
+# Get a free token at https://www.football-data.org/client/register — the free
+# tier includes the FIFA World Cup (competition code "WC").
+#
+# The browser never sees this token: the Flask /api/live route calls
+# football-data.org server-side and the page polls our own endpoint. That also
+# sidesteps the CORS block football-data.org applies to direct browser calls.
+#
 # Leave blank to fall back to clearly-labelled sample fixtures. Prefer setting
-# the API_FOOTBALL_KEY environment variable over hard-coding it here.
+# the FOOTBALL_DATA_TOKEN environment variable over committing the key.
 import os
-API_FOOTBALL_KEY = os.environ.get("API_FOOTBALL_KEY", "")
+FOOTBALL_DATA_TOKEN = os.environ.get("FOOTBALL_DATA_TOKEN", "c665fce411204ba6b5cb96d7d73a96fd")
+
+# Backwards-compatible alias for older code that read API_FOOTBALL_KEY.
+API_FOOTBALL_KEY = FOOTBALL_DATA_TOKEN
 

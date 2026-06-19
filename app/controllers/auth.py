@@ -42,7 +42,14 @@ class AuthController:
             else:
                 flash("Incorrect email or password.", "danger")
 
-        return render_template("login.html")
+        # Fetch live stats for auth page displays
+        db = Database()
+        total_communities = db.fetch_one("SELECT COUNT(*) AS count FROM communities")['count'] or 0
+        total_members = db.fetch_one("SELECT COUNT(*) AS count FROM users")['count'] or 0
+        online_now = db.fetch_one("SELECT COUNT(*) AS count FROM users WHERE is_active = 1")['count'] or 0
+        db.close()
+
+        return render_template("login.html", total_communities=total_communities, total_members=total_members, online_now=online_now)
     
     def register(self):
         if request.method == "POST":
@@ -96,7 +103,14 @@ class AuthController:
                 traceback.print_exc()
                 flash("An error occurred during registration. Please try again.", "danger")
 
-        return render_template("register.html")
+        # Fetch live stats for auth page displays
+        db = Database()
+        total_communities = db.fetch_one("SELECT COUNT(*) AS count FROM communities")['count'] or 0
+        total_members = db.fetch_one("SELECT COUNT(*) AS count FROM users")['count'] or 0
+        online_now = db.fetch_one("SELECT COUNT(*) AS count FROM users WHERE is_active = 1")['count'] or 0
+        db.close()
+
+        return render_template("register.html", total_communities=total_communities, total_members=total_members, online_now=online_now)
 
     def forgot_password(self):
         if request.method == "POST":

@@ -1,76 +1,809 @@
 {% extends "base.html" %}
+{% block title %}Live Matches — NicheForum{% endblock %}
 
-{% block title %}Live Matches | NicheForum{% endblock %}
+{% block styles %}
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   Live Page — Broadcast-Style Sports Design
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Hero Section ─────────────────────────────────────────────────── */
+.live-hero {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0C0A09 0%, #1C1917 40%, #292524 70%, #0C0A09 100%);
+    min-height: 300px;
+}
+
+.live-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 15% 30%, rgba(239, 68, 68, 0.25) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 70%, rgba(194, 65, 12, 0.15) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(239, 68, 68, 0.05) 0%, transparent 60%);
+}
+
+.live-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(to top, var(--nf-bg, #FAFAF9), transparent);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.live-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.2;
+    animation: float 9s ease-in-out infinite;
+}
+
+.live-hero-inner {
+    position: relative;
+    z-index: 1;
+}
+
+/* LIVE badge */
+.live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 100px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    margin-bottom: 20px;
+}
+
+.live-dot-pulse {
+    width: 8px;
+    height: 8px;
+    background: #EF4444;
+    border-radius: 50%;
+    position: relative;
+    animation: live-pulse 2s ease-in-out infinite;
+}
+
+.live-dot-pulse::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: #EF4444;
+    animation: pulse-ring 1.5s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+    0% { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+}
+
+.live-badge-text {
+    font-size: 12px;
+    font-weight: 800;
+    color: #EF4444;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+}
+
+/* Glass stat cards */
+.live-glass {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+}
+
+.live-glass:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.18);
+    transform: translateY(-2px);
+}
+
+/* ── Filter Tabs ──────────────────────────────────────────────────── */
+.live-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 100px;
+    border: 1.5px solid var(--nf-border, #E7E5E4);
+    background: var(--nf-surface, #fff);
+    color: var(--nf-text-secondary, #78716C);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.live-tab:hover {
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #DC2626;
+    background: rgba(239, 68, 68, 0.04);
+}
+
+.live-tab.active {
+    background: linear-gradient(135deg, #DC2626, #EF4444);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+
+/* ── Featured Match Card ──────────────────────────────────────────── */
+.featured-card {
+    background: linear-gradient(135deg, #1C1917, #292524, #44403C);
+    border-radius: 24px;
+    overflow: hidden;
+    position: relative;
+    color: white;
+}
+
+.featured-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 30% 20%, rgba(239, 68, 68, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(194, 65, 12, 0.1) 0%, transparent 40%);
+    pointer-events: none;
+}
+
+.featured-inner {
+    position: relative;
+    z-index: 1;
+    padding: 32px;
+}
+
+.featured-league {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 100px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.featured-clock {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 100px;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    font-size: 12px;
+    font-weight: 800;
+    color: #EF4444;
+    letter-spacing: 0.08em;
+}
+
+.featured-teams {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding: 32px 0;
+}
+
+.featured-team {
+    flex: 1;
+    text-align: center;
+}
+
+.team-crest {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+    position: relative;
+}
+
+.team-crest::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 23px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+    z-index: -1;
+}
+
+.featured-score {
+    font-size: 56px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    background: linear-gradient(to bottom, #fff, rgba(255,255,255,0.7));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.featured-vs {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+}
+
+.featured-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-live-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #DC2626, #EF4444);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    text-decoration: none;
+}
+
+.btn-live-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+}
+
+.btn-live-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.85);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-decoration: none;
+}
+
+.btn-live-ghost:hover {
+    background: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.25);
+}
+
+/* ── Match Cards Grid ─────────────────────────────────────────────── */
+.match-card {
+    background: var(--nf-surface, #fff);
+    border: 1px solid var(--nf-border, #E7E5E4);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+
+.match-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1), 0 8px 16px -4px rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.match-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #FAFAF9;
+    border-bottom: 1px solid #F5F5F4;
+}
+
+.match-league-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #78716C;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.match-league-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.match-clock {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+}
+
+.match-clock-live {
+    background: rgba(239, 68, 68, 0.08);
+    color: #DC2626;
+}
+
+.match-clock-upcoming {
+    background: #F5F5F4;
+    color: #78716C;
+}
+
+.match-body {
+    padding: 24px 20px;
+}
+
+.match-teams {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.match-team {
+    flex: 1;
+    text-align: center;
+}
+
+.match-team-crest {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+}
+
+.match-team-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1C1917;
+}
+
+.match-score {
+    font-size: 28px;
+    font-weight: 900;
+    color: #1C1917;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    padding: 0 8px;
+}
+
+.match-vs {
+    font-size: 11px;
+    font-weight: 700;
+    color: #D6D3D1;
+    letter-spacing: 0.2em;
+}
+
+.match-footer {
+    padding: 14px 20px;
+    border-top: 1px solid #F5F5F4;
+    display: flex;
+    gap: 8px;
+}
+
+.match-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    border: none;
+}
+
+.match-btn-primary {
+    background: linear-gradient(135deg, #DC2626, #EF4444);
+    color: white;
+}
+
+.match-btn-primary:hover {
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+    transform: translateY(-1px);
+}
+
+.match-btn-secondary {
+    background: #F5F5F4;
+    color: #44403C;
+}
+
+.match-btn-secondary:hover {
+    background: #E7E5E4;
+    color: #DC2626;
+}
+
+/* ── Upcoming Timeline ────────────────────────────────────────────── */
+.upcoming-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 16px;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.upcoming-item:hover {
+    background: #F5F5F4;
+    transform: translateX(4px);
+}
+
+.upcoming-time {
+    text-align: center;
+    min-width: 52px;
+    padding: 8px;
+    border-radius: 12px;
+    background: #FAFAF9;
+    border: 1px solid #E7E5E4;
+}
+
+.upcoming-teams-info {
+    flex: 1;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────────── */
+.live-side-stats {
+    background: linear-gradient(135deg, #0C0A09, #1C1917, #292524);
+    border-radius: 20px;
+    padding: 28px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.live-side-stats .bg-icon {
+    position: absolute;
+    right: -10px;
+    bottom: -10px;
+    opacity: 0.06;
+    font-size: 140px;
+}
+
+/* ── Section Headers ──────────────────────────────────────────────── */
+.section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.section-head-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.section-head h3 {
+    font-size: 13px;
+    font-weight: 800;
+    color: #1C1917;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* ── Interactive featured controls ────────────────────────────────── */
+/* Goal-alerts toggle, lit green when armed. */
+.btn-live-primary.alert-on {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    box-shadow: 0 4px 14px rgba(34, 197, 94, 0.4);
+}
+#btn-refresh-icon.spin { animation: wc-spin 0.8s linear; }
+@keyframes wc-spin { to { transform: rotate(360deg); } }
+
+/* Collapsible real-data panel inside the featured card. */
+.featured-details {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    animation: wc-fade-up 0.3s ease-out;
+}
+.detail-chip {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 10px 14px;
+}
+.detail-chip .k { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); }
+.detail-chip .v { font-size: 14px; font-weight: 700; color: #fff; margin-top: 3px; }
+@keyframes wc-fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* Goal toast notifications (bottom-right). */
+#wc-toasts {
+    position: fixed; right: 20px; bottom: 20px; z-index: 200;
+    display: flex; flex-direction: column; gap: 10px;
+}
+.wc-toast {
+    display: flex; align-items: center; gap: 12px;
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff; padding: 14px 18px; border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    font-weight: 700; min-width: 240px; max-width: 340px;
+    animation: wc-toast-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.wc-toast.out { animation: wc-toast-out 0.4s ease forwards; }
+.wc-toast .material-symbols-outlined { font-size: 28px; }
+@keyframes wc-toast-in { from { opacity: 0; transform: translateX(40px) scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes wc-toast-out { to { opacity: 0; transform: translateX(40px); } }
+
+/* ── Expandable match cards ───────────────────────────────────────── */
+.match-card { cursor: pointer; }
+.match-expand {
+    font-size: 18px;
+    color: #A8A29E;
+    transition: transform 0.25s ease;
+}
+.match-expand.open { transform: rotate(180deg); }
+.match-card.expanded { border-color: rgba(239, 68, 68, 0.25); }
+.match-details {
+    border-top: 1px solid #F5F5F4;
+    padding: 12px 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+    gap: 10px;
+    animation: wc-fade-up 0.25s ease-out;
+}
+.match-details .k { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #A8A29E; }
+.match-details .v { font-size: 12px; font-weight: 700; color: #1C1917; margin-top: 2px; }
+
+/* Score flashes green when it changes on a refresh. */
+.score-flash { animation: wc-score-flash 1.1s ease; }
+@keyframes wc-score-flash {
+    0% { color: #16a34a; transform: scale(1.18); text-shadow: 0 0 12px rgba(34,197,94,0.5); }
+    100% { transform: scale(1); }
+}
+
+/* ── Responsive ───────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .live-sidebar { display: none; }
+    .live-main { grid-column: span 12 !important; }
+}
+
+@media (max-width: 640px) {
+    .featured-teams { gap: 16px; }
+    .featured-score { font-size: 36px; }
+    .team-crest { width: 56px; height: 56px; }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="max-w-[1280px] mx-auto px-6 py-8">
-    <div class="{% if user_name %}grid grid-cols-1 xl:grid-cols-[1.5fr_0.9fr] gap-6{% endif %}">
-        <div class="space-y-6">
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h2 class="text-3xl font-bold text-on-background">Live Matches</h2>
-                    <p class="text-on-surface-variant text-body-md mt-1">Real-time scores and discussions for ongoing games.</p>
+<!-- ═══════════════════════════════════════════════════════════════════
+     HERO SECTION
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="live-hero flex items-center">
+    <!-- Decorative orbs -->
+    <div class="live-orb" style="width:240px;height:240px;background:#EF4444;top:5%;left:8%;animation-delay:0s;"></div>
+    <div class="live-orb" style="width:160px;height:160px;background:#C2410C;bottom:20%;right:12%;animation-delay:3s;"></div>
+    <div class="live-orb" style="width:100px;height:100px;background:#F97316;top:50%;right:40%;animation-delay:5s;"></div>
+
+    <div class="live-hero-inner max-w-[1280px] mx-auto px-6 py-14 w-full">
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            <div>
+                <!-- LIVE badge -->
+                <div class="live-badge">
+                    <div class="live-dot-pulse"></div>
+                    <span class="live-badge-text">Live Now</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-                    <span class="text-sm font-semibold text-red-500 uppercase tracking-wider">Live Now</span>
-                </div>
+
+                <h1 class="text-4xl md:text-5xl font-bold text-white leading-[1.1] tracking-tight mb-4">
+                    Live <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">Matches</span>
+                </h1>
+                <p class="text-base text-white/55 max-w-md leading-relaxed">
+                    Real-time scores, live commentary, and match threads. Never miss a moment of the action.
+                </p>
             </div>
 
-            <div class="grid grid-cols-1 {% if not user_name %}lg:grid-cols-2{% endif %} gap-6">
-                <!-- Match 1 -->
-                <div class="bg-white rounded-[28px] border border-slate-200 p-6 shadow-sm hover:border-primary/20 transition-all">
-                    <div class="flex justify-between items-center mb-6">
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Premier League</span>
-                        <span class="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">72'</span>
+            <!-- Stats -->
+            <div class="flex flex-wrap gap-3">
+                <div class="live-glass">
+                    <span class="material-symbols-outlined text-red-300 text-xl" style="font-variation-settings:'FILL' 1;">sensors</span>
+                    <div>
+                        <p class="text-white font-bold text-lg leading-none" id="live-count">0</p>
+                        <p class="text-white/40 text-xs mt-1 uppercase tracking-wider">Live Now</p>
                     </div>
-                    <div class="flex items-center justify-between gap-8 mb-8">
-                        <div class="flex-1 text-center">
-                            <div class="w-16 h-16 bg-slate-100 rounded-full mx-auto mb-3 flex items-center justify-center">
-                                <span class="material-symbols-outlined text-3xl text-slate-400">shield</span>
-                            </div>
-                            <p class="font-bold">Arsenal</p>
-                        </div>
-                        <div class="text-4xl font-black text-on-background">2 - 1</div>
-                        <div class="flex-1 text-center">
-                            <div class="w-16 h-16 bg-slate-100 rounded-full mx-auto mb-3 flex items-center justify-center">
-                                <span class="material-symbols-outlined text-3xl text-slate-400">shield</span>
-                            </div>
-                            <p class="font-bold">Chelsea</p>
-                        </div>
-                    </div>
-                    <button class="w-full py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-all">Enter Match Thread</button>
                 </div>
-
-                <!-- Match 2 -->
-                <div class="bg-white rounded-[28px] border border-slate-200 p-6 shadow-sm hover:border-primary/20 transition-all">
-                    <div class="flex justify-between items-center mb-6">
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">NBA</span>
-                        <span class="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">Q4 04:12</span>
+                <div class="live-glass">
+                    <span class="material-symbols-outlined text-amber-300 text-xl">whatshot</span>
+                    <div>
+                        <p class="text-white font-bold text-lg leading-none" id="goals-today">0</p>
+                        <p class="text-white/40 text-xs mt-1 uppercase tracking-wider">Goals Today</p>
                     </div>
-                    <div class="flex items-center justify-between gap-8 mb-8">
-                        <div class="flex-1 text-center">
-                            <div class="w-16 h-16 bg-slate-100 rounded-full mx-auto mb-3 flex items-center justify-center">
-                                <span class="material-symbols-outlined text-3xl text-slate-400">sports_basketball</span>
-                            </div>
-                            <p class="font-bold">Lakers</p>
-                        </div>
-                        <div class="text-4xl font-black text-on-background">102 - 98</div>
-                        <div class="flex-1 text-center">
-                            <div class="w-16 h-16 bg-slate-100 rounded-full mx-auto mb-3 flex items-center justify-center">
-                                <span class="material-symbols-outlined text-3xl text-slate-400">sports_basketball</span>
-                            </div>
-                            <p class="font-bold">Warriors</p>
-                        </div>
+                </div>
+                <div class="live-glass">
+                    <span class="material-symbols-outlined text-green-300 text-xl">person</span>
+                    <div>
+                        <p class="text-white font-bold text-lg leading-none">12.4K</p>
+                        <p class="text-white/40 text-xs mt-1 uppercase tracking-wider">Watching</p>
                     </div>
-                    <button class="w-full py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-all">Enter Match Thread</button>
                 </div>
             </div>
         </div>
-
-        {% if user_name %}
-            {% include "_sidebar.html" %}
-        {% endif %}
     </div>
 </section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     FILTER TABS
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="max-w-[1280px] mx-auto px-6 mt-8 mb-6">
+    <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        <button class="live-tab active" data-sport="all">
+            LIVE
+        </button>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     MAIN CONTENT — FEATURED + GRID + SIDEBAR
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="max-w-[1280px] mx-auto px-6 grid grid-cols-12 gap-8 pb-20">
+
+    <!-- ── Matches (full width) ─────────────────────────────────── -->
+    <div class="live-main col-span-12">
+
+        <!-- Featured Match -->
+        <div class="featured-card mb-8 reveal">
+            <div class="featured-inner">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="featured-league">
+                        <span class="material-symbols-outlined text-sm">sports_soccer</span>
+                        <span id="featured-stage">FIFA World Cup</span>
+                    </div>
+                    <div class="featured-clock">
+                        <div class="live-dot-pulse" style="width:6px;height:6px;"></div>
+                        <span id="featured-min">—</span>
+                    </div>
+                </div>
+
+                <div class="featured-teams" id="featured-teams">
+                    <div class="featured-team">
+                        <div class="team-crest" style="background:linear-gradient(135deg,#16a34a,#22c55e);">
+                            <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1;">shield</span>
+                        </div>
+                        <p class="text-base font-bold text-white">Mexico</p>
+                        <p class="text-xs text-white/40 mt-1">Home</p>
+                    </div>
+
+                    <div class="text-center">
+                        <div class="featured-score" id="featured-score">–</div>
+                        <p class="featured-vs mt-2" id="featured-state">LIVE</p>
+                    </div>
+
+                    <div class="featured-team">
+                        <div class="team-crest" style="background:linear-gradient(135deg,#2563EB,#3B82F6);">
+                            <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1;">shield</span>
+                        </div>
+                        <p class="text-base font-bold text-white">South Africa</p>
+                        <p class="text-xs text-white/40 mt-1">Away</p>
+                    </div>
+                </div>
+
+                <div class="featured-actions">
+                    <button type="button" id="btn-goal-alert" class="btn-live-primary" aria-pressed="false">
+                        <span class="material-symbols-outlined text-lg" id="goal-alert-icon">notifications_off</span>
+                        <span id="goal-alert-label">Goal Alerts: Off</span>
+                    </button>
+                    <button type="button" id="btn-details" class="btn-live-ghost" aria-expanded="false">
+                        <span class="material-symbols-outlined text-lg">info</span>
+                        Match Details
+                    </button>
+                    <button type="button" id="btn-refresh" class="btn-live-ghost">
+                        <span class="material-symbols-outlined text-lg" id="btn-refresh-icon">refresh</span>
+                        Refresh
+                    </button>
+                </div>
+
+                <!-- Real match metadata, toggled by the Match Details button. -->
+                <div id="featured-details" class="featured-details" hidden></div>
+            </div>
+        </div>
+
+        <!-- Section header -->
+        <div class="flex items-center justify-between mb-5">
+            <div class="section-head">
+                <div class="section-head-icon" style="background:rgba(239,68,68,0.1);">
+                    <span class="material-symbols-outlined text-red-500 text-base" style="font-variation-settings:'FILL' 1;">sensors</span>
+                </div>
+                <h3>All Live Matches</h3>
+            </div>
+            <p class="text-xs text-[#A8A29E]" id="live-updated">Loading… · auto-refreshes every 30s</p>
+        </div>
+
+        <!-- Match Grid (populated by liveScores.js from /api/live) -->
+        <div id="match-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12" data-football-url="{{ football_url }}">
+
+            <!-- Cards are injected here by liveScores.js (/api/live). -->
+            <div class="nf-card p-8 col-span-full text-center" id="match-grid-loading">
+                <span class="material-symbols-outlined text-3xl text-[#D6D3D1] animate-spin">progress_activity</span>
+                <p class="text-sm text-[#78716C] mt-3">Loading live World Cup scores…</p>
+            </div>
+        </div>
+
+        <!-- ── Upcoming Matches ──────────────────────────────────── -->
+        <div class="section-head mb-5">
+            <div class="section-head-icon" style="background:rgba(249,115,22,0.1);">
+                <span class="material-symbols-outlined text-orange-500 text-base">schedule</span>
+            </div>
+            <h3>Upcoming Today</h3>
+        </div>
+
+        <div class="nf-card p-4 mb-8">
+            <!-- Populated by liveScores.js from /api/live (upcoming fixtures). -->
+            <div class="flex flex-col gap-1 stagger-children" id="upcoming-list">
+                <p class="text-sm text-[#A8A29E] px-2 py-4">Loading upcoming fixtures…</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCRIPTS — Scroll Reveal (live data is handled by liveScores.js)
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+    /* ── Scroll Reveal for the static parts of the page (hero, sidebar). ──
+       Match cards are injected by liveScores.js already marked `visible`. */
+    var revealEls = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window && revealEls.length) {
+        var obs = new IntersectionObserver(function(entries) {
+            entries.forEach(function(e) {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    obs.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        revealEls.forEach(function(el) { obs.observe(el); });
+    } else {
+        revealEls.forEach(function(el) { el.classList.add('visible'); });
+    }
+})();
+</script>
+<!-- Live scoreboard engine: polls /api/live (server-side proxy) every 30s. -->
+<script src="{{ url_for('static', filename='liveScores.js') }}"></script>
 {% endblock %}

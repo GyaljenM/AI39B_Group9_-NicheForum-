@@ -17,129 +17,30 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>{% block title %}NicheForum{% endblock %} | Communities Hub</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&amp;family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&amp;display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-25..200&amp;display=swap" rel="stylesheet">
     <link href="{{ url_for('static', filename='index.css') }}" rel="stylesheet">
     <script id="tailwind-config">
         tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        // Warm-gray neutrals remap Tailwind's cool `slate` scale used across templates
-                        "slate": {
-                            "50": "#f8f8f7",
-                            "100": "#f2f1ef",
-                            "200": "#e6e4e1",
-                            "300": "#d4d1cc",
-                            "400": "#a7a39d",
-                            "500": "#79756f",
-                            "600": "#57534d",
-                            "700": "#423f3a",
-                            "800": "#292724",
-                            "900": "#1a1816",
-                            "950": "#0f0e0c"
-                        },
-                        // Tuned violet-indigo (anchored on hsl(245,58%,51%)) remaps `indigo`
-                        "indigo": {
-                            "50": "#f3f2fd",
-                            "100": "#e8e6fa",
-                            "200": "#d1cdf4",
-                            "300": "#b0a9ea",
-                            "400": "#8179dd",
-                            "500": "#645ad3",
-                            "600": "#463acb",
-                            "700": "#3c31af",
-                            "800": "#342d8f",
-                            "900": "#2e2a74",
-                            "950": "#1f1b4b"
-                        },
-                        "surface-bright": "#fbfbfa",
-                        "on-primary-fixed-variant": "#3c31af",
-                        "surface-container-highest": "#e1ded9",
-                        "surface-container": "#edece9",
-                        "on-primary-fixed": "#221c5e",
-                        "on-error-container": "#93000a",
-                        "background": "#f8f8f7",
-                        "secondary": "#b90538",
-                        "on-tertiary-fixed": "#002113",
-                        "on-error": "#ffffff",
-                        "primary": "#463acb",
-                        "on-background": "#1a1816",
-                        "on-surface-variant": "#565158",
-                        "on-secondary-fixed": "#40000d",
-                        "inverse-surface": "#2a2724",
-                        "tertiary-container": "#00885d",
-                        "surface": "#f8f8f7",
-                        "on-surface": "#1a1816",
-                        "inverse-primary": "#c5bef5",
-                        "error-container": "#ffdad6",
-                        "secondary-fixed-dim": "#ffb2b7",
-                        "primary-container": "#5a4fdb",
-                        "surface-container-high": "#e7e5e1",
-                        "on-tertiary-fixed-variant": "#005236",
-                        "error": "#ba1a1a",
-                        "primary-fixed": "#e6e2fb",
-                        "on-secondary": "#ffffff",
-                        "on-primary-container": "#fffbff",
-                        "outline": "#79756f",
-                        "surface-container-lowest": "#ffffff",
-                        "tertiary": "#006c49",
-                        "tertiary-fixed": "#6ffbbe",
-                        "surface-variant": "#e6e4e1",
-                        "tertiary-fixed-dim": "#4edea3",
-                        "surface-tint": "#463acb",
-                        "outline-variant": "#d4d1cc",
-                        "on-secondary-container": "#fffbff",
-                        "secondary-fixed": "#ffdadb",
-                        "on-secondary-fixed-variant": "#92002a",
-                        "secondary-container": "#dc2c4f",
-                        "primary-fixed-dim": "#c5bef5",
-                        "on-primary": "#ffffff",
-                        "on-tertiary-container": "#000703",
-                        "inverse-on-surface": "#f2f1ef",
-                        "surface-container-low": "#f4f3f1",
-                        "on-tertiary": "#ffffff",
-                        "surface-dim": "#dad7d1"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    "spacing": {
-                        "gutter": "24px",
-                        "margin-edge": "32px",
-                        "stack-sm": "8px",
-                        "stack-md": "16px",
-                        "stack-lg": "32px",
-                        "container-max": "1280px"
-                    },
-                    "fontFamily": {
-                        "lexend": ["Lexend", "ui-sans-serif", "system-ui", "sans-serif"],
-                        "inter": ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-                        "headline-md": ["Lexend", "ui-sans-serif", "sans-serif"],
-                        "headline-sm": ["Lexend", "ui-sans-serif", "sans-serif"],
-                        "body-md": ["Inter", "ui-sans-serif", "sans-serif"],
-                        "body-lg": ["Inter", "ui-sans-serif", "sans-serif"],
-                        "label-bold": ["Inter", "ui-sans-serif", "sans-serif"],
-                        "label-sm": ["Inter", "ui-sans-serif", "sans-serif"],
-                        "display-lg": ["Lexend", "ui-sans-serif", "sans-serif"]
-                    },
-                    "fontSize": {
-                        "headline-md": ["24px", {"lineHeight": "1.25", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-                        "headline-sm": ["18px", {"lineHeight": "1.35", "letterSpacing": "-0.015em", "fontWeight": "700"}],
-                        "body-md": ["14px", {"lineHeight": "1.55", "fontWeight": "400"}],
-                        "body-lg": ["16px", {"lineHeight": "1.65", "fontWeight": "400"}],
-                        "label-bold": ["12px", {"lineHeight": "1", "letterSpacing": "0.04em", "fontWeight": "600"}],
-                        "label-sm": ["12px", {"lineHeight": "1", "fontWeight": "400"}],
-                        "display-lg": ["40px", {"lineHeight": "1.1", "letterSpacing": "-0.03em", "fontWeight": "800"}]
-                    }
-                },
-            },
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#C2410C",
+                "primary-hover": "#9a3412",
+                "surface": "#FFFFFF",
+                "muted": "#78716C",
+                "forum-bg": "#F8F6F1",
+                "border": "#E5E3DE",
+                "teal": "#0D9488",
+              },
+              fontFamily: {
+                "sans": ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+              },
+              borderRadius: {
+                DEFAULT: "4px",
+              }
+            }
+          }
         }
     </script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -152,140 +53,88 @@
             min-height: 100% !important;
             position: relative !important;
         }
-        /* Typography: Inter for body, Lexend for headings, with optical sizing */
+        /* Typography: System fonts */
         body {
-            font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
-            font-optical-sizing: auto;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
         }
-        .font-lexend, .font-headline-md, .font-headline-sm, .font-display-lg {
-            font-family: "Lexend", ui-sans-serif, system-ui, sans-serif;
-            font-optical-sizing: auto;
-        }
 
         /* ─────────────────────────────────────────────────────────────
-           Site-wide dark mode. Applies on EVERY page (not just profile)
-           and removes stray white areas by recolouring the shared
-           surfaces, borders and text utilities used across templates.
+           Dark mode styles - simplified
            ───────────────────────────────────────────────────────────── */
-        .dark body.bg-surface-bright { background-color: #0f0e0c !important; color: #e6e4e1; }
-
-        /* Shared surface/background utilities → dark panels */
-        .dark .bg-white,
-        .dark .bg-surface-bright,
-        .dark .bg-surface,
-        .dark .bg-surface-container-lowest,
-        .dark .bg-surface-container-low { background-color: #1a1816 !important; }
-
-        .dark .bg-surface-container,
-        .dark .bg-surface-container-high,
-        .dark .bg-surface-container-highest { background-color: #292724 !important; }
-
-        .dark .bg-slate-50,
-        .dark .bg-slate-100 { background-color: #221f1c !important; }
-        .dark .bg-indigo-50 { background-color: #221c5e !important; }
-
-        /* Borders */
-        .dark .border-slate-100,
-        .dark .border-slate-200,
-        .dark .border-slate-300 { border-color: #292724 !important; }
-
-        /* Text utilities */
-        .dark .text-on-surface,
-        .dark .text-on-background { color: #e6e4e1 !important; }
-        .dark .text-on-surface-variant,
-        .dark .text-slate-500,
-        .dark .text-slate-600,
-        .dark .text-slate-700 { color: #a7a39d !important; }
-
-        /* Top nav + footer */
-        .dark header.fixed { background-color: #1a1816 !important; border-color: #292724 !important; }
-        .dark header.fixed .bg-white\/95 { background-color: rgba(26,24,22,0.95) !important; }
-        .dark footer { color: #79756f; }
-
-        /* Hover affordances that were tuned for light backgrounds */
-        .dark .hover\:bg-slate-50:hover,
-        .dark .hover\:bg-surface-bright:hover { background-color: #292724 !important; }
-
-        /* Keep the brand-coloured surfaces readable */
-        .dark .bg-indigo-50 .text-slate-500 { color: #c5bef5 !important; }
-
+        
         /* Navbar hamburger (user) menu */
         .user-menu-item {
             display: flex; align-items: center; gap: 12px; width: 100%;
             padding: 10px 16px; font-size: 14px; font-weight: 500;
-            color: #423f3a; background: none; border: none; cursor: pointer;
+            color: #1C1917; background: none; border: none; cursor: pointer;
             text-decoration: none; transition: background .15s;
         }
-        .user-menu-item:hover { background: #f2f1ef; }
+        .user-menu-item:hover { background: #F8F6F1; }
         .user-menu-item .material-symbols-outlined { font-size: 20px; }
-        .user-menu-item.danger { color: #ba1a1a; }
-        .dark .user-menu-item { color: #e6e4e1; }
-        .dark .user-menu-item:hover { background: #292724; }
-        .dark .user-menu-item.danger { color: #ff5449; }
+        .user-menu-item.danger { color: #DC2626; }
     </style>
     {% block styles %}{% endblock %}
 </head>
 <body class="bg-surface-bright text-on-surface font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed">
 <!-- TopNavBar -->
-<header class="fixed top-0 w-full border-b z-50 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm transition-all duration-300">
-<div class="max-w-[1280px] mx-auto flex justify-between items-center h-16 px-6">
+<header class="fixed top-0 w-full border-b z-50 bg-white border-[#E5E3DE] transition-all duration-300">
+<div class="max-w-[1280px] mx-auto flex justify-between items-center h-12 px-6">
 <div class="flex items-center gap-8">
-<a href="{{ url_for('Home.home') }}" class="text-2xl font-black text-indigo-600 dark:text-indigo-400 font-lexend cursor-pointer">NicheForum</a>
-<nav class="hidden md:flex items-center gap-6 font-lexend text-sm font-medium">
-<a class="transition-all {% if request.endpoint == 'Home.home' %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Home.home') }}">Home</a>
-<a class="transition-all {% if request.endpoint == 'Home.trending' %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Home.trending') }}">Trending</a>
-<a class="transition-all {% if request.endpoint == 'Home.communities' %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Home.communities') }}">Communities</a>
-<a class="transition-all {% if request.endpoint == 'Home.live' %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Home.live') }}">Live</a>
+<a href="{{ url_for('Home.home') }}" class="text-base font-semibold text-[#C2410C] cursor-pointer">NicheForum</a>
+<nav class="hidden md:flex items-center gap-6 text-sm font-normal">
+<a class="transition-colors {% if request.endpoint == 'Home.home' %}text-[#1C1917] border-b-2 border-[#C2410C]{% else %}text-[#78716C] hover:text-[#1C1917]{% endif %} py-5" href="{{ url_for('Home.home') }}">Home</a>
+<a class="transition-colors {% if request.endpoint == 'Home.trending' %}text-[#1C1917] border-b-2 border-[#C2410C]{% else %}text-[#78716C] hover:text-[#1C1917]{% endif %} py-5" href="{{ url_for('Home.trending') }}">Trending</a>
+<a class="transition-colors {% if request.endpoint == 'Home.communities' %}text-[#1C1917] border-b-2 border-[#C2410C]{% else %}text-[#78716C] hover:text-[#1C1917]{% endif %} py-5" href="{{ url_for('Home.communities') }}">Communities</a>
+<a class="transition-colors {% if request.endpoint == 'Home.live' %}text-[#1C1917] border-b-2 border-[#C2410C]{% else %}text-[#78716C] hover:text-[#1C1917]{% endif %} py-5" href="{{ url_for('Home.live') }}">Live</a>
 {% if session.get('user_id') %}
-<a class="transition-all flex items-center gap-1 {% if request.endpoint in ['Chat.chat_home', 'Chat.conversation'] %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Chat.chat_home') }}">
+<a class="transition-colors flex items-center gap-1 {% if request.endpoint in ['Chat.chat_home', 'Chat.conversation'] %}text-[#1C1917] border-b-2 border-[#C2410C]{% else %}text-[#78716C] hover:text-[#1C1917]{% endif %} py-5" href="{{ url_for('Chat.chat_home') }}">
     <span class="material-symbols-outlined text-base">chat</span>Chat
 </a>
 {% endif %}
 {% if session.get('user_role') == 'admin' %}
-<a class="transition-all flex items-center gap-1 {% if request.endpoint == 'Home.admin_reports' %}text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600{% else %}text-slate-500 dark:text-slate-400 hover:text-indigo-500{% endif %} py-5" href="{{ url_for('Home.admin_reports') }}">
-    <span class="material-symbols-outlined text-base">flag</span>Reports
+<a class="transition-colors flex items-center gap-1 {% if request.endpoint == 'Home.admin_reports' %}text-[#1C1917] border-b-2 border-[#C2410C]{% else %}text-[#78716C] hover:text-[#1C1917]{% endif %} py-5" href="{{ url_for('Home.admin_reports') }}">
 </a>
 {% endif %}
 </nav>
 </div>
 <div class="flex-1 max-w-md px-8 hidden lg:block">
 <form action="{{ url_for('Home.search_communities') }}" method="GET" class="relative group">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
-<input name="q" value="{{ request.args.get('q', '') }}" class="w-full bg-surface-container border-none rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary text-body-md transition-all" placeholder="Search people & communities..." type="text">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#78716C] text-sm">search</span>
+<input name="q" value="{{ request.args.get('q', '') }}" class="w-full bg-[#F8F6F1] border border-[#E5E3DE] rounded px-3 py-2 pl-10 pr-4 focus:outline-none focus:border-[#C2410C] text-sm transition-colors" placeholder="Search people & communities..." type="text">
 </form>
 </div>
 <div class="flex items-center gap-4">
         <!-- Notification Bell with Dropdown -->
         <div class="relative">
             <button onclick="toggleNotificationDropdown(event)" aria-label="Notifications" 
-                class="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-all relative">
-                <span class="material-symbols-outlined text-on-surface-variant">notifications</span>
-                <span id="notificationBadge" class="absolute top-1 right-1 w-2 h-2 bg-secondary rounded-full border-2 border-white {% if notif_unread_count == 0 %}hidden{% endif %}"></span>
+                class="p-2 hover:bg-[#F8F6F1] rounded transition-colors relative">
+                <span class="material-symbols-outlined text-[#78716C]">notifications</span>
+                <span id="notificationBadge" class="absolute top-1 right-1 w-2 h-2 bg-[#C2410C] rounded-full border-2 border-white {% if notif_unread_count == 0 %}hidden{% endif %}"></span>
             </button>
             <!-- Notification Dropdown -->
-            <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-96 max-h-96 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50">
-                <div class="p-4 border-b border-slate-200 dark:border-slate-800">
-                    <h3 class="font-semibold text-slate-900 dark:text-white">Notifications</h3>
+            <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-96 max-h-96 overflow-y-auto bg-white border border-[#E5E3DE] rounded z-50">
+                <div class="p-4 border-b border-[#E5E3DE]">
+                    <h3 class="font-semibold text-[#1C1917]">Notifications</h3>
                 </div>
-                <div id="notificationList" class="divide-y divide-slate-200 dark:divide-slate-800">
-                    <div class="p-4 text-center text-slate-500 dark:text-slate-400">
+                <div id="notificationList" class="divide-y divide-[#E5E3DE]">
+                    <div class="p-4 text-center text-[#78716C] text-sm">
                         <span class="material-symbols-outlined">hourglass_empty</span> Loading...
                     </div>
                 </div>
-                <div class="p-3 border-t border-slate-200 dark:border-slate-800">
-                    <a href="{{ url_for('Notification.list_page') }}" class="block text-center text-indigo-600 dark:text-indigo-400 hover:underline text-sm font-medium">
+                <div class="p-3 border-t border-[#E5E3DE]">
+                    <a href="{{ url_for('Notification.list_page') }}" class="block text-center text-[#C2410C] hover:underline text-sm font-medium">
                         View All Notifications
                     </a>
                 </div>
             </div>
         </div>
-        <div class="h-6 w-px bg-slate-200 mx-2"></div>
+        <div class="h-6 w-px bg-[#E5E3DE] mx-2"></div>
         {% if session.get('user_id') %}
-        <div class="hidden sm:flex items-center gap-3 rounded-full bg-indigo-50 px-3 py-2">
-            <a href="{{ url_for('Home.profile') }}" class="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold cursor-pointer overflow-hidden">
+        <div class="hidden sm:flex items-center gap-3 rounded px-3 py-2">
+            <a href="{{ url_for('Home.profile') }}" class="h-10 w-10 rounded bg-[#C2410C] text-white flex items-center justify-center font-semibold cursor-pointer overflow-hidden">
                 {% if session.get('profile_pic') %}
                     <img src="{{ url_for('static', filename=session.get('profile_pic')) }}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
                 {% else %}
@@ -293,26 +142,26 @@
                 {% endif %}
             </a>
             <div class="hidden sm:flex flex-col text-left">
-                <span class="font-semibold text-sm text-on-surface">{{ session.get('user_name') }}</span>
-                <span class="text-xs text-slate-500">Community member</span>
+                <span class="font-semibold text-sm text-[#1C1917]">{{ session.get('user_name') }}</span>
+                <span class="text-xs text-[#78716C]">Community member</span>
             </div>
         </div>
 
         <!-- Hamburger account menu: Settings (Edit Profile, Deactivate), Dark mode, Logout -->
         <div class="relative">
             <button type="button" onclick="toggleUserMenu(event)" aria-label="Open menu" aria-haspopup="true"
-                class="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-all">
-                <span class="material-symbols-outlined text-on-surface-variant">menu</span>
+                class="p-2 hover:bg-[#F8F6F1] rounded transition-colors">
+                <span class="material-symbols-outlined text-[#78716C]">menu</span>
             </button>
-            <div id="userMenu" class="hidden absolute right-0 mt-2 w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 z-50 overflow-hidden">
-                <p class="px-4 pt-1 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Settings</p>
+            <div id="userMenu" class="hidden absolute right-0 mt-2 w-60 bg-white border border-[#E5E3DE] rounded py-2 z-50 overflow-hidden">
+                <p class="px-4 pt-1 pb-1 text-xs font-semibold uppercase tracking-wider text-[#78716C]">Settings</p>
                 <a href="{{ url_for('Home.profile') }}?edit=1" class="user-menu-item">
                     <span class="material-symbols-outlined">manage_accounts</span> Edit profile
                 </a>
                 <button type="button" onclick="confirmDeactivate()" class="user-menu-item danger">
                     <span class="material-symbols-outlined">person_off</span> Deactivate account
                 </button>
-                <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                <div class="my-1 border-t border-[#E5E3DE]"></div>
                 <button type="button" onclick="toggleSiteTheme()" class="user-menu-item" style="justify-content: space-between;">
                     <span style="display:flex; align-items:center; gap:12px;">
                         <span class="material-symbols-outlined theme-icon-light">dark_mode</span>
@@ -320,7 +169,7 @@
                         Dark mode
                     </span>
                 </button>
-                <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                <div class="my-1 border-t border-[#E5E3DE]"></div>
                 <a href="{{ url_for('Auth.logout') }}" class="user-menu-item">
                     <span class="material-symbols-outlined">logout</span> Logout
                 </a>
@@ -328,8 +177,8 @@
         </div>
         <form id="deactivateForm" action="{{ url_for('Auth.deactivate_account') }}" method="POST" class="hidden"></form>
         {% else %}
-        <button onclick="openLoginModal()" class="font-label-bold text-on-surface-variant hover:text-primary transition-all px-4 cursor-pointer">Login</button>
-        <button onclick="openRegisterModal()" class="bg-primary hover:bg-primary-container text-white px-6 py-2 rounded-full font-label-bold transition-all active:scale-95 shadow-md">Sign Up</button>
+        <button onclick="openLoginModal()" class="text-[#78716C] hover:text-[#1C1917] transition-colors px-4 cursor-pointer text-sm">Login</button>
+        <button onclick="openRegisterModal()" class="bg-[#C2410C] hover:bg-[#9a3412] text-white px-6 py-2 rounded text-sm font-medium transition-colors">Sign Up</button>
         {% endif %}
     </div>
 </div>
@@ -339,25 +188,43 @@
     {% include 'login_modal_component.html' %}
     {% include 'register_modal_component.html' %}
 
+    {# Hidden config element for JS notification polling — no Jinja2 syntax needed inside <script> #}
+    {% if session.get('user_id') %}
+    <span id="nf-poll-config" data-feed-url="{{ url_for('Notification.feed') }}" hidden></span>
+    {% endif %}
+
     <main class="pt-16 pb-20">
         <div class="max-w-[1280px] mx-auto px-6 mt-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for category, message in messages %}
-                    <div class="mb-4 p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300
-                        {% if category == 'success' %} bg-green-50 text-green-700 border border-green-200
-                        {% elif category == 'danger' or category == 'error' %} bg-red-50 text-red-700 border border-red-200
-                        {% elif category == 'warning' %} bg-amber-50 text-amber-700 border border-amber-200
-                        {% else %} bg-blue-50 text-blue-700 border border-blue-200 {% endif %}">
-                        <span class="material-symbols-outlined">
-                            {% if category == 'success' %}check_circle
-                            {% elif category == 'danger' or category == 'error' %}error
-                            {% elif category == 'warning' %}warning
-                            {% else %}info{% endif %}
-                        </span>
-                        <p class="font-medium">{{ message }}</p>
-                    </div>
-                {% endfor %}
+                {# Horizontal scrolling ticker: each message scrolls across once then disappears. #}
+                <div class="flash-ticker" id="flashTicker" aria-live="polite">
+                    {% for category, message in messages %}
+                        <div class="flash-ticker__bar"
+                            style="
+                                {% if category == 'danger' or category == 'error' %} background:#9a3412; color:#ffffff;
+                                {% else %} background:#C2410C; color:#ffffff;{% endif %}">
+                            <span class="flash-ticker__item" style="animation-delay: {{ loop.index0 * 1.2 }}s;">
+                                <span>{{ message }}</span>
+                            </span>
+                        </div>
+                    {% endfor %}
+                </div>
+                <script>
+                    // Remove the ticker from the DOM once every message has finished scrolling.
+                    (function () {
+                        var ticker = document.getElementById('flashTicker');
+                        if (!ticker) return;
+                        var items = ticker.querySelectorAll('.flash-ticker__item');
+                        var done = 0;
+                        items.forEach(function (el) {
+                            el.addEventListener('animationend', function () {
+                                done += 1;
+                                if (done >= items.length) ticker.remove();
+                            });
+                        });
+                    })();
+                </script>
             {% endif %}
         {% endwith %}
         </div>
@@ -366,24 +233,36 @@
         {% endblock %}
     </main>
 
-    <footer>
-        <p>&copy; 2026 Niche Forum</p>
+    <footer class="border-t border-[#E5E3DE] bg-white">
+        <div class="max-w-[1280px] mx-auto px-6 py-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-base font-semibold text-[#C2410C]">NicheForum</span>
+                    <span class="text-sm text-[#A8A29E]">&copy; 2026 All rights reserved</span>
+                </div>
+                <div class="flex items-center gap-6 text-sm text-[#78716C]">
+                    <a href="#" class="hover:text-[#C2410C] transition-colors">Privacy</a>
+                    <a href="#" class="hover:text-[#C2410C] transition-colors">Terms</a>
+                    <a href="#" class="hover:text-[#C2410C] transition-colors">Contact</a>
+                </div>
+            </div>
+        </div>
     </footer>
 
     <!-- Shared Report modal (populated per-target by openReportModal) -->
     <div id="reportModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/50" onclick="closeReportModal()"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                <h3 class="font-headline-sm text-lg flex items-center gap-2">
+        <div class="relative bg-white rounded p-4 w-full max-w-md max-h-[90vh] overflow-y-auto border border-[#E5E3DE]">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-[#E5E3DE]">
+                <h3 class="text-lg font-semibold text-[#1C1917] flex items-center gap-2">
                     <span class="material-symbols-outlined text-red-500">flag</span>Report content
                 </h3>
-                <button type="button" onclick="closeReportModal()" class="p-1 hover:bg-slate-50 rounded-full text-on-surface-variant">
+                <button type="button" onclick="closeReportModal()" class="p-1 hover:bg-[#F8F6F1] rounded text-[#78716C]">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
             <form id="reportForm" method="POST" class="px-6 py-4 space-y-4">
-                <p class="text-sm text-on-surface-variant">Tell us why you're reporting <span id="reportTarget" class="font-semibold text-on-surface">this content</span>. Reports are anonymous to other users.</p>
+                <p class="text-sm text-[#78716C]">Tell us why you're reporting <span id="reportTarget" class="font-semibold text-[#1C1917]">this content</span>. Reports are anonymous to other users.</p>
                 <div class="space-y-1">
                     {% set reasons = [
                         ('misinformation', 'Misinformation or false information'),
@@ -395,17 +274,17 @@
                         ('other', 'Something else'),
                     ] %}
                     {% for value, label in reasons %}
-                    <label class="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-50 cursor-pointer">
-                        <input type="radio" name="reason" value="{{ value }}" required class="text-primary focus:ring-primary">
-                        <span class="text-sm text-on-surface">{{ label }}</span>
+                    <label class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#F8F6F1] cursor-pointer">
+                        <input type="radio" name="reason" value="{{ value }}" required class="text-[#C2410C]">
+                        <span class="text-sm text-[#1C1917]">{{ label }}</span>
                     </label>
                     {% endfor %}
                 </div>
                 <textarea name="details" rows="3" placeholder="Add any extra detail (optional)"
-                    class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm"></textarea>
+                    class="w-full px-4 py-2 rounded border border-[#E5E3DE] bg-[#F8F6F1] focus:border-[#C2410C] focus:outline-none text-sm"></textarea>
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeReportModal()" class="px-5 py-2 rounded-full border border-slate-200 text-on-surface-variant font-label-bold text-sm hover:bg-slate-50 transition-all">Cancel</button>
-                    <button type="submit" class="px-5 py-2 bg-red-600 text-white rounded-full font-label-bold text-sm hover:bg-red-700 transition-all">Submit report</button>
+                    <button type="button" onclick="closeReportModal()" class="px-5 py-2 rounded border border-[#E5E3DE] text-[#78716C] text-sm hover:bg-[#F8F6F1] transition-colors">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 transition-colors">Submit report</button>
                 </div>
             </form>
         </div>
@@ -447,19 +326,6 @@
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeReportModal(); });
     </script>
 
-    <script>
-        // Micro-interaction for Navbar Scroll
-        window.addEventListener('scroll', () => {
-            const header = document.querySelector('header');
-            const isDark = document.documentElement.classList.contains('dark');
-            if (window.scrollY > 20) {
-                header.classList.add('py-0', 'backdrop-blur-md');
-                header.classList.toggle('bg-white/95', !isDark);
-            } else {
-                header.classList.remove('py-0', 'bg-white/95', 'backdrop-blur-md');
-            }
-        });
-    </script>
     <script>
         // Force-enable vertical scrolling at runtime
         (function() {
@@ -597,23 +463,245 @@
         });
 
         // Poll for new notifications every 30 seconds
-        {% if session.get('user_id') %}
-        setInterval(() => {
-            const badge = document.getElementById('notificationBadge');
-            const apiUrl = "{{ url_for('Notification.feed') }}";
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    // Update badge visibility based on unread count
-                    if (data.count > 0) {
-                        badge.classList.remove('hidden');
-                    } else {
-                        badge.classList.add('hidden');
+        var _nfPollEl = document.getElementById('nf-poll-config');
+        if (_nfPollEl) {
+            (function() {
+                var pollFailures = 0;
+                var MAX_FAILURES = 3;
+                var feedUrl = _nfPollEl.getAttribute('data-feed-url');
+
+                function scheduleNext() {
+                    setTimeout(pollNotifications, 30000);
+                }
+
+                function pollNotifications() {
+                    var badge = document.getElementById('notificationBadge');
+                    if (!badge) return;
+
+                    fetch(feedUrl, { credentials: 'same-origin' })
+                        .then(function(response) {
+                            if (response.redirected || response.status === 401) {
+                                console.info('Notification polling stopped: session expired.');
+                                return null;
+                            }
+                            if (!response.ok) throw new Error('HTTP ' + response.status);
+                            return response.json();
+                        })
+                        .then(function(data) {
+                            if (data === null) return;
+                            pollFailures = 0;
+                            if (data.count > 0) {
+                                badge.classList.remove('hidden');
+                            } else {
+                                badge.classList.add('hidden');
+                            }
+                            scheduleNext();
+                        })
+                        .catch(function(err) {
+                            pollFailures++;
+                            console.warn('Notification poll failed (' + pollFailures + '/' + MAX_FAILURES + '):', err.message);
+                            if (pollFailures >= MAX_FAILURES) {
+                                console.warn('Stopping notification polling after ' + MAX_FAILURES + ' consecutive failures.');
+                                return;
+                            }
+                            scheduleNext();
+                        });
+                }
+
+                scheduleNext();
+            })();
+        }
+    </script>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         ADVANCED ANIMATIONS & INTERACTIONS
+         ═══════════════════════════════════════════════════════════════ -->
+    <script>
+    (function() {
+        'use strict';
+
+        // ── Scroll Reveal with Intersection Observer ────────────────
+        let revealObserver = null;
+        const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
+        
+        if ('IntersectionObserver' in window) {
+            revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        // Optionally unobserve after reveal (one-time animation)
+                        // revealObserver.unobserve(entry.target);
                     }
-                })
-                .catch(err => console.log('Error polling notifications:', err));
-        }, 30000);  // Poll every 30 seconds
-        {% endif %}
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
+
+            revealElements.forEach(el => revealObserver.observe(el));
+        }
+
+        // ── Button Ripple Effect
+        document.querySelectorAll('.nf-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                const rect = this.getBoundingClientRect();
+                const ripple = document.createElement('span');
+                const size = Math.max(rect.width, rect.height);
+                
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                ripple.classList.add('ripple');
+                
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        // ── Navbar Scroll Enhancement ───────────────────────────────
+        const header = document.querySelector('header');
+        let lastScrollY = 0;
+        
+        function handleNavScroll() {
+            const currentScrollY = window.scrollY;
+            
+            if (currentScrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+            
+            lastScrollY = currentScrollY;
+        }
+        
+        window.addEventListener('scroll', handleNavScroll, { passive: true });
+
+        // ── Scroll to Top Button ────────────────────────────────────
+        const scrollTopBtn = document.createElement('button');
+        scrollTopBtn.className = 'scroll-top-btn';
+        scrollTopBtn.innerHTML = '<span class="material-symbols-outlined">arrow_upward</span>';
+        scrollTopBtn.setAttribute('aria-label', 'Scroll to top');
+        document.body.appendChild(scrollTopBtn);
+
+        scrollTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) {
+                scrollTopBtn.classList.add('visible');
+            } else {
+                scrollTopBtn.classList.remove('visible');
+            }
+        }, { passive: true });
+
+        // ── Smooth Counter Animation ────────────────────────────────
+        function animateCounter(element, target, duration = 2000) {
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                element.textContent = formatNumber(Math.floor(current));
+            }, 16);
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(num >= 10000 ? 0 : 1) + 'K';
+            return num.toString();
+        }
+
+        // Observe counters for animation
+        const counters = document.querySelectorAll('.stats-gradient p.text-3xl');
+        if (counters.length > 0 && 'IntersectionObserver' in window) {
+            const counterObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !entry.target.dataset.animated) {
+                        entry.target.dataset.animated = 'true';
+                        const text = entry.target.textContent;
+                        let target;
+                        
+                        if (text.includes('M')) {
+                            target = parseFloat(text) * 1000000;
+                        } else if (text.includes('K')) {
+                            target = parseFloat(text) * 1000;
+                        } else {
+                            target = parseInt(text) || 0;
+                        }
+                        
+                        animateCounter(entry.target, target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            counters.forEach(counter => counterObserver.observe(counter));
+        }
+
+        // ── Smooth Scroll for Anchor Links ──────────────────────────
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const target = document.querySelector(targetId);
+                if (target) {
+                    e.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // ── Parallax Effect for Hero Section ────────────────────────
+        const heroSection = document.querySelector('.hero-section');
+        if (heroSection) {
+            window.addEventListener('scroll', () => {
+                const scrolled = window.scrollY;
+                const heroContent = heroSection.querySelector('.relative.z-10');
+                if (heroContent && scrolled < 600) {
+                    heroContent.style.transform = `translateY(${scrolled * 0.3}px)`;
+                    heroContent.style.opacity = 1 - (scrolled / 600);
+                }
+            }, { passive: true });
+        }
+
+        // ── Hover Sound Effect (subtle) ─────────────────────────────
+        // Uncomment to enable hover sounds
+        /*
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        document.querySelectorAll('.nf-card-interactive').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.1);
+            });
+        });
+        */
+
+        // ── Auto-add reveal classes to elements ─────────────────────
+        // Add reveal animation to cards that don't have it
+        if (revealObserver) {
+            document.querySelectorAll('.nf-card:not(.reveal):not(.reveal-left):not(.reveal-right):not(.reveal-scale)').forEach((el, index) => {
+                el.classList.add('reveal');
+                el.classList.add('reveal-delay-' + Math.min((index % 5) + 1, 5));
+                revealObserver.observe(el);
+            });
+        }
+
+        console.log('Animations initialized');
+    })();
     </script>
 </body>
 </html>

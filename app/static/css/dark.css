@@ -1,0 +1,373 @@
+/* ═══════════════════════════════════════════════════════════════════
+   dark.css — Dark Mode overrides
+
+   The toggle adds `.dark` to <html>. The templates use hardcoded light
+   colors (bg-white, text-[#1C1917], border-[#E5E3DE], …) with no `dark:`
+   variants, so these rules remap those exact utility classes to a warm
+   dark palette. Brand orange (#C2410C / #9a3412) is intentionally kept.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+    --nf-dark-bg:        #1A1714;  /* page background            */
+    --nf-dark-surface:   #242019;  /* cards / panels (was white) */
+    --nf-dark-subtle:    #2E2A24;  /* inputs / hover / chips     */
+    --nf-dark-text:      #F5F3EF;  /* primary text               */
+    --nf-dark-text-2:    #B8B2A8;  /* secondary text             */
+    --nf-dark-text-mute: #8C857B;  /* muted text                 */
+    --nf-dark-border:    #363029;  /* borders                    */
+}
+
+/* ── Base page ──────────────────────────────────────────────────── */
+html.dark,
+html.dark body {
+    background-color: var(--nf-dark-bg) !important;
+    color: var(--nf-dark-text);
+}
+
+/* ── Backgrounds ────────────────────────────────────────────────── */
+html.dark .bg-white,
+html.dark .bg-surface {
+    background-color: var(--nf-dark-surface) !important;
+}
+
+html.dark .bg-\[\#F8F6F1\],
+html.dark .bg-\[\#FAFAF9\],
+html.dark .bg-\[\#1C1917\] {
+    background-color: var(--nf-dark-bg) !important;
+}
+
+html.dark .bg-\[\#F5F5F4\],
+html.dark .bg-\[\#E5E3DE\] {
+    background-color: var(--nf-dark-subtle) !important;
+}
+
+/* Hover backgrounds */
+html.dark .hover\:bg-white:hover,
+html.dark .hover\:bg-\[\#F8F6F1\]:hover,
+html.dark .hover\:bg-\[\#FAFAF9\]:hover,
+html.dark .hover\:bg-\[\#F5F5F4\]:hover {
+    background-color: var(--nf-dark-subtle) !important;
+}
+
+/* ── Text ───────────────────────────────────────────────────────── */
+html.dark .text-\[\#1C1917\],
+html.dark .text-\[\#44403C\] {
+    color: var(--nf-dark-text) !important;
+}
+
+html.dark .text-\[\#78716C\],
+html.dark .text-\[\#D6D3D1\] {
+    color: var(--nf-dark-text-2) !important;
+}
+
+html.dark .text-\[\#A8A29E\],
+html.dark .text-\[\#E7E5E4\],
+html.dark .text-\[\#E5E3DE\] {
+    color: var(--nf-dark-text-mute) !important;
+}
+
+/* ── Borders ────────────────────────────────────────────────────── */
+html.dark .border-\[\#E5E3DE\],
+html.dark .border-\[\#E7E5E4\] {
+    border-color: var(--nf-dark-border) !important;
+}
+
+/* ── Form controls ──────────────────────────────────────────────── */
+html.dark input,
+html.dark textarea,
+html.dark select {
+    background-color: var(--nf-dark-subtle) !important;
+    color: var(--nf-dark-text) !important;
+    border-color: var(--nf-dark-border) !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+    color: var(--nf-dark-text-mute) !important;
+}
+
+/* ── Misc surfaces that use design tokens ───────────────────────── */
+html.dark {
+    --nf-surface: var(--nf-dark-surface);
+    --nf-bg: var(--nf-dark-bg);
+    --nf-bg-warm: var(--nf-dark-bg);
+    --nf-text: var(--nf-dark-text);
+    --nf-text-secondary: var(--nf-dark-text-2);
+    --nf-text-muted: var(--nf-dark-text-mute);
+    --nf-border: var(--nf-dark-border);
+    --nf-border-light: var(--nf-dark-subtle);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Tailwind `slate` palette — used heavily across pages with no dark:
+   variants. Remap by role: light slates → dark surfaces/borders,
+   dark slates (text) → light text. (bg-slate-800/900 are already dark,
+   so they're left alone.)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Backgrounds */
+html.dark .bg-slate-50 {
+    background-color: var(--nf-dark-bg) !important;
+}
+html.dark .bg-slate-100,
+html.dark .bg-slate-200,
+html.dark .bg-slate-300 {
+    background-color: var(--nf-dark-subtle) !important;
+}
+
+/* Hover backgrounds */
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-slate-200:hover {
+    background-color: var(--nf-dark-subtle) !important;
+}
+
+/* Text — dark slates become primary, mid slates become secondary/muted */
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+html.dark .text-slate-600 {
+    color: var(--nf-dark-text) !important;
+}
+html.dark .text-slate-500,
+html.dark .text-slate-400,
+html.dark .text-slate-300 {
+    color: var(--nf-dark-text-2) !important;
+}
+
+/* Borders */
+html.dark .border-slate-50,
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-300 {
+    border-color: var(--nf-dark-border) !important;
+}
+
+/* Divide (border between flex/stack children) */
+html.dark .divide-slate-50 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+    border-color: var(--nf-dark-border) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Component / layout CSS with hardcoded light values.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Navbar glass (layout.css sets a translucent WHITE bg with !important) */
+html.dark header {
+    background-color: rgba(26, 23, 20, 0.85) !important;
+}
+
+/* Ghost button & neutral chip hovers use #F5F5F4 */
+html.dark .nf-btn-ghost:hover,
+html.dark .nf-chip-neutral {
+    background: var(--nf-dark-subtle) !important;
+}
+
+/* Skeleton loading shimmer */
+html.dark .skeleton {
+    background: linear-gradient(90deg, #242019 0%, #322d26 50%, #242019 100%) !important;
+    background-size: 200% 100% !important;
+}
+
+/* Light-green "joined" chip (bg-[#F0FDF4]) */
+html.dark .bg-\[\#F0FDF4\] {
+    background-color: rgba(16, 185, 129, 0.12) !important;
+}
+
+/* The one cream-gradient nf-card (communities.html) — inline gradient.
+   nf-card normally uses var(--nf-surface) which is already remapped;
+   this !important rule also covers the inline-styled exception. */
+html.dark .nf-card {
+    background: var(--nf-dark-surface) !important;
+}
+
+/* User dropdown menu items (defined inline in base.html) */
+html.dark .user-menu-item {
+    color: var(--nf-dark-text) !important;
+}
+html.dark .user-menu-item:hover {
+    background: var(--nf-dark-subtle) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Chat page (chat.html has a scoped <style> with hardcoded light
+   colors + dark text that the utility/token overrides don't reach).
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Surfaces */
+html.dark .chat-main { background: var(--nf-dark-bg) !important; }
+html.dark .chat-sidebar-header,
+html.dark .chat-header,
+html.dark .chat-input-area,
+html.dark .profile-card { border-color: var(--nf-dark-border) !important; }
+
+/* Dark text → light */
+html.dark .chat-sidebar-title h2,
+html.dark .chat-contact-name,
+html.dark .chat-header-name,
+html.dark .profile-name-lg,
+html.dark .mutual-item-name { color: var(--nf-dark-text) !important; }
+
+html.dark .profile-bio,
+html.dark .panel-section-title h3 { color: var(--nf-dark-text-2) !important; }
+
+/* Contact / button hovers (were #F5F5F4) */
+html.dark .chat-contact:hover,
+html.dark .chat-header-btn,
+html.dark .mutual-item:hover { background: var(--nf-dark-subtle) !important; }
+
+html.dark .chat-contact-status,
+html.dark .chat-contact-avatar .chat-contact-status { border-color: var(--nf-dark-surface) !important; }
+
+/* Their message bubble (was solid white) */
+html.dark .chat-msg.theirs .chat-bubble {
+    background: var(--nf-dark-surface) !important;
+    color: var(--nf-dark-text) !important;
+    border-color: var(--nf-dark-border) !important;
+}
+html.dark .chat-msg.theirs .chat-share-card { background: var(--nf-dark-subtle) !important; color: var(--nf-dark-text) !important; }
+
+/* Input form, share form, quick-share, mutual items (were #FAFAF9 / white) */
+html.dark .chat-input-form,
+html.dark .quick-share-btn,
+html.dark .share-form,
+html.dark .mutual-item { background: var(--nf-dark-subtle) !important; border-color: var(--nf-dark-border) !important; }
+html.dark .chat-input-form:focus-within { background: var(--nf-dark-surface) !important; }
+
+/* Cream icon badges */
+html.dark .chat-empty-icon,
+html.dark .chat-contacts-empty-icon { background: var(--nf-dark-subtle) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Per-page scoped <style> overrides. These selectors live in each
+   template's own <style> block with hardcoded light colors / dark text.
+   Higher specificity (html.dark + the original selector) so they beat
+   the scoped rules, including :focus states that flip bg to white.
+   Brand orange / status colors are deliberately left untouched.
+   (user_profile.html already ships its own .dark rules, so it's skipped.)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* communities.html */
+html.dark .comm-view-link {
+    background: var(--nf-dark-subtle) !important;
+    color: var(--nf-dark-text) !important;
+}
+
+/* dashboard.html */
+html.dark .dash-stat-num,
+html.dark .feed-title,
+html.dark .feed-author-name,
+html.dark .dash-section-head h2 { color: var(--nf-dark-text) !important; }
+html.dark .feed-menu-btn:hover {
+    background: var(--nf-dark-subtle) !important;
+    color: var(--nf-dark-text) !important;
+}
+
+/* activity_feed.html */
+html.dark .prof-name,
+html.dark .prof-stat-num,
+html.dark .prof-post-title,
+html.dark .person-name,
+html.dark .modal-form-top h2 { color: var(--nf-dark-text) !important; }
+html.dark .modal-form-group label,
+html.dark .modal-file-info p { color: var(--nf-dark-text-2) !important; }
+html.dark .modal-close:hover,
+html.dark .modal-cancel:hover {
+    background: var(--nf-dark-subtle) !important;
+    color: var(--nf-dark-text) !important;
+}
+html.dark .modal-input,
+html.dark .modal-textarea {
+    background: var(--nf-dark-subtle) !important;
+    color: var(--nf-dark-text) !important;
+    border-color: var(--nf-dark-border) !important;
+}
+html.dark .modal-input:focus,
+html.dark .modal-textarea:focus { background: var(--nf-dark-surface) !important; }
+html.dark .color-swatch.active { border-color: var(--nf-dark-text) !important; }
+
+/* live.html */
+html.dark .match-team-name,
+html.dark .match-score,
+html.dark .section-head h3,
+html.dark .match-details .v { color: var(--nf-dark-text) !important; }
+html.dark .match-btn-secondary {
+    background: var(--nf-dark-subtle) !important;
+    color: var(--nf-dark-text) !important;
+}
+
+/* trending.html */
+html.dark .vote-pill .vote-count { color: var(--nf-dark-text) !important; }
+html.dark .topic-tag {
+    background: var(--nf-dark-subtle) !important;
+    border-color: var(--nf-dark-border) !important;
+    color: var(--nf-dark-text) !important;
+}
+
+/* login.html + register.html (shared .auth-* classes) */
+html.dark .auth-form-header h2 { color: var(--nf-dark-text) !important; }
+html.dark .auth-field label { color: var(--nf-dark-text-2) !important; }
+html.dark .auth-field input {
+    background: var(--nf-dark-subtle) !important;
+    color: var(--nf-dark-text) !important;
+    border-color: var(--nf-dark-border) !important;
+}
+html.dark .auth-field input:focus { background: var(--nf-dark-surface) !important; }
+html.dark .auth-social {
+    background: var(--nf-dark-subtle) !important;
+    color: var(--nf-dark-text) !important;
+    border-color: var(--nf-dark-border) !important;
+}
+
+/* Login & Register modals (included in base.html on every page) */
+html.dark .login-modal-container,
+html.dark .register-modal-container { background: var(--nf-dark-surface) !important; }
+html.dark .login-modal-header h2,
+html.dark .register-modal-header h2 { color: var(--nf-dark-text) !important; }
+html.dark .login-form label,
+html.dark .register-form label { color: var(--nf-dark-text-2) !important; }
+html.dark .login-modal-close,
+html.dark .register-modal-close { background: var(--nf-dark-subtle) !important; }
+html.dark .login-modal-close:hover,
+html.dark .register-modal-close:hover {
+    background: var(--nf-dark-subtle) !important;
+    color: var(--nf-dark-text) !important;
+}
+html.dark .login-modal-footer,
+html.dark .register-modal-footer { border-color: var(--nf-dark-border) !important; }
+html.dark .login-form input,
+html.dark .register-form input:not([type="checkbox"]) {
+    background: var(--nf-dark-subtle) !important;
+    color: var(--nf-dark-text) !important;
+    border-color: var(--nf-dark-border) !important;
+}
+html.dark .login-form input:focus,
+html.dark .register-form input:not([type="checkbox"]):focus { background: var(--nf-dark-surface) !important; }
+
+/* live.html — match cards & upcoming timeline (injected by liveScores.js) */
+html.dark .match-card {
+    background: var(--nf-dark-surface) !important;
+    border-color: var(--nf-dark-border) !important;
+}
+html.dark .match-header {
+    background: var(--nf-dark-bg) !important;
+    border-bottom-color: var(--nf-dark-border) !important;
+}
+html.dark .match-league-badge { color: var(--nf-dark-text) !important; }
+html.dark .match-clock-upcoming {
+    background: var(--nf-dark-subtle) !important;
+    color: var(--nf-dark-text) !important;
+}
+html.dark .match-expand { color: var(--nf-dark-text-2) !important; }
+html.dark .match-details { border-top-color: var(--nf-dark-border) !important; }
+html.dark .upcoming-item:hover { background: var(--nf-dark-subtle) !important; }
+html.dark .upcoming-time {
+    background: var(--nf-dark-subtle) !important;
+    border-color: var(--nf-dark-border) !important;
+}
+
+/* Keep the flash ticker readable in dark mode (brand bar already fine) */
+html.dark .flash-ticker__bar {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}

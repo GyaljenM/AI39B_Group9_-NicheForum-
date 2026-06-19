@@ -2,67 +2,326 @@
 
 {% block title %}Trending | NicheForum{% endblock %}
 
+{% block styles %}
+<style>
+/* Compact brand hero — looks right in both light and dark mode. */
+.trending-hero {
+    background: linear-gradient(135deg, #1C1917 0%, #292524 45%, #44403C 75%, #1C1917 100%);
+    position: relative;
+    overflow: hidden;
+}
+.trending-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 25% 15%, rgba(194, 65, 12, 0.35) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 90%, rgba(249, 115, 22, 0.18) 0%, transparent 55%);
+    pointer-events: none;
+}
+/* 2-line clamp (the Tailwind line-clamp plugin isn't loaded on the CDN build). */
+.clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ── Most Popular Communities ─────────────────────────────────────── */
+.popular-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 14px;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.popular-item:hover {
+    background: #F5F5F4;
+    transform: translateX(4px);
+}
+
+.popular-rank {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.rank-gold   { background: linear-gradient(135deg, #FCD34D, #F59E0B); color: #78350F; }
+.rank-silver { background: linear-gradient(135deg, #D1D5DB, #9CA3AF); color: #374151; }
+.rank-bronze { background: linear-gradient(135deg, #FCA5A5, #EF4444); color: #7F1D1D; }
+.rank-default { background: #F5F5F4; color: #78716C; }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="max-w-[1280px] mx-auto px-6 py-8">
-    <div class="{% if user_name %}grid grid-cols-1 xl:grid-cols-[1.5fr_0.9fr] gap-6{% endif %}">
-        <div class="space-y-6">
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h2 class="text-3xl font-bold text-on-background">Trending Now</h2>
-                    <p class="text-on-surface-variant text-body-md mt-1">The most discussed topics across all communities.</p>
-                </div>
-            </div>
-
-            <div class="space-y-6">
-                <article class="bg-white rounded-[28px] border border-slate-200 p-6 hover:border-primary/20 transition-all shadow-sm">
-                    <div class="flex items-start gap-4">
-                        <div class="flex flex-col items-center rounded-3xl bg-slate-50 p-3 text-slate-500">
-                            <button class="text-primary"><span class="material-symbols-outlined">arrow_drop_up</span></button>
-                            <span class="mt-1 text-lg font-semibold">1.2k</span>
-                            <button><span class="material-symbols-outlined">arrow_drop_down</span></button>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex flex-wrap items-center gap-2 text-xs font-semibold mb-3">
-                                <span class="rounded-full bg-primary/10 text-primary px-3 py-1">r/sports</span>
-                                <span class="text-slate-400">• 2h ago</span>
-                            </div>
-                            <h3 class="text-xl font-semibold text-on-background">New roster thread: which underdog team will steal the playoffs?</h3>
-                            <p class="mt-3 text-slate-600">Discuss the latest underdog stories, surprise lineups and dark horse teams making waves this season.</p>
-                            <div class="mt-4 flex items-center gap-4 text-sm text-slate-500">
-                                <span class="flex items-center gap-2"><span class="material-symbols-outlined">chat_bubble</span> 144 comments</span>
-                                <span class="flex items-center gap-2"><span class="material-symbols-outlined">account_circle</span> @coachjon</span>
-                            </div>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="bg-white rounded-[28px] border border-slate-200 p-6 hover:border-primary/20 transition-all shadow-sm">
-                    <div class="flex items-start gap-4">
-                        <div class="flex flex-col items-center rounded-3xl bg-slate-50 p-3 text-slate-500">
-                            <button class="text-primary"><span class="material-symbols-outlined">arrow_drop_up</span></button>
-                            <span class="mt-1 text-lg font-semibold">830</span>
-                            <button><span class="material-symbols-outlined">arrow_drop_down</span></button>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex flex-wrap items-center gap-2 text-xs font-semibold mb-3">
-                                <span class="rounded-full bg-primary/10 text-primary px-3 py-1">r/eSports</span>
-                                <span class="text-slate-400">• 4h ago</span>
-                            </div>
-                            <h3 class="text-xl font-semibold text-on-background">Valorant meta update: the best economy rounds for teams on a budget</h3>
-                            <p class="mt-3 text-slate-600">Share your favorite economy plays and learn how pros save credits without losing momentum.</p>
-                            <div class="mt-4 flex items-center gap-4 text-sm text-slate-500">
-                                <span class="flex items-center gap-2"><span class="material-symbols-outlined">chat_bubble</span> 68 comments</span>
-                                <span class="flex items-center gap-2"><span class="material-symbols-outlined">account_circle</span> @viper_main</span>
-                            </div>
-                        </div>
-                    </div>
-                </article>
-            </div>
+<!-- ── Hero ─────────────────────────────────────────────────────────── -->
+<section class="trending-hero">
+    <div class="max-w-7xl mx-auto px-6 py-12 relative">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 mb-4">
+            <span class="material-symbols-outlined text-orange-400 text-base" style="font-variation-settings:'FILL' 1;">local_fire_department</span>
+            <span class="text-white/80 text-xs font-semibold uppercase tracking-wider">Trending now</span>
         </div>
-
-        {% if user_name %}
-            {% include "_sidebar.html" %}
-        {% endif %}
+        <h1 class="text-4xl md:text-5xl font-bold text-white tracking-tight">Trending</h1>
+        <p class="text-white/55 mt-3 max-w-lg leading-relaxed">
+            The most upvoted and most discussed posts across NicheForum — ranked from real activity, updated as people vote and comment.
+        </p>
     </div>
 </section>
+
+<div class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- ── Filter bar (full width) ─────────────────────────────────── -->
+    <div class="flex bg-white border border-[#E5E3DE] rounded-full p-1 shadow-sm -mt-6 relative z-10 w-full mb-8">
+        {% set ranges = [('today', 'Today'), ('week', 'This Week'), ('all', 'All Time')] %}
+        {% for key, label in ranges %}
+        <a href="{{ url_for('Home.trending', range=key) }}"
+           class="flex-1 text-center px-4 py-2.5 rounded-full text-sm font-semibold transition-colors
+                  {% if active_range == key %}bg-[#C2410C] text-white shadow-sm{% else %}text-[#78716C] hover:text-[#1C1917]{% endif %}">
+            {{ label }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- ── Quick-jump to top communities (real, by member count) ────── -->
+    {% if communities %}
+    <div class="flex flex-wrap items-center justify-center gap-2 mt-6">
+        <span class="text-xs text-[#A8A29E] font-medium mr-1">Popular:</span>
+        {% for c in communities %}
+        <a href="{{ url_for('Home.community_detail', community_id=c.id) }}"
+           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F5F5F4] text-[#44403C] text-xs font-semibold hover:bg-[#C2410C] hover:text-white transition-colors">
+            <span class="material-symbols-outlined text-sm">hub</span>c/{{ c.name }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ── Ranked feed + Live box ──────────────────────────────────── -->
+    <div class="mt-8 pb-20 flex gap-8">
+        <!-- Posts feed -->
+        <div class="flex-1">
+            {% if posts %}
+            <div class="bg-white border border-[#E5E3DE] rounded-2xl overflow-hidden">
+                {% for post in posts %}
+                <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}"
+                   class="flex gap-4 p-5 hover:bg-[#F5F5F4] transition-colors group {% if not loop.last %}border-b border-[#E5E3DE]{% endif %}">
+
+                <!-- Rank -->
+                <div class="w-9 h-9 flex-shrink-0 rounded-xl flex items-center justify-center font-extrabold text-sm
+                            {% if loop.index <= 3 %}text-white{% else %}bg-[#F5F5F4] text-[#78716C]{% endif %}"
+                     {% if loop.index <= 3 %}style="background:linear-gradient(135deg,#C2410C,#EA580C);box-shadow:0 4px 12px rgba(194,65,12,0.3);"{% endif %}>
+                    {{ loop.index }}
+                </div>
+
+                <!-- Body -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 text-xs text-[#78716C] mb-1 flex-wrap">
+                        <span class="font-semibold text-[#C2410C]">c/{{ post.community_name }}</span>
+                        <span class="text-[#D6D3D1]">·</span>
+                        <span>{{ post.user_name }}</span>
+                        <span class="text-[#D6D3D1]">·</span>
+                        <span>{{ post.time_label }}</span>
+                    </div>
+
+                    <h3 class="text-base font-bold text-[#1C1917] leading-snug group-hover:text-[#C2410C] transition-colors">
+                        {{ post.title_display }}
+                    </h3>
+
+                    {% if post.snippet %}
+                    <p class="text-sm text-[#78716C] mt-1 clamp-2">{{ post.snippet }}</p>
+                    {% endif %}
+
+                    <div class="flex items-center gap-5 mt-3 text-xs font-medium text-[#78716C]">
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm text-[#C2410C]" style="font-variation-settings:'FILL' 1;">favorite</span>
+                            {{ post.like_count }} {{ 'like' if post.like_count == 1 else 'likes' }}
+                        </span>
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm">chat_bubble</span>
+                            {{ post.comment_count }} {{ 'comment' if post.comment_count == 1 else 'comments' }}
+                        </span>
+                    </div>
+                </div>
+
+                <span class="material-symbols-outlined text-[#D6D3D1] self-center group-hover:text-[#C2410C] transition-colors">chevron_right</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Empty state — honest, no fake rows -->
+            <div class="bg-white border border-[#E5E3DE] rounded-2xl p-14 text-center">
+            <span class="material-symbols-outlined text-5xl text-[#D6D3D1]">trending_up</span>
+            <h3 class="text-lg font-bold text-[#1C1917] mt-4">Nothing trending {{ 'today' if active_range == 'today' else ('this week' if active_range == 'week' else 'yet') }}</h3>
+            <p class="text-sm text-[#78716C] mt-2 max-w-sm mx-auto">
+                Trending is built from real likes and comments.
+                {% if active_range != 'all' %}Try widening the range, or be{% else %}Be{% endif %}
+                the first to start a hot discussion.
+            </p>
+            <div class="flex items-center justify-center gap-3 mt-6">
+                {% if active_range != 'all' %}
+                <a href="{{ url_for('Home.trending', range='all') }}"
+                   class="px-5 py-2.5 rounded-full border border-[#E5E3DE] text-sm font-semibold text-[#78716C] hover:text-[#1C1917] transition-colors">
+                    View all time
+                </a>
+                {% endif %}
+                <a href="{{ url_for('Home.communities') }}"
+                   class="px-5 py-2.5 rounded-full bg-[#C2410C] hover:bg-[#9a3412] text-white text-sm font-semibold transition-colors">
+                    Explore communities
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        </div>
+
+        <!-- Live box sidebar -->
+        <div class="w-96 flex-shrink-0">
+            <a href="{{ url_for('Home.live') }}"
+               class="block bg-white border border-[#E5E3DE] rounded-2xl p-8 shadow-sm hover:shadow-md hover:border-[#C2410C] transition-all">
+                <div class="flex items-center justify-center gap-2 mb-8">
+                    <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-red-500 uppercase tracking-wide flex-shrink-0">
+                        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>Live
+                    </span>
+                </div>
+                <div class="flex items-center justify-center gap-6 mb-8">
+                    <!-- Home Team -->
+                    <div class="flex flex-col items-center gap-3">
+                        <img id="live-home-crest" src="https://crests.football-data.org/usa.svg" alt="Home" class="w-16 h-16 object-contain">
+                        <p id="live-home" class="text-sm font-bold text-[#1C1917]">USA</p>
+                        <p class="text-xs text-[#A8A29E] font-medium">Home</p>
+                    </div>
+
+                    <!-- Score -->
+                    <div class="text-center flex flex-col items-center gap-4">
+                        <div id="live-score" class="text-2xl font-bold text-[#C2410C]">vs</div>
+                        <p id="live-time" class="text-sm text-[#78716C] font-medium">UPCOMING</p>
+                    </div>
+
+                    <!-- Away Team -->
+                    <div class="flex flex-col items-center gap-3">
+                        <img id="live-away-crest" src="https://crests.football-data.org/779.svg" alt="Away" class="w-16 h-16 object-contain">
+                        <p id="live-away" class="text-sm font-bold text-[#1C1917]">Australia</p>
+                        <p class="text-xs text-[#A8A29E] font-medium">Away</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-center text-[#C2410C] text-sm font-semibold mt-4 pt-4 border-t border-[#E5E3DE]">
+                    View live <span class="material-symbols-outlined text-base ml-1">chevron_right</span>
+                </div>
+            </a>
+        </div>
+    </div>
+
+<!-- Most Popular Communities -->
+<div class="max-w-7xl mx-auto px-6 py-12">
+    <div class="nf-card p-6">
+        <div class="flex items-center gap-3 mb-5">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C2410C] to-[#F97316] flex items-center justify-center">
+                <span class="material-symbols-outlined text-white text-base" style="font-variation-settings:'FILL' 1;">emoji_events</span>
+            </div>
+            <h2 class="text-sm font-bold text-[#1C1917] uppercase tracking-wider">Most Popular Communities</h2>
+        </div>
+        <div class="flex flex-col gap-1 stagger-children">
+            {% if communities %}
+            {% for community in communities[:5] %}
+            <a href="{{ url_for('Home.community_detail', community_id=community.id) }}" class="popular-item">
+                {% set rank_class = 'rank-default' %}
+                {% if loop.index == 1 %}{% set rank_class = 'rank-gold' %}
+                {% elif loop.index == 2 %}{% set rank_class = 'rank-silver' %}
+                {% elif loop.index == 3 %}{% set rank_class = 'rank-bronze' %}
+                {% endif %}
+                <div class="popular-rank {{ rank_class }}">{{ loop.index }}</div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-[#1C1917] truncate">{{ community.name }}</p>
+                    <p class="text-xs text-[#A8A29E]">{{ "{:,}".format(community.member_count) }} members</p>
+                </div>
+                <span class="material-symbols-outlined text-[#A8A29E] text-base group-hover:text-[#C2410C] transition-colors">chevron_right</span>
+            </a>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Fill the live box from the same feed the /live page uses. Auto-updates every 10 seconds. -->
+<script>
+(function () {
+    var homeCrest = document.getElementById('live-home-crest');
+    var home = document.getElementById('live-home');
+    var awayCrest = document.getElementById('live-away-crest');
+    var away = document.getElementById('live-away');
+    var score = document.getElementById('live-score');
+    var time = document.getElementById('live-time');
+    
+    if (!home) return;
+
+    function getCountryCode(countryName) {
+        var codes = {
+            'United States': 'usa', 'USA': 'usa', 'US': 'usa',
+            'Australia': '779', 'AUS': '779',
+            'Mexico': 'mex', 'MEX': 'mex',
+            'South Africa': 'rsa', 'RSA': 'rsa',
+            'Brazil': 'bra', 'BRA': 'bra',
+            'Germany': 'ger', 'GER': 'ger',
+            'France': 'fra', 'FRA': 'fra',
+            'Spain': 'esp', 'ESP': 'esp',
+            'Italy': 'ita', 'ITA': 'ita',
+            'Japan': 'jpn', 'JPN': 'jpn',
+            'England': 'eng', 'ENG': 'eng'
+        };
+        return codes[countryName] || 'usa';
+    }
+
+    function updateLiveMatch() {
+        fetch('/api/live', { credentials: 'same-origin' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (!d || !d.matches || !d.matches.length) { 
+                    home.textContent = 'No match';
+                    away.textContent = '';
+                    time.textContent = '';
+                    return;
+                }
+                var liveOnes = d.matches.filter(function (m) { return m.is_live; });
+                var m = liveOnes.length ? liveOnes[0] : d.matches[0];
+                var h = m.home || {}, a = m.away || {};
+                
+                var homeCode = getCountryCode(h.code || h.short || h.name || 'USA');
+                var awayCode = getCountryCode(a.code || a.short || a.name || 'AUS');
+                
+                home.textContent = h.short || h.name || 'Home';
+                away.textContent = a.short || a.name || 'Away';
+                homeCrest.src = 'https://crests.football-data.org/' + homeCode + '.svg';
+                awayCrest.src = 'https://crests.football-data.org/' + awayCode + '.svg';
+                
+                var hg = h.goals, ag = a.goals;
+                if (hg != null && ag != null) {
+                    score.textContent = hg + ' - ' + ag;
+                } else {
+                    score.textContent = 'vs';
+                }
+                
+                time.textContent = m.status || 'UPCOMING';
+            })
+            .catch(function () { 
+                home.textContent = 'USA';
+                away.textContent = 'Australia';
+                time.textContent = 'UPCOMING';
+            });
+    }
+
+    // Update immediately on page load
+    updateLiveMatch();
+    
+    // Auto-update every 10 seconds
+    setInterval(updateLiveMatch, 10000);
+})();
+</script>
 {% endblock %}

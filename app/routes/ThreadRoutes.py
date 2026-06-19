@@ -18,7 +18,6 @@ class ThreadRoutes:
         self.bp.route("/community/<category_name>")(self.view_community)
         self.bp.route("/thread/<int:thread_id>")(self.view_thread)
         self.bp.route("/thread/<int:thread_id>/reply", methods=["POST"])(self.post_reply)
-        self.bp.route("/thread/<int:thread_id>/reply/<int:reply_id>/vote", methods=["POST"])(self.vote_reply)
         self.bp.route("/thread/<int:thread_id>/reply/<int:reply_id>/edit", methods=["GET", "POST"])(self.edit_reply)
         self.bp.route("/thread/<int:thread_id>/edit", methods=["GET", "POST"])(self.edit_thread)
         self.bp.route("/thread/<int:thread_id>/vote", methods=["POST"])(self.vote_thread)
@@ -72,29 +71,9 @@ class ThreadRoutes:
                 flash("Thread not found!", "danger")
                 return redirect(url_for("Home.home"))
             
-            user_id = session.get("user_id")
             replies = db.fetch_all("SELECT * FROM replies WHERE thread_id = %s ORDER BY created_at ASC", (thread_id,))
-            for reply in replies:
-                likes = db.fetch_one(
-                    "SELECT COUNT(*) AS c FROM reply_votes WHERE reply_id = %s AND vote_type = 'like'",
-                    (reply['id'],)
-                )
-                dislikes = db.fetch_one(
-                    "SELECT COUNT(*) AS c FROM reply_votes WHERE reply_id = %s AND vote_type = 'dislike'",
-                    (reply['id'],)
-                )
-                reply['like_count'] = likes['c'] if likes else 0
-                reply['dislike_count'] = dislikes['c'] if dislikes else 0
-                reply['user_vote'] = None
-                if user_id:
-                    my_vote = db.fetch_one(
-                        "SELECT vote_type FROM reply_votes WHERE reply_id = %s AND user_id = %s",
-                        (reply['id'], user_id)
-                    )
-                    reply['user_vote'] = my_vote['vote_type'] if my_vote else None
-
-            attach_media_and_poll(db, thread, "thread", user_id)
-            attach_notes(db, thread, "thread", user_id)
+            attach_media_and_poll(db, thread, "thread", session.get("user_id"))
+            attach_notes(db, thread, "thread", session.get("user_id"))
             db.close()
             return render_template("thread_detail.html", thread=thread, replies=replies)
         except Exception as e:
@@ -122,58 +101,6 @@ class ThreadRoutes:
             print(f"Error posting reply: {e}")
 
         return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
-
-    def vote_reply(self, thread_id, reply_id):
-        user_id = session.get("user_id")
-        if not user_id:
-            return {"success": False, "error": "Login required"}, 401
-
-        payload = request.get_json(silent=True) or {}
-        vote_type = payload.get("vote_type")
-        if vote_type not in ("like", "dislike"):
-            return {"success": False, "error": "Invalid vote type"}, 400
-
-        try:
-            db = Database()
-            reply = db.fetch_one("SELECT * FROM replies WHERE id = %s AND thread_id = %s", (reply_id, thread_id))
-            if not reply:
-                db.close()
-                return {"success": False, "error": "Reply not found"}, 404
-
-            existing = db.fetch_one(
-                "SELECT * FROM reply_votes WHERE reply_id = %s AND user_id = %s",
-                (reply_id, user_id)
-            )
-            if existing is None:
-                db.execute(
-                    "INSERT INTO reply_votes (user_id, reply_id, vote_type) VALUES (%s, %s, %s)",
-                    (user_id, reply_id, vote_type)
-                )
-            elif existing['vote_type'] == vote_type:
-                db.execute("DELETE FROM reply_votes WHERE id = %s", (existing['id'],))
-            else:
-                db.execute(
-                    "UPDATE reply_votes SET vote_type = %s WHERE id = %s",
-                    (vote_type, existing['id'])
-                )
-
-            likes = db.fetch_one(
-                "SELECT COUNT(*) AS c FROM reply_votes WHERE reply_id = %s AND vote_type = 'like'",
-                (reply_id,)
-            )
-            dislikes = db.fetch_one(
-                "SELECT COUNT(*) AS c FROM reply_votes WHERE reply_id = %s AND vote_type = 'dislike'",
-                (reply_id,)
-            )
-            db.close()
-            return {
-                "success": True,
-                "like_count": likes['c'] if likes else 0,
-                "dislike_count": dislikes['c'] if dislikes else 0,
-                "user_vote": vote_type if existing is None or existing['vote_type'] != vote_type else None
-            }
-        except Exception as e:
-            return {"success": False, "error": str(e)}, 500
 
     def edit_reply(self, thread_id, reply_id):
         try:

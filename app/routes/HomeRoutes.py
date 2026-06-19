@@ -189,6 +189,24 @@ def can_moderate_community(db, community_id):
     return is_community_moderator(db, community_id, session.get("user_id"))
 
 
+def is_community_owner(db, community_id, user_id):
+    """True if the current user is the creator/leader of this community."""
+    if not user_id:
+        return False
+    row = db.fetch_one(
+        "SELECT 1 FROM communities WHERE id = %s AND owner_id = %s",
+        (community_id, user_id),
+    )
+    return row is not None
+
+
+def can_manage_community(db, community_id):
+    """True if the current session may manage this community (owner or admin)."""
+    if session.get("user_role") == "admin":
+        return True
+    return is_community_owner(db, community_id, session.get("user_id"))
+
+
 def is_user_banned(db, community_id, user_id):
     """True if `user_id` is banned from this community."""
     if not user_id:
@@ -214,6 +232,7 @@ class HomeRoutes:
     def register(self):
         self.bp.route("/", methods=["GET"])(self.home)
         self.bp.route("/communities", methods=["GET"])(self.communities)
+        self.bp.route("/communities/create", methods=["GET", "POST"])(self.create_community)
         self.bp.route("/search", methods=["GET"])(self.search_communities)
         self.bp.route("/trending", methods=["GET"])(self.trending)
         self.bp.route("/live", methods=["GET"])(self.live)
@@ -222,8 +241,10 @@ class HomeRoutes:
         self.bp.route("/profile/update", methods=["POST"])(self.update_profile)
         self.bp.route("/community/<int:community_id>", methods=["GET"])(self.community_detail)
         self.bp.route("/community/<int:community_id>/join", methods=["POST"])(self.join_community)
+        self.bp.route("/community/<int:community_id>/delete", methods=["POST"])(self.delete_community)
         self.bp.route("/community/<int:community_id>/post", methods=["POST"])(self.create_post)
         self.bp.route("/post/delete/<int:post_id>", methods=["POST"])(self.delete_post)
+        self.bp.route("/post/<int:post_id>/edit", methods=["GET", "POST"])(self.edit_post)
         self.bp.route("/post/<int:post_id>/vote", methods=["POST"])(self.vote_post)
         self.bp.route("/post/<int:post_id>/comment", methods=["POST"])(self.comment_post)
         self.bp.route("/post/<int:post_id>/poll-vote", methods=["POST"])(self.vote_poll)
@@ -250,7 +271,40 @@ class HomeRoutes:
             JOIN communities c ON p.community_id = c.id 
             ORDER BY p.created_at DESC LIMIT 10
         """)
-        
+        user_id = session.get("user_id")
+        for post in posts:
+            likes = db.fetch_one(
+                "SELECT COUNT(*) AS c FROM post_votes WHERE post_id = %s AND vote_type = 'like'",
+                (post['id'],)
+            )
+            dislikes = db.fetch_one(
+                "SELECT COUNT(*) AS c FROM post_votes WHERE post_id = %s AND vote_type = 'dislike'",
+                (post['id'],)
+            )
+            post['like_count'] = likes['c'] if likes else 0
+            post['dislike_count'] = dislikes['c'] if dislikes else 0
+            post['user_vote'] = None
+            if user_id:
+                my_vote = db.fetch_one(
+                    "SELECT vote_type FROM post_votes WHERE post_id = %s AND user_id = %s",
+                    (post['id'], user_id)
+                )
+                if my_vote:
+                    post['user_vote'] = my_vote['vote_type']
+
+            post['comments'] = db.fetch_all(
+                """
+                SELECT pc.*, u.name AS user_name
+                FROM post_comments pc
+                JOIN users u ON pc.user_id = u.id
+                WHERE pc.post_id = %s
+                ORDER BY pc.created_at ASC
+                """,
+                (post['id'],)
+            )
+            attach_media_and_poll(db, post, "post", user_id)
+            attach_notes(db, post, "post", user_id)
+
         # Also fetch threads for the home page (index.html)
         threads = db.fetch_all("SELECT * FROM threads ORDER BY created_at DESC LIMIT 10")
         for thread in threads:
@@ -259,23 +313,99 @@ class HomeRoutes:
             attach_notes(db, thread, "thread", session.get("user_id"))
 
         communities = db.fetch_all("SELECT * FROM communities LIMIT 5")
+        
+        # Fetch live stats for hero/banner sections
+        total_communities = db.fetch_one("SELECT COUNT(*) AS count FROM communities")['count'] or 0
+        total_members = db.fetch_one("SELECT COUNT(*) AS count FROM users")['count'] or 0
+        online_now = db.fetch_one("SELECT COUNT(*) AS count FROM users WHERE is_active = 1")['count'] or 0
+        
         db.close()
         
         if session.get("user_id"):
-            return render_template("dashboard.html", user_name=session.get("user_name"), posts=posts, communities=communities)
-        return render_template("index.html", posts=posts, threads=threads, communities=communities)
+            return render_template("dashboard.html", user_name=session.get("user_name"), posts=posts, communities=communities, total_communities=total_communities, total_members=total_members, online_now=online_now)
+        return render_template("index.html", posts=posts, threads=threads, communities=communities, total_communities=total_communities, total_members=total_members, online_now=online_now)
 
     def communities(self):
         db = Database()
-        communities = db.fetch_all("SELECT * FROM communities")
+        communities = db.fetch_all(
+            """
+            SELECT c.*, COALESCE(m.member_count, 0) AS member_count
+            FROM communities c
+            LEFT JOIN (
+                SELECT community_id, COUNT(*) AS member_count
+                FROM community_members
+                GROUP BY community_id
+            ) m ON m.community_id = c.id
+            ORDER BY COALESCE(m.member_count, 0) DESC, c.name ASC
+            """
+        )
         user_id = session.get("user_id")
         user_communities = []
         if user_id:
             user_memberships = db.fetch_all("SELECT community_id FROM community_members WHERE user_id = %s", (user_id,))
             user_communities = [m["community_id"] for m in user_memberships]
+
+        total_communities = db.fetch_one("SELECT COUNT(*) AS count FROM communities")['count'] or 0
+        total_members = db.fetch_one("SELECT COUNT(*) AS count FROM users")['count'] or 0
+        total_posts = db.fetch_one("SELECT COUNT(*) AS count FROM posts")['count'] or 0
+        online_now = db.fetch_one("SELECT COUNT(*) AS count FROM users WHERE is_active = 1")['count'] or 0
+
         db.close()
         user_name = session.get("user_name") if user_id else None
-        return render_template("communities.html", communities=communities, user_communities=user_communities, user_name=user_name)
+        # Ensure a few popular sport communities show a Join button prominently
+        featured_join_names = ['Football', 'Basketball', 'Tennis', 'Cricket']
+        return render_template(
+            "communities.html",
+            communities=communities,
+            user_communities=user_communities,
+            user_name=user_name,
+            featured_join_names=featured_join_names,
+            total_communities=total_communities,
+            total_members=total_members,
+            total_posts=total_posts,
+            online_now=online_now,
+        )
+
+    @login_required
+    def create_community(self):
+        """Render a form to create a new community (GET) and handle creation (POST)."""
+        user_name = session.get("user_name")
+        allowed_categories = ['Football', 'Basketball', 'Tennis', 'Cricket', 'eSports', 'Combat Sports', 'Fitness']
+        db = Database()
+
+        if request.method == 'GET':
+            return render_template('create_community.html', user_name=user_name, categories=allowed_categories)
+
+        # POST: create the community
+        name = (request.form.get('name') or '').strip()
+        description = (request.form.get('description') or '').strip()
+        category = (request.form.get('category') or 'Football').strip()
+        if category not in allowed_categories:
+            category = 'Football'
+
+        if not name:
+            flash('Community name is required.', 'warning')
+            db.close()
+            return redirect(url_for('Home.create_community'))
+
+        try:
+            exists = db.fetch_one('SELECT id FROM communities WHERE name = %s', (name,))
+            if exists:
+                flash('A community with that name already exists.', 'warning')
+                db.close()
+                return redirect(url_for('Home.create_community'))
+
+            user_id = session.get('user_id')
+            db.execute('INSERT INTO communities (name, description, category, owner_id) VALUES (%s, %s, %s, %s)', (name, description, category, user_id))
+            new_id = db.fetch_one('SELECT LAST_INSERT_ID() AS id')['id']
+            db.execute('INSERT INTO community_members (user_id, community_id) VALUES (%s, %s)', (user_id, new_id))
+            db.close()
+            flash('Community created successfully!', 'success')
+            return redirect(url_for('Home.community_detail', community_id=new_id))
+        except Exception as e:
+            db.close()
+            flash(f'Error creating community: {e}', 'danger')
+            return redirect(url_for('Home.create_community'))
 
     def search_communities(self):
         """Instagram-style universal search: people, communities, and posts.
@@ -359,7 +489,12 @@ class HomeRoutes:
 
     def community_detail(self, community_id):
         db = Database()
-        community = db.fetch_one("SELECT * FROM communities WHERE id = %s", (community_id,))
+        community = db.fetch_one(
+            "SELECT c.*, u.name AS owner_name FROM communities c "
+            "LEFT JOIN users u ON c.owner_id = u.id "
+            "WHERE c.id = %s",
+            (community_id,),
+        )
         if not community:
             db.close()
             return "Community not found", 404
@@ -410,9 +545,19 @@ class HomeRoutes:
             attach_notes(db, post, "post", user_id)
 
         can_moderate = can_moderate_community(db, community_id)
+        is_owner = is_community_owner(db, community_id, user_id)
+        can_delete = is_owner or session.get("user_role") == "admin"
         db.close()
         user_name = session.get("user_name") if user_id else None
-        return render_template("community_detail.html", community=community, posts=posts, is_member=is_member, user_name=user_name, can_moderate=can_moderate)
+        return render_template(
+            "community_detail.html",
+            community=community,
+            posts=posts,
+            is_member=is_member,
+            user_name=user_name,
+            can_moderate=can_moderate,
+            can_delete=can_delete,
+        )
 
     @login_required
     def join_community(self, community_id):
@@ -431,6 +576,24 @@ class HomeRoutes:
             flash("You are already a member of this community.", "info")
         db.close()
         return redirect(url_for("Home.community_detail", community_id=community_id))
+
+    @login_required
+    def delete_community(self, community_id):
+        db = Database()
+        if not can_manage_community(db, community_id):
+            db.close()
+            flash("You don't have permission to delete this community.", "danger")
+            return redirect(url_for("Home.community_detail", community_id=community_id))
+
+        community = db.fetch_one("SELECT name FROM communities WHERE id = %s", (community_id,))
+        if not community:
+            db.close()
+            return "Community not found", 404
+
+        db.execute("DELETE FROM communities WHERE id = %s", (community_id,))
+        db.close()
+        flash(f"Community '{community['name']}' has been deleted.", "success")
+        return redirect(url_for("Home.communities"))
 
     @login_required
     def create_post(self, community_id):
@@ -578,22 +741,99 @@ class HomeRoutes:
 
     def trending(self):
         user_name = session.get("user_name") if session.get("user_id") else None
-        return render_template("trending.html", user_name=user_name)
+
+        # Time window (?range=today|week|all). Default: week.
+        range_arg = (request.args.get("range") or "week").lower()
+        if range_arg not in ("today", "week", "all"):
+            range_arg = "week"
+        if range_arg == "today":
+            where = "WHERE p.created_at >= NOW() - INTERVAL 1 DAY"
+        elif range_arg == "week":
+            where = "WHERE p.created_at >= NOW() - INTERVAL 7 DAY"
+        else:
+            where = ""
+
+        db = Database()
+
+        # Real trending = posts ranked by likes (weighted) + comments.
+        posts = db.fetch_all(f"""
+            SELECT p.id, p.title, p.content, p.created_at, p.community_id,
+                   u.name AS user_name, u.profile_pic,
+                   c.name AS community_name,
+                   (SELECT COUNT(*) FROM post_votes v
+                      WHERE v.post_id = p.id AND v.vote_type = 'like')   AS like_count,
+                   (SELECT COUNT(*) FROM post_comments pc
+                      WHERE pc.post_id = p.id)                           AS comment_count
+            FROM posts p
+            JOIN users u ON p.user_id = u.id
+            JOIN communities c ON p.community_id = c.id
+            {where}
+            ORDER BY (like_count * 2 + comment_count) DESC, p.created_at DESC
+            LIMIT 20
+        """)
+
+        # Derive display fields so the template stays simple.
+        for p in posts:
+            ts = p.get("created_at")
+            p["time_label"] = ts.strftime("%b %d, %Y") if hasattr(ts, "strftime") else (str(ts)[:10] if ts else "")
+            body = (p.get("content") or "").strip()
+            p["snippet"] = (body[:140] + "…") if len(body) > 140 else body
+            title = (p.get("title") or "").strip()
+            p["title_display"] = title or "Untitled post"
+            p["score"] = (p.get("like_count") or 0) * 2 + (p.get("comment_count") or 0)
+
+        # Real top communities (by member count) for the quick-jump pills.
+        communities = db.fetch_all("""
+            SELECT c.id, c.name,
+                   (SELECT COUNT(*) FROM community_members m
+                      WHERE m.community_id = c.id) AS member_count
+            FROM communities c
+            ORDER BY member_count DESC, c.name ASC
+            LIMIT 6
+        """)
+        db.close()
+
+        return render_template(
+            "trending.html",
+            user_name=user_name,
+            posts=posts,
+            communities=communities,
+            active_range=range_arg,
+        )
 
     def live(self):
         user_name = session.get("user_name") if session.get("user_id") else None
-        return render_template("live.html", user_name=user_name)
+        # Point the "Discuss" buttons at a real Football community when one
+        # exists; fall back to the communities directory. Best-effort: a DB
+        # hiccup must not stop the live page (which needs no database) rendering.
+        football_url = url_for("Home.communities")
+        try:
+            db = Database()
+            row = db.fetch_one(
+                "SELECT id FROM communities WHERE name = %s OR category = %s ORDER BY id LIMIT 1",
+                ("Football", "Football"),
+            )
+            db.close()
+            if row:
+                football_url = url_for("Home.community_detail", community_id=row["id"])
+        except Exception:
+            pass
+        return render_template("live.html", user_name=user_name, football_url=football_url)
 
     def api_live(self):
-        """JSON feed of live World Cup 2026 goal counts (polled by the home page).
+        """JSON feed of live World Cup scores (polled by the /live page).
 
-        Backed by a process-wide MatchDataManager that caches upstream results
-        for 30 seconds, so frequent client polling does not exhaust the API
-        rate limit. Always returns 200 with a JSON body; upstream problems are
-        reported via the ``source``/``message`` fields rather than an error code.
+        Acts as a server-side proxy to football-data.org: the browser polls this
+        same-origin endpoint, so the API token stays on the server and there is
+        no CORS problem. Backed by a process-wide MatchDataManager that caches
+        upstream results for 30 seconds, so frequent client polling does not
+        exhaust the free-tier rate limit. Always returns 200 with a JSON body;
+        upstream problems are reported via the ``source``/``message`` fields
+        rather than an error code.
         """
-        manager = get_match_manager(api_key=current_app.config.get("API_FOOTBALL_KEY"))
-        return jsonify(manager.get_live_matches())
+        token = current_app.config.get("FOOTBALL_DATA_TOKEN") or current_app.config.get("API_FOOTBALL_KEY")
+        manager = get_match_manager(token=token)
+        return jsonify(manager.get_scoreboard())
 
     @login_required
     def profile(self):
@@ -674,6 +914,47 @@ class HomeRoutes:
             flash("You do not have permission to delete this post.", "danger")
         db.close()
         return redirect(request.referrer or url_for("Home.home"))
+
+    @login_required
+    def edit_post(self, post_id):
+        user_id = session.get("user_id")
+        db = Database()
+        post = db.fetch_one("SELECT * FROM posts WHERE id = %s", (post_id,))
+        if not post:
+            db.close()
+            flash("Post not found.", "danger")
+            return redirect(request.referrer or url_for("Home.home"))
+
+        if post['user_id'] != user_id:
+            db.close()
+            flash("You do not have permission to edit this post.", "danger")
+            return redirect(request.referrer or url_for("Home.home"))
+
+        if request.method == 'POST':
+            title = (request.form.get('title') or '').strip()
+            content = (request.form.get('content') or '').strip()
+
+            if not title:
+                db.close()
+                flash("A title is required.", "warning")
+                return redirect(url_for('Home.edit_post', post_id=post_id))
+
+            if post['post_type'] == 'text' and not content:
+                db.close()
+                flash("Please write something in the body of your post.", "warning")
+                return redirect(url_for('Home.edit_post', post_id=post_id))
+
+            db.execute(
+                "UPDATE posts SET title = %s, content = %s WHERE id = %s",
+                (title, content, post_id),
+            )
+            db.close()
+            flash("Post updated successfully!", "success")
+            return redirect(url_for("Home.community_detail", community_id=post['community_id']))
+
+        attach_media_and_poll(db, post, "post", user_id)
+        db.close()
+        return render_template("edit_post.html", post=post)
 
     @login_required
     def vote_post(self, post_id):

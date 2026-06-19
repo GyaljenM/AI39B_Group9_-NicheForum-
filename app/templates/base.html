@@ -188,6 +188,11 @@
     {% include 'login_modal_component.html' %}
     {% include 'register_modal_component.html' %}
 
+    {# Hidden config element for JS notification polling — no Jinja2 syntax needed inside <script> #}
+    {% if session.get('user_id') %}
+    <span id="nf-poll-config" data-feed-url="{{ url_for('Notification.feed') }}" hidden></span>
+    {% endif %}
+
     <main class="pt-16 pb-20">
         <div class="max-w-[1280px] mx-auto px-6 mt-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -215,8 +220,20 @@
         {% endblock %}
     </main>
 
-    <footer>
-        <p>&copy; 2026 Niche Forum</p>
+    <footer class="border-t border-[#E5E3DE] bg-white">
+        <div class="max-w-[1280px] mx-auto px-6 py-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-base font-semibold text-[#C2410C]">NicheForum</span>
+                    <span class="text-sm text-[#A8A29E]">&copy; 2026 All rights reserved</span>
+                </div>
+                <div class="flex items-center gap-6 text-sm text-[#78716C]">
+                    <a href="#" class="hover:text-[#C2410C] transition-colors">Privacy</a>
+                    <a href="#" class="hover:text-[#C2410C] transition-colors">Terms</a>
+                    <a href="#" class="hover:text-[#C2410C] transition-colors">Contact</a>
+                </div>
+            </div>
+        </div>
     </footer>
 
     <!-- Shared Report modal (populated per-target by openReportModal) -->
@@ -296,17 +313,6 @@
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeReportModal(); });
     </script>
 
-    <script>
-        // Micro-interaction for Navbar Scroll
-        window.addEventListener('scroll', () => {
-            const header = document.querySelector('header');
-            if (window.scrollY > 20) {
-                header.classList.add('py-0');
-            } else {
-                header.classList.remove('py-0');
-            }
-        });
-    </script>
     <script>
         // Force-enable vertical scrolling at runtime
         (function() {
@@ -444,23 +450,245 @@
         });
 
         // Poll for new notifications every 30 seconds
-        {% if session.get('user_id') %}
-        setInterval(() => {
-            const badge = document.getElementById('notificationBadge');
-            const apiUrl = "{{ url_for('Notification.feed') }}";
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    // Update badge visibility based on unread count
-                    if (data.count > 0) {
-                        badge.classList.remove('hidden');
-                    } else {
-                        badge.classList.add('hidden');
+        var _nfPollEl = document.getElementById('nf-poll-config');
+        if (_nfPollEl) {
+            (function() {
+                var pollFailures = 0;
+                var MAX_FAILURES = 3;
+                var feedUrl = _nfPollEl.getAttribute('data-feed-url');
+
+                function scheduleNext() {
+                    setTimeout(pollNotifications, 30000);
+                }
+
+                function pollNotifications() {
+                    var badge = document.getElementById('notificationBadge');
+                    if (!badge) return;
+
+                    fetch(feedUrl, { credentials: 'same-origin' })
+                        .then(function(response) {
+                            if (response.redirected || response.status === 401) {
+                                console.info('Notification polling stopped: session expired.');
+                                return null;
+                            }
+                            if (!response.ok) throw new Error('HTTP ' + response.status);
+                            return response.json();
+                        })
+                        .then(function(data) {
+                            if (data === null) return;
+                            pollFailures = 0;
+                            if (data.count > 0) {
+                                badge.classList.remove('hidden');
+                            } else {
+                                badge.classList.add('hidden');
+                            }
+                            scheduleNext();
+                        })
+                        .catch(function(err) {
+                            pollFailures++;
+                            console.warn('Notification poll failed (' + pollFailures + '/' + MAX_FAILURES + '):', err.message);
+                            if (pollFailures >= MAX_FAILURES) {
+                                console.warn('Stopping notification polling after ' + MAX_FAILURES + ' consecutive failures.');
+                                return;
+                            }
+                            scheduleNext();
+                        });
+                }
+
+                scheduleNext();
+            })();
+        }
+    </script>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         ADVANCED ANIMATIONS & INTERACTIONS
+         ═══════════════════════════════════════════════════════════════ -->
+    <script>
+    (function() {
+        'use strict';
+
+        // ── Scroll Reveal with Intersection Observer ────────────────
+        let revealObserver = null;
+        const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
+        
+        if ('IntersectionObserver' in window) {
+            revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        // Optionally unobserve after reveal (one-time animation)
+                        // revealObserver.unobserve(entry.target);
                     }
-                })
-                .catch(err => console.log('Error polling notifications:', err));
-        }, 30000);  // Poll every 30 seconds
-        {% endif %}
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
+
+            revealElements.forEach(el => revealObserver.observe(el));
+        }
+
+        // ── Button Ripple Effect
+        document.querySelectorAll('.nf-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                const rect = this.getBoundingClientRect();
+                const ripple = document.createElement('span');
+                const size = Math.max(rect.width, rect.height);
+                
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                ripple.classList.add('ripple');
+                
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        // ── Navbar Scroll Enhancement ───────────────────────────────
+        const header = document.querySelector('header');
+        let lastScrollY = 0;
+        
+        function handleNavScroll() {
+            const currentScrollY = window.scrollY;
+            
+            if (currentScrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+            
+            lastScrollY = currentScrollY;
+        }
+        
+        window.addEventListener('scroll', handleNavScroll, { passive: true });
+
+        // ── Scroll to Top Button ────────────────────────────────────
+        const scrollTopBtn = document.createElement('button');
+        scrollTopBtn.className = 'scroll-top-btn';
+        scrollTopBtn.innerHTML = '<span class="material-symbols-outlined">arrow_upward</span>';
+        scrollTopBtn.setAttribute('aria-label', 'Scroll to top');
+        document.body.appendChild(scrollTopBtn);
+
+        scrollTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) {
+                scrollTopBtn.classList.add('visible');
+            } else {
+                scrollTopBtn.classList.remove('visible');
+            }
+        }, { passive: true });
+
+        // ── Smooth Counter Animation ────────────────────────────────
+        function animateCounter(element, target, duration = 2000) {
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                element.textContent = formatNumber(Math.floor(current));
+            }, 16);
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(num >= 10000 ? 0 : 1) + 'K';
+            return num.toString();
+        }
+
+        // Observe counters for animation
+        const counters = document.querySelectorAll('.stats-gradient p.text-3xl');
+        if (counters.length > 0 && 'IntersectionObserver' in window) {
+            const counterObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !entry.target.dataset.animated) {
+                        entry.target.dataset.animated = 'true';
+                        const text = entry.target.textContent;
+                        let target;
+                        
+                        if (text.includes('M')) {
+                            target = parseFloat(text) * 1000000;
+                        } else if (text.includes('K')) {
+                            target = parseFloat(text) * 1000;
+                        } else {
+                            target = parseInt(text) || 0;
+                        }
+                        
+                        animateCounter(entry.target, target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            counters.forEach(counter => counterObserver.observe(counter));
+        }
+
+        // ── Smooth Scroll for Anchor Links ──────────────────────────
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const target = document.querySelector(targetId);
+                if (target) {
+                    e.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // ── Parallax Effect for Hero Section ────────────────────────
+        const heroSection = document.querySelector('.hero-section');
+        if (heroSection) {
+            window.addEventListener('scroll', () => {
+                const scrolled = window.scrollY;
+                const heroContent = heroSection.querySelector('.relative.z-10');
+                if (heroContent && scrolled < 600) {
+                    heroContent.style.transform = `translateY(${scrolled * 0.3}px)`;
+                    heroContent.style.opacity = 1 - (scrolled / 600);
+                }
+            }, { passive: true });
+        }
+
+        // ── Hover Sound Effect (subtle) ─────────────────────────────
+        // Uncomment to enable hover sounds
+        /*
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        document.querySelectorAll('.nf-card-interactive').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.1);
+            });
+        });
+        */
+
+        // ── Auto-add reveal classes to elements ─────────────────────
+        // Add reveal animation to cards that don't have it
+        if (revealObserver) {
+            document.querySelectorAll('.nf-card:not(.reveal):not(.reveal-left):not(.reveal-right):not(.reveal-scale)').forEach((el, index) => {
+                el.classList.add('reveal');
+                el.classList.add('reveal-delay-' + Math.min((index % 5) + 1, 5));
+                revealObserver.observe(el);
+            });
+        }
+
+        console.log('Animations initialized');
+    })();
     </script>
 </body>
 </html>

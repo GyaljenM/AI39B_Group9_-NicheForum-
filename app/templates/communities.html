@@ -1,85 +1,792 @@
 {% extends "base.html" %}
 
-{% block title %}Communities{% endblock %}
+{% block title %}Communities — Find Your Tribe{% endblock %}
+
+{% block styles %}
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   Communities Page — Page-Specific Styles
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Hero Section ─────────────────────────────────────────────────── */
+.comm-hero {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #1C1917 0%, #292524 40%, #44403C 70%, #1C1917 100%);
+    min-height: 340px;
+}
+
+.comm-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 15% 20%, rgba(194, 65, 12, 0.35) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 80%, rgba(249, 115, 22, 0.2) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(194, 65, 12, 0.08) 0%, transparent 60%);
+}
+
+.comm-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(to top, var(--nf-bg, #FAFAF9), transparent);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Floating orbs */
+.comm-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.25;
+    animation: float 9s ease-in-out infinite;
+}
+
+/* Glass stat cards */
+.glass-stat {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 16px 20px;
+    transition: all 0.3s ease;
+}
+
+.glass-stat:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+/* ── Category Filter Tabs ─────────────────────────────────────────── */
+.cat-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 100px;
+    border: 1.5px solid var(--nf-border, #E7E5E4);
+    background: var(--nf-surface, #fff);
+    color: var(--nf-text-secondary, #78716C);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.cat-tab:hover {
+    border-color: rgba(194, 65, 12, 0.4);
+    color: #C2410C;
+    background: rgba(194, 65, 12, 0.05);
+    transform: translateY(-1px);
+}
+
+.cat-tab.active {
+    background: linear-gradient(135deg, #C2410C, #EA580C);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(194, 65, 12, 0.35);
+}
+
+.cat-tab.active:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(194, 65, 12, 0.4);
+}
+
+/* ── Community Cards ──────────────────────────────────────────────── */
+.comm-card {
+    background: var(--nf-surface, #fff);
+    border: 1px solid var(--nf-border, #E7E5E4);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.comm-card:hover {
+    transform: translateY(-6px) scale(1.01);
+    box-shadow:
+        0 20px 40px -10px rgba(0, 0, 0, 0.1),
+        0 10px 20px -5px rgba(194, 65, 12, 0.08);
+    border-color: var(--nf-primary-glow, rgba(194, 65, 12, 0.2));
+}
+
+/* Shimmer sweep on hover */
+.comm-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(194, 65, 12, 0.03), transparent);
+    transition: left 0.7s ease;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.comm-card:hover::before {
+    left: 100%;
+}
+
+/* Card banner (gradient header) */
+.comm-banner {
+    height: 80px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+}
+
+.comm-banner::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to top, white, transparent);
+    z-index: 1;
+}
+
+/* Sport-specific banner gradients */
+.comm-banner-football  { background: linear-gradient(135deg, #16a34a, #22c55e, #86efac); }
+.comm-banner-basketball { background: linear-gradient(135deg, #2563EB, #3B82F6, #93C5FD); }
+.comm-banner-tennis    { background: linear-gradient(135deg, #CA8A04, #EAB308, #FDE68A); }
+.comm-banner-cricket   { background: linear-gradient(135deg, #059669, #10B981, #6EE7B7); }
+.comm-banner-esports   { background: linear-gradient(135deg, #7C3AED, #8B5CF6, #C4B5FD); }
+.comm-banner-combat    { background: linear-gradient(135deg, #DC2626, #EF4444, #FCA5A5); }
+.comm-banner-fitness   { background: linear-gradient(135deg, #EA580C, #F97316, #FDBA74); }
+.comm-banner-default   { background: linear-gradient(135deg, #C2410C, #EA580C, #FDBA74); }
+
+/* Icon circle (overlapping banner) */
+.comm-icon-wrap {
+    position: relative;
+    z-index: 2;
+    margin-left: 20px;
+    margin-bottom: -22px;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: white;
+    padding: 3px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+.comm-icon-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.comm-icon-inner .material-symbols-outlined {
+    font-size: 24px;
+    color: white;
+}
+
+/* Sport-specific icon backgrounds */
+.comm-icon-football .comm-icon-inner  { background: linear-gradient(135deg, #16a34a, #22c55e); }
+.comm-icon-basketball .comm-icon-inner { background: linear-gradient(135deg, #2563EB, #3B82F6); }
+.comm-icon-tennis .comm-icon-inner    { background: linear-gradient(135deg, #CA8A04, #EAB308); }
+.comm-icon-cricket .comm-icon-inner   { background: linear-gradient(135deg, #059669, #10B981); }
+.comm-icon-esports .comm-icon-inner   { background: linear-gradient(135deg, #7C3AED, #8B5CF6); }
+.comm-icon-combat .comm-icon-inner    { background: linear-gradient(135deg, #DC2626, #EF4444); }
+.comm-icon-fitness .comm-icon-inner   { background: linear-gradient(135deg, #EA580C, #F97316); }
+.comm-icon-default .comm-icon-inner   { background: linear-gradient(135deg, #C2410C, #EA580C); }
+
+/* Joined badge */
+.joined-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+/* Join button */
+.comm-join-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 100px;
+    background: #C2410C;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.comm-join-btn:hover {
+    background: #9a3412;
+    box-shadow: 0 4px 14px rgba(194, 65, 12, 0.35);
+    transform: scale(1.05);
+}
+
+/* View link */
+.comm-view-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    border-radius: 100px;
+    background: #F5F5F4;
+    color: #1C1917;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.comm-view-link:hover {
+    background: #E7E5E4;
+    color: #C2410C;
+}
+
+/* Activity bar (decorative) */
+.activity-bar {
+    height: 4px;
+    border-radius: 100px;
+    background: #F5F5F4;
+    overflow: hidden;
+    position: relative;
+}
+
+.activity-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, #C2410C, #F97316);
+    transition: width 0.8s ease;
+}
+
+/* ── Sidebar Cards ───────────────────────────────────────────────── */
+.side-stats-card {
+    background: linear-gradient(135deg, #1C1917 0%, #44403C 100%);
+    border-radius: 20px;
+    padding: 28px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.side-stats-card .bg-icon {
+    position: absolute;
+    right: -10px;
+    bottom: -10px;
+    opacity: 0.07;
+    font-size: 140px;
+}
+
+.popular-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 14px;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.popular-item:hover {
+    background: #F5F5F4;
+    transform: translateX(4px);
+}
+
+.popular-rank {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.rank-gold   { background: linear-gradient(135deg, #FCD34D, #F59E0B); color: #78350F; }
+.rank-silver { background: linear-gradient(135deg, #D1D5DB, #9CA3AF); color: #374151; }
+.rank-bronze { background: linear-gradient(135deg, #FCA5A5, #EF4444); color: #7F1D1D; }
+.rank-default { background: #F5F5F4; color: #78716C; }
+
+/* ── Empty State ──────────────────────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.empty-icon {
+    width: 100px;
+    height: 100px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #FFF7ED, #FEF3C7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    animation: float 3s ease-in-out infinite;
+}
+
+/* ── Hero fire icon animation ─────────────────────────────────────── */
+@keyframes icon-breathe {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.08); opacity: 0.85; }
+}
+
+.hero-icon-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #C2410C, #EA580C);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 32px rgba(194, 65, 12, 0.4);
+    animation: icon-breathe 3s ease-in-out infinite;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .comm-layout-sidebar { display: none; }
+    .comm-layout-main { grid-column: span 12 !important; }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-[1280px] mx-auto px-6 mt-8">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-        <div>
-            <h1 class="font-display-lg text-headline-md mb-2">Explore Communities</h1>
-            <p class="text-on-surface-variant text-body-lg">Find your tribe among thousands of sports hubs.</p>
-        </div>
-        <div class="flex gap-4">
-            <form action="{{ url_for('Home.search_communities') }}" method="GET" class="relative">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
-                <input type="text" name="q" placeholder="Search communities..." class="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
-                    <button type="submit" class="ml-2 px-6 py-2 bg-primary text-white rounded font-medium text-sm hover:bg-primary-container transition-all align-middle">Search</button>
-            </form>
-        </div>
-    </div>
+<!-- ═══════════════════════════════════════════════════════════════════
+     HERO SECTION
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="comm-hero flex items-center">
+    <!-- Decorative orbs -->
+    <div class="comm-orb" style="width:280px;height:280px;background:#C2410C;top:5%;left:5%;animation-delay:0s;"></div>
+    <div class="comm-orb" style="width:180px;height:180px;background:#F97316;bottom:15%;right:10%;animation-delay:3s;"></div>
+    <div class="comm-orb" style="width:120px;height:120px;background:#FBBF24;top:40%;right:35%;animation-delay:5s;"></div>
 
-    <!-- Category Tabs -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-8 scrollbar-hide">
-           <button class="px-5 py-2 bg-primary text-white rounded-full text-xs font-medium whitespace-nowrap">All Sports</button>
-           <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-medium hover:border-primary hover:text-primary transition-all whitespace-nowrap">Football</button>
-           <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-medium hover:border-primary hover:text-primary transition-all whitespace-nowrap">Basketball</button>
-           <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-medium hover:border-primary hover:text-primary transition-all whitespace-nowrap">eSports</button>
-           <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-medium hover:border-primary hover:text-primary transition-all whitespace-nowrap">Tennis</button>
-           <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-medium hover:border-primary hover:text-primary transition-all whitespace-nowrap">Cricket</button>
-           <button class="px-5 py-2 bg-white text-slate-600 border border-slate-200 rounded-full text-xs font-medium hover:border-primary hover:text-primary transition-all whitespace-nowrap">Combat Sports</button>
-    </div>
+    <div class="relative z-10 max-w-[1280px] mx-auto px-6 py-16 w-full">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10">
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% if communities %}
-            {% for community in communities %}
-            <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-slate-100 flex flex-col group">
-                <div class="bg-white rounded overflow-hidden transition-all border border-slate-100 flex flex-col group">
-                    <div class="h-32 bg-slate-100 relative overflow-hidden">
-                                <div class="absolute inset-0 bg-primary/10 group-hover:bg-primary/20 transition-colors"></div>
-                        <div class="absolute -bottom-6 left-6">
-                            <div class="w-12 h-12 rounded bg-white p-1">
-                                <div class="w-full h-full bg-primary rounded flex items-center justify-center text-white">
-                                <span class="material-symbols-outlined">
-                                    {% if community.name == 'Football' %}sports_soccer
-                                    {% elif community.name == 'Basketball' %}sports_basketball
-                                    {% elif community.name == 'Tennis' %}sports_tennis
-                                    {% elif community.name == 'Cricket' %}sports_cricket
-                                    {% elif community.name == 'eSports' %}sports_esports
-                                    {% else %}groups{% endif %}
-                                </span>
-                            </div>
+            <!-- Left: Title block -->
+            <div class="max-w-xl">
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/10 mb-6">
+                    <span class="material-symbols-outlined text-white/80 text-base" style="font-variation-settings:'FILL' 1;">hub</span>
+                    <span class="text-white/85 text-sm font-semibold tracking-wide">1,200+ Active Communities</span>
+                </div>
+
+                <h1 class="text-4xl md:text-5xl font-bold text-white leading-[1.1] tracking-tight mb-5">
+                    Discover your
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300"> community</span>
+                </h1>
+
+                <p class="text-base text-white/65 leading-relaxed mb-8 max-w-md">
+                    Join thousands of fans, players and analysts in sport-specific hubs. From grassroots to the World Cup — there's a tribe for you.
+                </p>
+
+                <!-- Glass stats row -->
+                <div class="flex flex-wrap gap-3">
+                    <div class="glass-stat flex items-center gap-3">
+                        <span class="material-symbols-outlined text-orange-300 text-xl">groups</span>
+                        <div>
+                            <p class="text-white font-bold text-lg leading-none">1,200+</p>
+                            <p class="text-white/50 text-xs mt-1 uppercase tracking-wider">Communities</p>
+                        </div>
+                    </div>
+                    <div class="glass-stat flex items-center gap-3">
+                        <span class="material-symbols-outlined text-amber-300 text-xl">person</span>
+                        <div>
+                            <p class="text-white font-bold text-lg leading-none">250K+</p>
+                            <p class="text-white/50 text-xs mt-1 uppercase tracking-wider">Members</p>
+                        </div>
+                    </div>
+                    <div class="glass-stat flex items-center gap-3">
+                        <span class="material-symbols-outlined text-green-300 text-xl">sensors</span>
+                        <div>
+                            <p class="text-white font-bold text-lg leading-none">2.4K</p>
+                            <p class="text-white/50 text-xs mt-1 uppercase tracking-wider">Online Now</p>
                         </div>
                     </div>
                 </div>
-                <div class="p-6 pt-8 flex-1">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-headline-sm"><a href="{{ url_for('Home.community_detail', community_id=community.id) }}" class="hover:text-primary transition-colors">{{ community.name }}</a></h3>
-                        {% if community.id in user_communities %}
-                        <span class="material-symbols-outlined text-green-500 text-sm" title="Member">check_circle</span>
-                        {% endif %}
-                    </div>
-                    <p class="text-on-surface-variant text-sm line-clamp-2 mb-6">{{ community.description or 'Official community for ' ~ community.name ~ ' enthusiasts.' }}</p>
-                    <div class="flex items-center justify-between mt-auto">
-                        <span class="text-xs font-semibold text-slate-500">Active Community</span>
-                        <div class="flex gap-2">
-                                <a href="{{ url_for('Home.community_detail', community_id=community.id) }}" class="px-4 py-2 bg-slate-50 text-slate-600 rounded font-medium text-xs hover:bg-slate-100 transition-all">View</a>
-                            {% if community.id not in user_communities %}
-                            <form action="{{ url_for('Home.join_community', community_id=community.id) }}" method="POST">
-                                    <button type="submit" class="px-4 py-2 bg-primary/10 text-primary rounded font-medium text-xs hover:bg-primary hover:text-white transition-all">Join</button>
-                            </form>
-                            {% else %}
-                                <span class="px-4 py-2 bg-green-50 text-green-600 rounded font-medium text-xs">Joined</span>
-                            {% endif %}
+            </div>
+
+            <!-- Right: Search card -->
+            <div class="lg:max-w-sm w-full">
+                <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-6">
+                    <p class="text-white/60 text-xs font-semibold uppercase tracking-widest mb-4">Quick search</p>
+                    <form action="{{ url_for('Home.search_communities') }}" method="GET">
+                        <div class="relative mb-4">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/40 text-xl">search</span>
+                            <input type="text" name="q" placeholder="Search communities..."
+                                class="w-full pl-12 pr-4 py-3.5 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:border-orange-400 focus:bg-white/15 transition-all"
+                                style="caret-color: #F97316;">
                         </div>
+                        <button type="submit" class="w-full py-3 bg-gradient-to-r from-[#C2410C] to-[#EA580C] text-white font-semibold rounded-xl text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-lg">search</span>
+                            Search
+                        </button>
+                    </form>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <span class="text-white/30 text-xs">Popular:</span>
+                        <a href="{{ url_for('Home.search_communities', q='Football') }}" class="text-orange-300/70 text-xs hover:text-orange-300 transition-colors">#Football</a>
+                        <a href="{{ url_for('Home.search_communities', q='Basketball') }}" class="text-orange-300/70 text-xs hover:text-orange-300 transition-colors">#Basketball</a>
+                        <a href="{{ url_for('Home.search_communities', q='eSports') }}" class="text-orange-300/70 text-xs hover:text-orange-300 transition-colors">#eSports</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     CATEGORY TABS
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="max-w-[1280px] mx-auto px-6 mt-10 mb-8">
+    <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        <button class="cat-tab active" data-filter="all">
+            <span class="material-symbols-outlined text-base">apps</span>
+            All Sports
+        </button>
+        <button class="cat-tab" data-filter="football">
+            <span class="material-symbols-outlined text-base">sports_soccer</span>
+            Football
+        </button>
+        <button class="cat-tab" data-filter="basketball">
+            <span class="material-symbols-outlined text-base">sports_basketball</span>
+            Basketball
+        </button>
+        <button class="cat-tab" data-filter="tennis">
+            <span class="material-symbols-outlined text-base">sports_tennis</span>
+            Tennis
+        </button>
+        <button class="cat-tab" data-filter="cricket">
+            <span class="material-symbols-outlined text-base">sports_cricket</span>
+            Cricket
+        </button>
+        <button class="cat-tab" data-filter="esports">
+            <span class="material-symbols-outlined text-base">sports_esports</span>
+            eSports
+        </button>
+        <button class="cat-tab" data-filter="combat">
+            <span class="material-symbols-outlined text-base">sports_martial_arts</span>
+            Combat Sports
+        </button>
+        <button class="cat-tab" data-filter="fitness">
+            <span class="material-symbols-outlined text-base">fitness_center</span>
+            Fitness
+        </button>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     MAIN CONTENT — GRID + SIDEBAR
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="max-w-[1280px] mx-auto px-6 grid grid-cols-12 gap-8 pb-20">
+
+    <!-- ── COMMUNITY CARDS GRID ─────────────────────────────────── -->
+    <div class="comm-layout-main col-span-12 lg:col-span-9">
+        <div id="comm-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+
+            {% if communities %}
+            {% for community in communities %}
+
+            {# ── Map sport name to slug for CSS classes ── #}
+            {% set slug = 'default' %}
+            {% set icon = 'groups' %}
+            {% if community.name == 'Football' %}
+                {% set slug = 'football' %}{% set icon = 'sports_soccer' %}
+            {% elif community.name == 'Basketball' %}
+                {% set slug = 'basketball' %}{% set icon = 'sports_basketball' %}
+            {% elif community.name == 'Tennis' %}
+                {% set slug = 'tennis' %}{% set icon = 'sports_tennis' %}
+            {% elif community.name == 'Cricket' %}
+                {% set slug = 'cricket' %}{% set icon = 'sports_cricket' %}
+            {% elif community.name == 'eSports' %}
+                {% set slug = 'esports' %}{% set icon = 'sports_esports' %}
+            {% elif community.name in ['Combat Sports', 'Boxing', 'MMA'] %}
+                {% set slug = 'combat' %}{% set icon = 'sports_martial_arts' %}
+            {% elif community.name in ['Fitness', 'Training', 'Gym'] %}
+                {% set slug = 'fitness' %}{% set icon = 'fitness_center' %}
+            {% endif %}
+
+            {# Fake member/activity data for visual flair #}
+            {% set member_count = (community.id * 347 + 1200) % 9000 + 800 %}
+            {% set activity_pct = ((community.id * 17 + 40) % 60) + 40 %}
+
+            <div class="comm-card reveal" data-category="{{ slug }}" style="animation-delay: {{ loop.index0 * 0.07 }}s">
+
+                <!-- Gradient Banner -->
+                <div class="comm-banner comm-banner-{{ slug }}">
+                    <!-- Decorative pattern -->
+                    <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:0.15;" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <pattern id="dots-{{ community.id }}" width="20" height="20" patternUnits="userSpaceOnUse">
+                                <circle cx="2" cy="2" r="1.5" fill="white"/>
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#dots-{{ community.id }})"/>
+                    </svg>
+                </div>
+
+                <!-- Icon circle (overlaps banner) -->
+                <div class="flex items-end justify-between px-4 -mt-5 relative z-10">
+                    <div class="comm-icon-wrap comm-icon-{{ slug }}">
+                        <div class="comm-icon-inner">
+                            <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">{{ icon }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Membership indicator -->
+                    {% if community.id in user_communities %}
+                    <div class="joined-badge mb-1">
+                        <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                        Joined
+                    </div>
+                    {% else %}
+                    <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#E7E5E4] shadow-sm mb-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                        <span class="text-[11px] font-semibold text-[#78716C]">Active</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Body -->
+                <div class="flex-1 px-5 pt-3 pb-5 flex flex-col">
+                    <h3 class="text-base font-bold text-[#1C1917] mb-1.5">
+                        <a href="{{ url_for('Home.community_detail', community_id=community.id) }}"
+                           class="hover:text-[#C2410C] transition-colors">
+                            {{ community.name }}
+                        </a>
+                    </h3>
+                    <p class="text-sm text-[#78716C] leading-relaxed line-clamp-2 mb-4 flex-1">
+                        {{ community.description or ('The official hub for ' ~ community.name ~ ' fans. Discuss matches, share highlights, and connect with fellow enthusiasts from around the world.') }}
+                    </p>
+
+                    <!-- Stats row -->
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[#A8A29E] text-base">person</span>
+                            <span class="text-xs font-semibold text-[#78716C]">{{ "{:,}".format(member_count) }} members</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[#A8A29E] text-base">whatshot</span>
+                            <span class="text-xs font-semibold text-[#78716C]">{{ activity_pct }}% active</span>
+                        </div>
+                    </div>
+
+                    <!-- Activity bar -->
+                    <div class="activity-bar mb-5">
+                        <div class="activity-bar-fill" style="width: {{ activity_pct }}%"></div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-3">
+                        <a href="{{ url_for('Home.community_detail', community_id=community.id) }}"
+                           class="comm-view-link flex-1 justify-center">
+                            <span class="material-symbols-outlined text-base">open_in_new</span>
+                            View
+                        </a>
+
+                        {% if community.id not in user_communities %}
+                        <form action="{{ url_for('Home.join_community', community_id=community.id) }}" method="POST" class="flex-1">
+                            <button type="submit" class="comm-join-btn w-full justify-center">
+                                <span class="material-symbols-outlined text-base">add_circle</span>
+                                Join
+                            </button>
+                        </form>
+                        {% else %}
+                        <div class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full bg-[#F0FDF4] border border-[#BBF7D0] text-[#16A34A] text-sm font-semibold">
+                            <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                            Member
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
             {% endfor %}
-        {% else %}
-            <div class="col-span-full text-center py-12">
-                <p class="text-slate-500">No communities found.</p>
+
+            {% else %}
+            <!-- Empty State -->
+            <div class="col-span-full">
+                <div class="empty-state nf-card p-12">
+                    <div class="empty-icon">
+                        <span class="material-symbols-outlined text-5xl text-[#C2410C]" style="font-variation-settings:'FILL' 1;">hub</span>
+                    </div>
+                    <h2 class="text-xl font-bold text-[#1C1917] mb-2">No communities yet</h2>
+                    <p class="text-[#78716C] mb-8 max-w-sm mx-auto">Be the first to explore and join communities. New sports hubs are being created every day.</p>
+                    <a href="{{ url_for('Home.search_communities') }}"
+                       class="comm-join-btn inline-flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base">search</span>
+                        Search Communities
+                    </a>
+                </div>
             </div>
-        {% endif %}
+            {% endif %}
+        </div>
     </div>
+
+    <!-- ── SIDEBAR ──────────────────────────────────────────────── -->
+    <aside class="comm-layout-sidebar col-span-3 flex flex-col gap-6">
+
+        <!-- Stats Card -->
+        <div class="side-stats-card">
+            <span class="material-symbols-outlined bg-icon" style="font-variation-settings:'FILL' 1;">hub</span>
+            <div class="relative z-10">
+                <p class="text-xs font-semibold uppercase tracking-widest text-white/50 mb-5">Community Hub</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-2xl font-bold">1,200+</p>
+                        <p class="text-xs text-white/45 mt-1 uppercase tracking-wider">Communities</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold">250K</p>
+                        <p class="text-xs text-white/45 mt-1 uppercase tracking-wider">Members</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold">12K</p>
+                        <p class="text-xs text-white/45 mt-1 uppercase tracking-wider">Posts Today</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold">2.4K</p>
+                        <p class="text-xs text-white/45 mt-1 uppercase tracking-wider">Online Now</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Most Popular Communities -->
+        <div class="nf-card p-6">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C2410C] to-[#F97316] flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white text-base" style="font-variation-settings:'FILL' 1;">emoji_events</span>
+                </div>
+                <h2 class="text-sm font-bold text-[#1C1917] uppercase tracking-wider">Most Popular</h2>
+            </div>
+            <div class="flex flex-col gap-1 stagger-children">
+                {% if communities %}
+                {% for community in communities[:5] %}
+                <a href="{{ url_for('Home.community_detail', community_id=community.id) }}" class="popular-item">
+                    {% set rank_class = 'rank-default' %}
+                    {% if loop.index == 1 %}{% set rank_class = 'rank-gold' %}
+                    {% elif loop.index == 2 %}{% set rank_class = 'rank-silver' %}
+                    {% elif loop.index == 3 %}{% set rank_class = 'rank-bronze' %}
+                    {% endif %}
+                    <div class="popular-rank {{ rank_class }}">{{ loop.index }}</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-[#1C1917] truncate">{{ community.name }}</p>
+                        <p class="text-xs text-[#A8A29E]">{{ ((community.id * 347 + 1200) % 9000 + 800)|string|truncate(4, True, '00') }} members</p>
+                    </div>
+                    <span class="material-symbols-outlined text-[#A8A29E] text-base group-hover:text-[#C2410C] transition-colors">chevron_right</span>
+                </a>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="nf-card p-6">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white text-base">explore</span>
+                </div>
+                <h2 class="text-sm font-bold text-[#1C1917] uppercase tracking-wider">Explore</h2>
+            </div>
+            <div class="flex flex-col gap-2">
+                <a href="{{ url_for('Home.trending') }}" class="flex items-center gap-3 text-sm text-[#78716C] hover:text-[#C2410C] transition-colors py-1.5">
+                    <span class="material-symbols-outlined text-lg">whatshot</span> Trending topics
+                </a>
+                <a href="{{ url_for('Home.live') }}" class="flex items-center gap-3 text-sm text-[#78716C] hover:text-[#C2410C] transition-colors py-1.5">
+                    <span class="material-symbols-outlined text-lg">sensors</span> Live events
+                </a>
+                <a href="{{ url_for('Home.search_communities') }}" class="flex items-center gap-3 text-sm text-[#78716C] hover:text-[#C2410C] transition-colors py-1.5">
+                    <span class="material-symbols-outlined text-lg">search</span> Search all
+                </a>
+            </div>
+        </div>
+
+        <!-- Create Community CTA -->
+        <div class="nf-card p-6 text-center" style="background: linear-gradient(135deg, #FFF7ED, #FFFBEB);">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#C2410C] to-[#F97316] flex items-center justify-center mx-auto mb-4 shadow-lg" style="box-shadow: 0 8px 24px rgba(194,65,12,0.25);">
+                <span class="material-symbols-outlined text-white text-2xl">add_circle</span>
+            </div>
+            <h3 class="text-base font-bold text-[#1C1917] mb-1">Can't find your sport?</h3>
+            <p class="text-xs text-[#78716C] mb-4 leading-relaxed">Start a new community and build your own tribe.</p>
+            <a href="{{ url_for('Home.search_communities') }}"
+               class="comm-join-btn inline-flex items-center gap-2 text-sm">
+                <span class="material-symbols-outlined text-base">add</span>
+                Create Community
+            </a>
+        </div>
+    </aside>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCRIPTS — Filter Tabs + Scroll Reveal
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+    /* ── Category Filter ────────────────────────────────────────────── */
+    var tabs = document.querySelectorAll('.cat-tab');
+    var cards = document.querySelectorAll('.comm-card');
+
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            tabs.forEach(function(t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+
+            var filter = tab.getAttribute('data-filter');
+            var delay = 0;
+
+            cards.forEach(function(card) {
+                var cat = card.getAttribute('data-category');
+                var show = (filter === 'all' || cat === filter);
+                if (show) {
+                    card.style.display = '';
+                    card.style.animation = 'fadeInUp 0.4s ease-out ' + delay + 's forwards';
+                    delay += 0.05;
+                } else {
+                    card.style.display = 'none';
+                    card.style.animation = '';
+                }
+            });
+        });
+    });
+
+    /* ── Scroll Reveal (Intersection Observer) ─────────────────────── */
+    var revealEls = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window && revealEls.length) {
+        var obs = new IntersectionObserver(function(entries) {
+            entries.forEach(function(e) {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    obs.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        revealEls.forEach(function(el) { obs.observe(el); });
+    } else {
+        revealEls.forEach(function(el) { el.classList.add('visible'); });
+    }
+})();
+</script>
 {% endblock %}

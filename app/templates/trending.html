@@ -1,68 +1,769 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}Trending | NicheForum{% endblock %}
 
+{% block styles %}
+<style>
+/* â”€â”€ Trending Page Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.trending-hero {
+    background: linear-gradient(135deg, #1C1917 0%, #292524 40%, #44403C 70%, #1C1917 100%);
+    position: relative;
+    overflow: hidden;
+}
+.trending-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 30% 20%, rgba(194, 65, 12, 0.35) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(249, 115, 22, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.08) 0%, transparent 60%);
+}
+.trending-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(to top, var(--nf-bg, #FAFAF9), transparent);
+    pointer-events: none;
+}
+
+/* â”€â”€ Fire Icon Pulse â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@keyframes fire-pulse {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.15); filter: brightness(1.3); }
+}
+.fire-icon {
+    animation: fire-pulse 2s ease-in-out infinite;
+    color: #F97316;
+}
+
+/* â”€â”€ Trending Rank Badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.rank-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    flex-shrink: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.rank-1 { background: linear-gradient(135deg, #FBBF24, #F59E0B); color: #78350F; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); }
+.rank-2 { background: linear-gradient(135deg, #D1D5DB, #9CA3AF); color: #374151; box-shadow: 0 4px 12px rgba(156, 163, 175, 0.3); }
+.rank-3 { background: linear-gradient(135deg, #F59E0B, #D97706); color: #451A03; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3); }
+.rank-default { background: #F5F5F4; color: #78716C; }
+
+/* â”€â”€ Trending Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.trend-card {
+    background: var(--nf-surface, #FFFFFF);
+    border: 1px solid var(--nf-border, #E7E5E4);
+    border-radius: 16px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+.trend-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, #C2410C, #F97316);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.trend-card:hover {
+    border-color: rgba(194, 65, 12, 0.2);
+    box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.08), 0 4px 16px -4px rgba(194, 65, 12, 0.1);
+    transform: translateY(-2px);
+}
+.trend-card:hover::before {
+    opacity: 1;
+}
+.trend-card:hover .rank-badge {
+    transform: scale(1.1);
+}
+
+/* â”€â”€ Vote Pill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.vote-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: #FAFAF9;
+    border: 1px solid #F5F5F4;
+    transition: all 0.3s ease;
+}
+.vote-pill:hover {
+    background: rgba(194, 65, 12, 0.04);
+    border-color: rgba(194, 65, 12, 0.15);
+}
+.vote-pill .vote-count {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1C1917;
+    line-height: 1;
+}
+.vote-pill button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #A8A29E;
+    transition: all 0.2s ease;
+}
+.vote-pill button:hover {
+    background: rgba(194, 65, 12, 0.08);
+    color: #C2410C;
+}
+.vote-pill button.active-up { color: #C2410C; background: rgba(194, 65, 12, 0.08); }
+.vote-pill button.active-down { color: #3B82F6; background: rgba(59, 130, 246, 0.08); }
+
+/* â”€â”€ Filter Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.filter-tab {
+    padding: 8px 20px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+}
+.filter-tab:hover {
+    background: #F5F5F4;
+    transform: translateY(-1px);
+}
+.filter-tab.active {
+    background: #C2410C;
+    color: white;
+    box-shadow: 0 4px 12px rgba(194, 65, 12, 0.3);
+}
+.filter-tab:not(.active) {
+    color: #78716C;
+    border-color: #E7E5E4;
+}
+
+/* â”€â”€ Trending Topic Tag â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.topic-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 100px;
+    background: #FAFAF9;
+    border: 1px solid #E7E5E4;
+    font-size: 13px;
+    font-weight: 500;
+    color: #44403C;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.topic-tag:hover {
+    background: rgba(194, 65, 12, 0.06);
+    border-color: rgba(194, 65, 12, 0.2);
+    color: #C2410C;
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 4px 12px rgba(194, 65, 12, 0.1);
+}
+.topic-tag .tag-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: #A8A29E;
+    background: #F5F5F4;
+    padding: 2px 8px;
+    border-radius: 100px;
+}
+.topic-tag:hover .tag-count {
+    background: rgba(194, 65, 12, 0.1);
+    color: #C2410C;
+}
+
+/* â”€â”€ Trending User Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.trending-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+.trending-user:hover {
+    background: #FAFAF9;
+}
+.trending-user .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+    flex-shrink: 0;
+}
+
+/* â”€â”€ Engagement Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.engagement-bar {
+    height: 4px;
+    border-radius: 100px;
+    background: #F5F5F4;
+    overflow: hidden;
+}
+.engagement-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, #C2410C, #F97316);
+    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* â”€â”€ Stat Mini Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.stat-mini {
+    text-align: center;
+    padding: 16px 12px;
+    border-radius: 12px;
+    background: #FAFAF9;
+    border: 1px solid #F5F5F4;
+    transition: all 0.3s ease;
+}
+.stat-mini:hover {
+    border-color: rgba(194, 65, 12, 0.15);
+    background: rgba(194, 65, 12, 0.02);
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="max-w-[1280px] mx-auto px-6 py-8">
-    <div class="{% if user_name %}grid grid-cols-1 xl:grid-cols-[1.5fr_0.9fr] gap-6{% endif %}">
-        <div class="space-y-6">
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h2 class="text-3xl font-bold text-on-background">Trending Now</h2>
-                    <p class="text-on-surface-variant text-body-md mt-1">The most discussed topics across all communities.</p>
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     TRENDING HERO
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<section class="trending-hero relative py-16 md:py-20">
+    <div class="relative z-10 max-w-[1280px] mx-auto px-6">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+            <div class="max-w-xl">
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/10 mb-6">
+                    <span class="material-symbols-outlined fire-icon text-lg" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                    <span class="text-white/90 text-sm font-medium">Updated 2 minutes ago</span>
+                </div>
+
+                <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 leading-[1.1] tracking-tight">
+                    Trending
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">Right Now</span>
+                </h1>
+
+                <p class="text-lg text-white/60 leading-relaxed">
+                    The hottest discussions, debates, and stories from across every community.
+                </p>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="flex gap-3">
+                <div class="bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl px-5 py-4 text-center min-w-[100px]">
+                    <p class="text-2xl font-bold text-white">847</p>
+                    <p class="text-[11px] text-white/50 uppercase tracking-wider mt-1">Active Threads</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl px-5 py-4 text-center min-w-[100px]">
+                    <p class="text-2xl font-bold text-white">12.4K</p>
+                    <p class="text-[11px] text-white/50 uppercase tracking-wider mt-1">Comments Today</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl px-5 py-4 text-center min-w-[100px]">
+                    <p class="text-2xl font-bold text-white">3.2K</p>
+                    <p class="text-[11px] text-white/50 uppercase tracking-wider mt-1">Online Now</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     MAIN CONTENT GRID
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<div class="max-w-[1280px] mx-auto px-6 -mt-8 relative z-10">
+    <div class="grid grid-cols-12 gap-8">
+
+        <!-- â”€â”€ LEFT: TRENDING FEED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <div class="col-span-12 lg:col-span-8">
+
+            <!-- Filter Tabs -->
+            <div class="nf-card p-2 mb-6 flex items-center gap-2 overflow-x-auto custom-scrollbar">
+                <button class="filter-tab active" onclick="setActiveTab(this)">All</button>
+                <button class="filter-tab" onclick="setActiveTab(this)">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">sports_soccer</span>Football
+                </button>
+                <button class="filter-tab" onclick="setActiveTab(this)">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">sports_basketball</span>Basketball
+                </button>
+                <button class="filter-tab" onclick="setActiveTab(this)">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">sports_esports</span>eSports
+                </button>
+                <button class="filter-tab" onclick="setActiveTab(this)">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">sports_tennis</span>Tennis
+                </button>
+                <button class="filter-tab" onclick="setActiveTab(this)">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">sports_cricket</span>Cricket
+                </button>
+                <button class="filter-tab" onclick="setActiveTab(this)">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">fitness_center</span>Fitness
+                </button>
+            </div>
+
+            <!-- Trending Topics Cloud -->
+            <div class="nf-card p-6 mb-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#F97316] to-[#FBBF24] flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white text-base" style="font-variation-settings: 'FILL' 1;">tag</span>
+                    </div>
+                    <h2 class="text-sm font-semibold text-[#1C1917] uppercase tracking-wider">Trending Topics</h2>
+                </div>
+                <div class="flex flex-wrap gap-2 stagger-children">
+                    <span class="topic-tag">#WorldCup2026 <span class="tag-count">2.4K</span></span>
+                    <span class="topic-tag">#ChampionsLeague <span class="tag-count">1.8K</span></span>
+                    <span class="topic-tag">#NBADraft <span class="tag-count">945</span></span>
+                    <span class="topic-tag">#ValorantMasters <span class="tag-count">812</span></span>
+                    <span class="topic-tag">#Wimbledon <span class="tag-count">634</span></span>
+                    <span class="topic-tag">#TransferWindow <span class="tag-count">1.2K</span></span>
+                    <span class="topic-tag">#Olympics2028 <span class="tag-count">423</span></span>
+                    <span class="topic-tag">#F1Season <span class="tag-count">567</span></span>
+                    <span class="topic-tag">#CricketWorldCup <span class="tag-count">789</span></span>
+                    <span class="topic-tag">#MLBPlayoffs <span class="tag-count">356</span></span>
                 </div>
             </div>
 
-            <div class="space-y-6">
-                     <article class="bg-white rounded border border-slate-200 p-6 hover:border-primary/20 transition-all">
-                    <div class="flex items-start gap-4">
-                                <div class="flex flex-col items-center rounded bg-slate-50 p-3 text-slate-500">
-                            <button class="text-primary"><span class="material-symbols-outlined">arrow_drop_up</span></button>
-                            <span class="mt-1 text-lg font-semibold">1.2k</span>
-                            <button><span class="material-symbols-outlined">arrow_drop_down</span></button>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex flex-wrap items-center gap-2 text-xs font-semibold mb-3">
-                                <span class="rounded-full bg-primary/10 text-primary px-3 py-1">r/sports</span>
-                                <span class="text-slate-400">• 2h ago</span>
-                            </div>
-                            <h3 class="text-xl font-semibold text-on-background">New roster thread: which underdog team will steal the playoffs?</h3>
-                            <p class="mt-3 text-slate-600">Discuss the latest underdog stories, surprise lineups and dark horse teams making waves this season.</p>
-                            <div class="mt-4 flex items-center gap-4 text-sm text-slate-500">
-                                <span class="flex items-center gap-2"><span class="material-symbols-outlined">chat_bubble</span> 144 comments</span>
-                                <span class="flex items-center gap-2"><span class="material-symbols-outlined">account_circle</span> @coachjon</span>
-                            </div>
-                        </div>
-                    </div>
-                </article>
+            <!-- Trending Posts -->
+            <div class="space-y-4 stagger-children">
 
-                     <article class="bg-white rounded border border-slate-200 p-6 hover:border-primary/20 transition-all">
+                <!-- Post #1 -->
+                <div class="trend-card p-5">
                     <div class="flex items-start gap-4">
-                                <div class="flex flex-col items-center rounded bg-slate-50 p-3 text-slate-500">
-                            <button class="text-primary"><span class="material-symbols-outlined">arrow_drop_up</span></button>
-                            <span class="mt-1 text-lg font-semibold">830</span>
-                            <button><span class="material-symbols-outlined">arrow_drop_down</span></button>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex flex-wrap items-center gap-2 text-xs font-semibold mb-3">
-                                <span class="rounded-full bg-primary/10 text-primary px-3 py-1">r/eSports</span>
-                                <span class="text-slate-400">• 4h ago</span>
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="rank-badge rank-1">1</div>
+                            <div class="vote-pill">
+                                <button class="active-up"><span class="material-symbols-outlined text-lg">arrow_drop_up</span></button>
+                                <span class="vote-count">2.4k</span>
+                                <button><span class="material-symbols-outlined text-lg">arrow_drop_down</span></button>
                             </div>
-                            <h3 class="text-xl font-semibold text-on-background">Valorant meta update: the best economy rounds for teams on a budget</h3>
-                            <p class="mt-3 text-slate-600">Share your favorite economy plays and learn how pros save credits without losing momentum.</p>
-                            <div class="mt-4 flex items-center gap-4 text-sm text-slate-500">
-                                <span class="flex items-center gap-2"><span class="material-symbols-outlined">chat_bubble</span> 68 comments</span>
-                                <span class="flex items-center gap-2"><span class="material-symbols-outlined">account_circle</span> @viper_main</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center flex-wrap gap-2 mb-2">
+                                <span class="nf-chip nf-chip-primary text-[11px] py-0.5">
+                                    <span class="material-symbols-outlined text-xs">sports_soccer</span> r/FootballTalk
+                                </span>
+                                <span class="nf-chip nf-chip-danger text-[11px] py-0.5">
+                                    <span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">local_fire_department</span> HOT
+                                </span>
+                                <span class="text-[11px] text-[#A8A29E]">2h ago</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-[#1C1917] leading-snug mb-2 hover:text-[#C2410C] transition-colors cursor-pointer">
+                                World Cup 2026 Group Stage Predictions â€” Which dark horse team will shock everyone?
+                            </h3>
+                            <p class="text-sm text-[#78716C] leading-relaxed mb-4 line-clamp-2">
+                                With the tournament just weeks away, let's discuss which underdog teams could pull off major upsets. Morocco's 2022 run proved anything is possible...
+                            </p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4 text-xs text-[#78716C]">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-5 h-5 rounded-full bg-gradient-to-br from-[#C2410C] to-[#F97316] flex items-center justify-center text-[9px] text-white font-bold">C</span>
+                                        <span class="font-medium">@coachjon</span>
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">chat_bubble</span> 284 comments
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">visibility</span> 12.4K views
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button class="p-2 rounded-lg hover:bg-[#F5F5F4] text-[#A8A29E] hover:text-[#C2410C] transition-all">
+                                        <span class="material-symbols-outlined text-lg">bookmark</span>
+                                    </button>
+                                    <button class="p-2 rounded-lg hover:bg-[#F5F5F4] text-[#A8A29E] hover:text-[#C2410C] transition-all">
+                                        <span class="material-symbols-outlined text-lg">share</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="engagement-bar mt-4">
+                                <div class="engagement-bar-fill" style="width: 92%;"></div>
                             </div>
                         </div>
                     </div>
-                </article>
+                </div>
+
+                <!-- Post #2 -->
+                <div class="trend-card p-5">
+                    <div class="flex items-start gap-4">
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="rank-badge rank-2">2</div>
+                            <div class="vote-pill">
+                                <button><span class="material-symbols-outlined text-lg">arrow_drop_up</span></button>
+                                <span class="vote-count">1.8k</span>
+                                <button><span class="material-symbols-outlined text-lg">arrow_drop_down</span></button>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center flex-wrap gap-2 mb-2">
+                                <span class="nf-chip nf-chip-primary text-[11px] py-0.5">
+                                    <span class="material-symbols-outlined text-xs">sports_basketball</span> r/NBACentral
+                                </span>
+                                <span class="nf-chip nf-chip-success text-[11px] py-0.5">
+                                    <span class="material-symbols-outlined text-xs">trending_up</span> Rising
+                                </span>
+                                <span class="text-[11px] text-[#A8A29E]">4h ago</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-[#1C1917] leading-snug mb-2 hover:text-[#C2410C] transition-colors cursor-pointer">
+                                NBA Draft 2026: Top 10 prospects ranked â€” who's going #1 overall?
+                            </h3>
+                            <p class="text-sm text-[#78716C] leading-relaxed mb-4 line-clamp-2">
+                                The consensus is shifting. We break down the latest scouting reports, combine results, and why one international prospect could change everything.
+                            </p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4 text-xs text-[#78716C]">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-5 h-5 rounded-full bg-gradient-to-br from-[#3B82F6] to-[#6366F1] flex items-center justify-center text-[9px] text-white font-bold">D</span>
+                                        <span class="font-medium">@draftguru</span>
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">chat_bubble</span> 196 comments
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">visibility</span> 8.7K views
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button class="p-2 rounded-lg hover:bg-[#F5F5F4] text-[#A8A29E] hover:text-[#C2410C] transition-all">
+                                        <span class="material-symbols-outlined text-lg">bookmark</span>
+                                    </button>
+                                    <button class="p-2 rounded-lg hover:bg-[#F5F5F4] text-[#A8A29E] hover:text-[#C2410C] transition-all">
+                                        <span class="material-symbols-outlined text-lg">share</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="engagement-bar mt-4">
+                                <div class="engagement-bar-fill" style="width: 78%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Post #3 -->
+                <div class="trend-card p-5">
+                    <div class="flex items-start gap-4">
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="rank-badge rank-3">3</div>
+                            <div class="vote-pill">
+                                <button><span class="material-symbols-outlined text-lg">arrow_drop_up</span></button>
+                                <span class="vote-count">1.2k</span>
+                                <button><span class="material-symbols-outlined text-lg">arrow_drop_down</span></button>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center flex-wrap gap-2 mb-2">
+                                <span class="nf-chip nf-chip-primary text-[11px] py-0.5">
+                                    <span class="material-symbols-outlined text-xs">sports_esports</span> r/ElectroArena
+                                </span>
+                                <span class="text-[11px] text-[#A8A29E]">5h ago</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-[#1C1917] leading-snug mb-2 hover:text-[#C2410C] transition-colors cursor-pointer">
+                                Valorant Masters Tokyo: Best economy round strategies for budget-conscious teams
+                            </h3>
+                            <p class="text-sm text-[#78716C] leading-relaxed mb-4 line-clamp-2">
+                                Pro teams are winning tournaments on eco rounds. Here's a breakdown of the meta-defining strategies that cost almost nothing but deliver maximum impact.
+                            </p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4 text-xs text-[#78716C]">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-5 h-5 rounded-full bg-gradient-to-br from-[#10B981] to-[#059669] flex items-center justify-center text-[9px] text-white font-bold">V</span>
+                                        <span class="font-medium">@viper_main</span>
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">chat_bubble</span> 142 comments
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">visibility</span> 6.3K views
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button class="p-2 rounded-lg hover:bg-[#F5F5F4] text-[#A8A29E] hover:text-[#C2410C] transition-all">
+                                        <span class="material-symbols-outlined text-lg">bookmark</span>
+                                    </button>
+                                    <button class="p-2 rounded-lg hover:bg-[#F5F5F4] text-[#A8A29E] hover:text-[#C2410C] transition-all">
+                                        <span class="material-symbols-outlined text-lg">share</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="engagement-bar mt-4">
+                                <div class="engagement-bar-fill" style="width: 65%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Post #4 -->
+                <div class="trend-card p-5">
+                    <div class="flex items-start gap-4">
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="rank-badge rank-default">4</div>
+                            <div class="vote-pill">
+                                <button><span class="material-symbols-outlined text-lg">arrow_drop_up</span></button>
+                                <span class="vote-count">830</span>
+                                <button><span class="material-symbols-outlined text-lg">arrow_drop_down</span></button>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center flex-wrap gap-2 mb-2">
+                                <span class="nf-chip nf-chip-primary text-[11px] py-0.5">
+                                    <span class="material-symbols-outlined text-xs">sports_tennis</span> r/AcePoint
+                                </span>
+                                <span class="text-[11px] text-[#A8A29E]">7h ago</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-[#1C1917] leading-snug mb-2 hover:text-[#C2410C] transition-colors cursor-pointer">
+                                Wimbledon 2026: The serve-and-volley revival â€” is old-school tennis coming back?
+                            </h3>
+                            <p class="text-sm text-[#78716C] leading-relaxed mb-4 line-clamp-2">
+                                Young players are bringing back the classics. Stats show a 40% increase in net approaches this season compared to last year.
+                            </p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4 text-xs text-[#78716C]">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-5 h-5 rounded-full bg-gradient-to-br from-[#F59E0B] to-[#D97706] flex items-center justify-center text-[9px] text-white font-bold">A</span>
+                                        <span class="font-medium">@acequeen</span>
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">chat_bubble</span> 87 comments
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">visibility</span> 4.1K views
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button class="p-2 rounded-lg hover:bg-[#F5F5F4] text-[#A8A29E] hover:text-[#C2410C] transition-all">
+                                        <span class="material-symbols-outlined text-lg">bookmark</span>
+                                    </button>
+                                    <button class="p-2 rounded-lg hover:bg-[#F5F5F4] text-[#A8A29E] hover:text-[#C2410C] transition-all">
+                                        <span class="material-symbols-outlined text-lg">share</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="engagement-bar mt-4">
+                                <div class="engagement-bar-fill" style="width: 52%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Post #5 -->
+                <div class="trend-card p-5">
+                    <div class="flex items-start gap-4">
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="rank-badge rank-default">5</div>
+                            <div class="vote-pill">
+                                <button><span class="material-symbols-outlined text-lg">arrow_drop_up</span></button>
+                                <span class="vote-count">567</span>
+                                <button><span class="material-symbols-outlined text-lg">arrow_drop_down</span></button>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center flex-wrap gap-2 mb-2">
+                                <span class="nf-chip nf-chip-primary text-[11px] py-0.5">
+                                    <span class="material-symbols-outlined text-xs">sports_cricket</span> r/CricketWorld
+                                </span>
+                                <span class="nf-chip nf-chip-success text-[11px] py-0.5">
+                                    <span class="material-symbols-outlined text-xs">trending_up</span> Rising
+                                </span>
+                                <span class="text-[11px] text-[#A8A29E]">9h ago</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-[#1C1917] leading-snug mb-2 hover:text-[#C2410C] transition-colors cursor-pointer">
+                                IPL Auction 2026: Top 5 most expensive buys and whether they'll deliver value
+                            </h3>
+                            <p class="text-sm text-[#78716C] leading-relaxed mb-4 line-clamp-2">
+                                Record-breaking bids this season. We analyze each marquee signing's stats, form, and fit with their new franchise.
+                            </p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4 text-xs text-[#78716C]">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-5 h-5 rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] flex items-center justify-center text-[9px] text-white font-bold">R</span>
+                                        <span class="font-medium">@runmachine</span>
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">chat_bubble</span> 63 comments
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">visibility</span> 3.2K views
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button class="p-2 rounded-lg hover:bg-[#F5F5F4] text-[#A8A29E] hover:text-[#C2410C] transition-all">
+                                        <span class="material-symbols-outlined text-lg">bookmark</span>
+                                    </button>
+                                    <button class="p-2 rounded-lg hover:bg-[#F5F5F4] text-[#A8A29E] hover:text-[#C2410C] transition-all">
+                                        <span class="material-symbols-outlined text-lg">share</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="engagement-bar mt-4">
+                                <div class="engagement-bar-fill" style="width: 38%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Load More -->
+            <div class="text-center mt-8 mb-4">
+                <button class="nf-btn nf-btn-outline">
+                    <span class="material-symbols-outlined">expand_more</span>
+                    Load More Trending
+                </button>
             </div>
         </div>
 
-        {% if user_name %}
-            {% include "_sidebar.html" %}
-        {% endif %}
+        <!-- â”€â”€ RIGHT: SIDEBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <aside class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+
+            <!-- Trending Stats -->
+            <div class="stats-gradient rounded-2xl p-6 text-white relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 opacity-10">
+                    <span class="material-symbols-outlined text-[120px]" style="font-variation-settings: 'FILL' 1, 'wght' 300;">trending_up</span>
+                </div>
+                <div class="relative z-10">
+                    <h3 class="text-sm font-semibold uppercase tracking-wider text-white/60 mb-4">Today's Pulse</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-3xl font-bold">48K</p>
+                            <p class="text-xs text-white/50 uppercase tracking-wider mt-1">Posts Today</p>
+                        </div>
+                        <div>
+                            <p class="text-3xl font-bold">156K</p>
+                            <p class="text-xs text-white/50 uppercase tracking-wider mt-1">Votes Cast</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-white/10">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-green-400 text-sm">trending_up</span>
+                            <span class="text-sm text-white/80">Engagement up <span class="font-bold text-green-400">23%</span> this week</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Contributors -->
+            <div class="nf-card p-6">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C2410C] to-[#9a3412] flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white text-base" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+                    </div>
+                    <h2 class="text-sm font-semibold text-[#1C1917] uppercase tracking-wider">Top Contributors</h2>
+                </div>
+                <div class="space-y-1 stagger-children">
+                    <div class="trending-user">
+                        <div class="user-avatar bg-gradient-to-br from-[#FBBF24] to-[#F59E0B]">C</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-[#1C1917] truncate">@coachjon</p>
+                            <p class="text-xs text-[#A8A29E]">12 posts trending today</p>
+                        </div>
+                        <span class="nf-chip nf-chip-primary text-[10px] py-0.5">#1</span>
+                    </div>
+                    <div class="trending-user">
+                        <div class="user-avatar bg-gradient-to-br from-[#3B82F6] to-[#6366F1]">D</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-[#1C1917] truncate">@draftguru</p>
+                            <p class="text-xs text-[#A8A29E]">8 posts trending today</p>
+                        </div>
+                        <span class="nf-chip nf-chip-neutral text-[10px] py-0.5">#2</span>
+                    </div>
+                    <div class="trending-user">
+                        <div class="user-avatar bg-gradient-to-br from-[#10B981] to-[#059669]">V</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-[#1C1917] truncate">@viper_main</p>
+                            <p class="text-xs text-[#A8A29E]">6 posts trending today</p>
+                        </div>
+                        <span class="nf-chip nf-chip-neutral text-[10px] py-0.5">#3</span>
+                    </div>
+                    <div class="trending-user">
+                        <div class="user-avatar bg-gradient-to-br from-[#F59E0B] to-[#D97706]">A</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-[#1C1917] truncate">@acequeen</p>
+                            <p class="text-xs text-[#A8A29E]">5 posts trending today</p>
+                        </div>
+                        <span class="nf-chip nf-chip-neutral text-[10px] py-0.5">#4</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommended Communities -->
+            <div class="nf-card p-6">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white text-base">groups</span>
+                    </div>
+                    <h2 class="text-sm font-semibold text-[#1C1917] uppercase tracking-wider">Hot Communities</h2>
+                </div>
+                <div class="space-y-3 stagger-children">
+                    <a href="#" class="flex items-center gap-3 p-3 rounded-xl hover:bg-[#FAFAF9] transition-all group">
+                        <span class="material-symbols-outlined text-[#C2410C]" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-[#1C1917]">r/FootballTalk</p>
+                            <p class="text-xs text-[#A8A29E]">42.3K members</p>
+                        </div>
+                        <span class="nf-btn nf-btn-outline text-[11px] py-1 px-3">Join</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 p-3 rounded-xl hover:bg-[#FAFAF9] transition-all group">
+                        <span class="material-symbols-outlined text-[#3B82F6]" style="font-variation-settings: 'FILL' 1;">sports_esports</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-[#1C1917]">r/ElectroArena</p>
+                            <p class="text-xs text-[#A8A29E]">28.1K members</p>
+                        </div>
+                        <span class="nf-btn nf-btn-outline text-[11px] py-1 px-3">Join</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 p-3 rounded-xl hover:bg-[#FAFAF9] transition-all group">
+                        <span class="material-symbols-outlined text-[#10B981]" style="font-variation-settings: 'FILL' 1;">sports_basketball</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-[#1C1917]">r/NBACentral</p>
+                            <p class="text-xs text-[#A8A29E]">35.7K members</p>
+                        </div>
+                        <span class="nf-btn nf-btn-outline text-[11px] py-1 px-3">Join</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="nf-card p-5">
+                <h3 class="text-xs font-semibold text-[#A8A29E] uppercase tracking-wider mb-3">Explore</h3>
+                <div class="flex flex-col gap-2">
+                    <a href="{{ url_for('Home.live') }}" class="flex items-center gap-3 text-sm text-[#78716C] hover:text-[#C2410C] transition-colors py-1">
+                        <span class="material-symbols-outlined text-lg">sensors</span> Live events now
+                    </a>
+                    <a href="{{ url_for('Home.communities') }}" class="flex items-center gap-3 text-sm text-[#78716C] hover:text-[#C2410C] transition-colors py-1">
+                        <span class="material-symbols-outlined text-lg">hub</span> All communities
+                    </a>
+                    <a href="{{ url_for('Home.search_communities') }}" class="flex items-center gap-3 text-sm text-[#78716C] hover:text-[#C2410C] transition-colors py-1">
+                        <span class="material-symbols-outlined text-lg">search</span> Search topics
+                    </a>
+                </div>
+            </div>
+        </aside>
     </div>
-</section>
+</div>
+
+<script>
+function setActiveTab(el) {
+    document.querySelectorAll('.filter-tab').forEach(function(tab) {
+        tab.classList.remove('active');
+    });
+    el.classList.add('active');
+}
+</script>
 {% endblock %}

@@ -7,7 +7,7 @@ def login_required(f):
     def decorated(*args, **kwargs):
         if "user_id" not in session:
             flash("Please login first.", "warning")
-            return redirect(url_for("auth.login"))
+            return redirect(url_for("Auth.login"))
         return f(*args, **kwargs)
     return decorated
 

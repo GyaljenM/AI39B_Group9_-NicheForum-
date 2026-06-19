@@ -525,6 +525,78 @@
     letter-spacing: 0.08em;
 }
 
+/* ── Interactive featured controls ────────────────────────────────── */
+/* Goal-alerts toggle, lit green when armed. */
+.btn-live-primary.alert-on {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    box-shadow: 0 4px 14px rgba(34, 197, 94, 0.4);
+}
+#btn-refresh-icon.spin { animation: wc-spin 0.8s linear; }
+@keyframes wc-spin { to { transform: rotate(360deg); } }
+
+/* Collapsible real-data panel inside the featured card. */
+.featured-details {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    animation: wc-fade-up 0.3s ease-out;
+}
+.detail-chip {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 10px 14px;
+}
+.detail-chip .k { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); }
+.detail-chip .v { font-size: 14px; font-weight: 700; color: #fff; margin-top: 3px; }
+@keyframes wc-fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* Goal toast notifications (bottom-right). */
+#wc-toasts {
+    position: fixed; right: 20px; bottom: 20px; z-index: 200;
+    display: flex; flex-direction: column; gap: 10px;
+}
+.wc-toast {
+    display: flex; align-items: center; gap: 12px;
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff; padding: 14px 18px; border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    font-weight: 700; min-width: 240px; max-width: 340px;
+    animation: wc-toast-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.wc-toast.out { animation: wc-toast-out 0.4s ease forwards; }
+.wc-toast .material-symbols-outlined { font-size: 28px; }
+@keyframes wc-toast-in { from { opacity: 0; transform: translateX(40px) scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes wc-toast-out { to { opacity: 0; transform: translateX(40px); } }
+
+/* ── Expandable match cards ───────────────────────────────────────── */
+.match-card { cursor: pointer; }
+.match-expand {
+    font-size: 18px;
+    color: #A8A29E;
+    transition: transform 0.25s ease;
+}
+.match-expand.open { transform: rotate(180deg); }
+.match-card.expanded { border-color: rgba(239, 68, 68, 0.25); }
+.match-details {
+    border-top: 1px solid #F5F5F4;
+    padding: 12px 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+    gap: 10px;
+    animation: wc-fade-up 0.25s ease-out;
+}
+.match-details .k { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #A8A29E; }
+.match-details .v { font-size: 12px; font-weight: 700; color: #1C1917; margin-top: 2px; }
+
+/* Score flashes green when it changes on a refresh. */
+.score-flash { animation: wc-score-flash 1.1s ease; }
+@keyframes wc-score-flash {
+    0% { color: #16a34a; transform: scale(1.18); text-shadow: 0 0 12px rgba(34,197,94,0.5); }
+    100% { transform: scale(1); }
+}
+
 /* ── Responsive ───────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
     .live-sidebar { display: none; }
@@ -571,14 +643,14 @@
                 <div class="live-glass">
                     <span class="material-symbols-outlined text-red-300 text-xl" style="font-variation-settings:'FILL' 1;">sensors</span>
                     <div>
-                        <p class="text-white font-bold text-lg leading-none" id="live-count">6</p>
+                        <p class="text-white font-bold text-lg leading-none" id="live-count">0</p>
                         <p class="text-white/40 text-xs mt-1 uppercase tracking-wider">Live Now</p>
                     </div>
                 </div>
                 <div class="live-glass">
                     <span class="material-symbols-outlined text-amber-300 text-xl">whatshot</span>
                     <div>
-                        <p class="text-white font-bold text-lg leading-none">48</p>
+                        <p class="text-white font-bold text-lg leading-none" id="goals-today">0</p>
                         <p class="text-white/40 text-xs mt-1 uppercase tracking-wider">Goals Today</p>
                     </div>
                 </div>
@@ -600,22 +672,7 @@
 <div class="max-w-[1280px] mx-auto px-6 mt-8 mb-6">
     <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
         <button class="live-tab active" data-sport="all">
-            <span class="material-symbols-outlined text-base">apps</span> All Live
-        </button>
-        <button class="live-tab" data-sport="football">
-            <span class="material-symbols-outlined text-base">sports_soccer</span> Football
-        </button>
-        <button class="live-tab" data-sport="basketball">
-            <span class="material-symbols-outlined text-base">sports_basketball</span> Basketball
-        </button>
-        <button class="live-tab" data-sport="tennis">
-            <span class="material-symbols-outlined text-base">sports_tennis</span> Tennis
-        </button>
-        <button class="live-tab" data-sport="cricket">
-            <span class="material-symbols-outlined text-base">sports_cricket</span> Cricket
-        </button>
-        <button class="live-tab" data-sport="esports">
-            <span class="material-symbols-outlined text-base">sports_esports</span> eSports
+            LIVE
         </button>
     </div>
 </div>
@@ -625,8 +682,8 @@
      ═══════════════════════════════════════════════════════════════════ -->
 <div class="max-w-[1280px] mx-auto px-6 grid grid-cols-12 gap-8 pb-20">
 
-    <!-- ── LEFT: Matches ────────────────────────────────────────── -->
-    <div class="live-main col-span-12 lg:col-span-9">
+    <!-- ── Matches (full width) ─────────────────────────────────── -->
+    <div class="live-main col-span-12">
 
         <!-- Featured Match -->
         <div class="featured-card mb-8 reveal">
@@ -634,15 +691,15 @@
                 <div class="flex items-center justify-between mb-6">
                     <div class="featured-league">
                         <span class="material-symbols-outlined text-sm">sports_soccer</span>
-                        World Cup 2026 · Group Stage
+                        <span id="featured-stage">FIFA World Cup</span>
                     </div>
                     <div class="featured-clock">
                         <div class="live-dot-pulse" style="width:6px;height:6px;"></div>
-                        <span id="featured-min">67</span>'
+                        <span id="featured-min">—</span>
                     </div>
                 </div>
 
-                <div class="featured-teams">
+                <div class="featured-teams" id="featured-teams">
                     <div class="featured-team">
                         <div class="team-crest" style="background:linear-gradient(135deg,#16a34a,#22c55e);">
                             <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1;">shield</span>
@@ -652,8 +709,8 @@
                     </div>
 
                     <div class="text-center">
-                        <div class="featured-score" id="featured-score">2 - 1</div>
-                        <p class="featured-vs mt-2">LIVE</p>
+                        <div class="featured-score" id="featured-score">–</div>
+                        <p class="featured-vs mt-2" id="featured-state">LIVE</p>
                     </div>
 
                     <div class="featured-team">
@@ -665,36 +722,23 @@
                     </div>
                 </div>
 
-                <!-- Match stats -->
-                <div class="grid grid-cols-3 gap-3 mb-6">
-                    <div class="text-center p-3 rounded-xl bg-white/5 border border-white/8">
-                        <p class="text-xl font-bold text-white">62%</p>
-                        <p class="text-xs text-white/40 mt-1">Possession</p>
-                    </div>
-                    <div class="text-center p-3 rounded-xl bg-white/5 border border-white/8">
-                        <p class="text-xl font-bold text-white">14</p>
-                        <p class="text-xs text-white/40 mt-1">Shots</p>
-                    </div>
-                    <div class="text-center p-3 rounded-xl bg-white/5 border border-white/8">
-                        <p class="text-xl font-bold text-white">8</p>
-                        <p class="text-xs text-white/40 mt-1">Corners</p>
-                    </div>
+                <div class="featured-actions">
+                    <button type="button" id="btn-goal-alert" class="btn-live-primary" aria-pressed="false">
+                        <span class="material-symbols-outlined text-lg" id="goal-alert-icon">notifications_off</span>
+                        <span id="goal-alert-label">Goal Alerts: Off</span>
+                    </button>
+                    <button type="button" id="btn-details" class="btn-live-ghost" aria-expanded="false">
+                        <span class="material-symbols-outlined text-lg">info</span>
+                        Match Details
+                    </button>
+                    <button type="button" id="btn-refresh" class="btn-live-ghost">
+                        <span class="material-symbols-outlined text-lg" id="btn-refresh-icon">refresh</span>
+                        Refresh
+                    </button>
                 </div>
 
-                <div class="featured-actions">
-                    <a href="#" class="btn-live-primary">
-                        <span class="material-symbols-outlined text-lg">forum</span>
-                        Enter Match Thread
-                    </a>
-                    <a href="#" class="btn-live-ghost">
-                        <span class="material-symbols-outlined text-lg">bar_chart</span>
-                        Full Stats
-                    </a>
-                    <a href="#" class="btn-live-ghost">
-                        <span class="material-symbols-outlined text-lg">notifications</span>
-                        Goal Alert
-                    </a>
-                </div>
+                <!-- Real match metadata, toggled by the Match Details button. -->
+                <div id="featured-details" class="featured-details" hidden></div>
             </div>
         </div>
 
@@ -706,177 +750,16 @@
                 </div>
                 <h3>All Live Matches</h3>
             </div>
-            <p class="text-xs text-[#A8A29E]">Auto-refreshes every 30s</p>
+            <p class="text-xs text-[#A8A29E]" id="live-updated">Loading… · auto-refreshes every 30s</p>
         </div>
 
-        <!-- Match Grid -->
-        <div id="match-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-12">
+        <!-- Match Grid (populated by liveScores.js from /api/live) -->
+        <div id="match-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12" data-football-url="{{ football_url }}">
 
-            <!-- Match Card 1 -->
-            <div class="match-card reveal" data-sport="football">
-                <div class="match-header">
-                    <div class="match-league-badge">
-                        <div class="match-league-dot" style="background:#16a34a;"></div>
-                        Premier League
-                    </div>
-                    <div class="match-clock match-clock-live">
-                        <div class="live-dot-pulse" style="width:5px;height:5px;"></div>
-                        72'
-                    </div>
-                </div>
-                <div class="match-body">
-                    <div class="match-teams">
-                        <div class="match-team">
-                            <div class="match-team-crest" style="background:linear-gradient(135deg,#DC2626,#EF4444);">
-                                <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1;">shield</span>
-                            </div>
-                            <p class="match-team-name">Arsenal</p>
-                        </div>
-                        <div class="match-score">2 - 1</div>
-                        <div class="match-team">
-                            <div class="match-team-crest" style="background:linear-gradient(135deg,#2563EB,#3B82F6);">
-                                <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1;">shield</span>
-                            </div>
-                            <p class="match-team-name">Chelsea</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="match-footer">
-                    <a href="#" class="match-btn match-btn-primary">
-                        <span class="material-symbols-outlined text-sm">forum</span>
-                        Match Thread
-                    </a>
-                    <a href="#" class="match-btn match-btn-secondary">
-                        <span class="material-symbols-outlined text-sm">bar_chart</span>
-                        Stats
-                    </a>
-                </div>
-            </div>
-
-            <!-- Match Card 2 -->
-            <div class="match-card reveal" data-sport="basketball">
-                <div class="match-header">
-                    <div class="match-league-badge">
-                        <div class="match-league-dot" style="background:#F97316;"></div>
-                        NBA
-                    </div>
-                    <div class="match-clock match-clock-live">
-                        <div class="live-dot-pulse" style="width:5px;height:5px;"></div>
-                        Q4 04:12
-                    </div>
-                </div>
-                <div class="match-body">
-                    <div class="match-teams">
-                        <div class="match-team">
-                            <div class="match-team-crest" style="background:linear-gradient(135deg,#7C3AED,#8B5CF6);">
-                                <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1;">sports_basketball</span>
-                            </div>
-                            <p class="match-team-name">Lakers</p>
-                        </div>
-                        <div class="match-score">102 - 98</div>
-                        <div class="match-team">
-                            <div class="match-team-crest" style="background:linear-gradient(135deg,#059669,#10B981);">
-                                <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1;">sports_basketball</span>
-                            </div>
-                            <p class="match-team-name">Warriors</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="match-footer">
-                    <a href="#" class="match-btn match-btn-primary">
-                        <span class="material-symbols-outlined text-sm">forum</span>
-                        Match Thread
-                    </a>
-                    <a href="#" class="match-btn match-btn-secondary">
-                        <span class="material-symbols-outlined text-sm">bar_chart</span>
-                        Stats
-                    </a>
-                </div>
-            </div>
-
-            <!-- Match Card 3 -->
-            <div class="match-card reveal" data-sport="tennis">
-                <div class="match-header">
-                    <div class="match-league-badge">
-                        <div class="match-league-dot" style="background:#EAB308;"></div>
-                        ATP · Roland Garros
-                    </div>
-                    <div class="match-clock match-clock-live">
-                        <div class="live-dot-pulse" style="width:5px;height:5px;"></div>
-                        Set 3
-                    </div>
-                </div>
-                <div class="match-body">
-                    <div class="match-teams">
-                        <div class="match-team">
-                            <div class="match-team-crest" style="background:linear-gradient(135deg,#CA8A04,#EAB308);">
-                                <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1;">sports_tennis</span>
-                            </div>
-                            <p class="match-team-name">Djokovic</p>
-                        </div>
-                        <div class="text-center">
-                            <p class="text-lg font-bold text-[#1C1917]">6-4, 3-6, 5-4</p>
-                            <p class="text-xs text-[#A8A29E] mt-1">Set 3</p>
-                        </div>
-                        <div class="match-team">
-                            <div class="match-team-crest" style="background:linear-gradient(135deg,#DC2626,#EF4444);">
-                                <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1;">sports_tennis</span>
-                            </div>
-                            <p class="match-team-name">Alcaraz</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="match-footer">
-                    <a href="#" class="match-btn match-btn-primary">
-                        <span class="material-symbols-outlined text-sm">forum</span>
-                        Match Thread
-                    </a>
-                    <a href="#" class="match-btn match-btn-secondary">
-                        <span class="material-symbols-outlined text-sm">bar_chart</span>
-                        Stats
-                    </a>
-                </div>
-            </div>
-
-            <!-- Match Card 4 -->
-            <div class="match-card reveal" data-sport="football">
-                <div class="match-header">
-                    <div class="match-league-badge">
-                        <div class="match-league-dot" style="background:#16a34a;"></div>
-                        La Liga
-                    </div>
-                    <div class="match-clock match-clock-live">
-                        <div class="live-dot-pulse" style="width:5px;height:5px;"></div>
-                        34'
-                    </div>
-                </div>
-                <div class="match-body">
-                    <div class="match-teams">
-                        <div class="match-team">
-                            <div class="match-team-crest" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);">
-                                <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1;">shield</span>
-                            </div>
-                            <p class="match-team-name">Real Madrid</p>
-                        </div>
-                        <div class="match-score">1 - 0</div>
-                        <div class="match-team">
-                            <div class="match-team-crest" style="background:linear-gradient(135deg,#A21CAF,#C026D3);">
-                                <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1;">shield</span>
-                            </div>
-                            <p class="match-team-name">Barcelona</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="match-footer">
-                    <a href="#" class="match-btn match-btn-primary">
-                        <span class="material-symbols-outlined text-sm">forum</span>
-                        Match Thread
-                    </a>
-                    <a href="#" class="match-btn match-btn-secondary">
-                        <span class="material-symbols-outlined text-sm">bar_chart</span>
-                        Stats
-                    </a>
-                </div>
+            <!-- Cards are injected here by liveScores.js (/api/live). -->
+            <div class="nf-card p-8 col-span-full text-center" id="match-grid-loading">
+                <span class="material-symbols-outlined text-3xl text-[#D6D3D1] animate-spin">progress_activity</span>
+                <p class="text-sm text-[#78716C] mt-3">Loading live World Cup scores…</p>
             </div>
         </div>
 
@@ -889,210 +772,22 @@
         </div>
 
         <div class="nf-card p-4 mb-8">
-            <div class="flex flex-col gap-1 stagger-children">
-                <a href="#" class="upcoming-item">
-                    <div class="upcoming-time">
-                        <p class="text-sm font-bold text-[#1C1917]">18:00</p>
-                        <p class="text-[10px] text-[#A8A29E] uppercase">GMT</p>
-                    </div>
-                    <div class="flex items-center gap-3 flex-1">
-                        <span class="material-symbols-outlined text-[#16a34a]" style="font-variation-settings:'FILL' 1;">sports_soccer</span>
-                        <div class="upcoming-teams-info">
-                            <p class="text-sm font-semibold text-[#1C1917]">Man United vs Liverpool</p>
-                            <p class="text-xs text-[#A8A29E]">Premier League · Matchday 28</p>
-                        </div>
-                    </div>
-                    <span class="material-symbols-outlined text-[#A8A29E] text-lg">chevron_right</span>
-                </a>
-                <a href="#" class="upcoming-item">
-                    <div class="upcoming-time">
-                        <p class="text-sm font-bold text-[#1C1917]">19:30</p>
-                        <p class="text-[10px] text-[#A8A29E] uppercase">GMT</p>
-                    </div>
-                    <div class="flex items-center gap-3 flex-1">
-                        <span class="material-symbols-outlined text-[#F97316]" style="font-variation-settings:'FILL' 1;">sports_basketball</span>
-                        <div class="upcoming-teams-info">
-                            <p class="text-sm font-semibold text-[#1C1917]">Celtics vs Heat</p>
-                            <p class="text-xs text-[#A8A29E]">NBA · Eastern Conference</p>
-                        </div>
-                    </div>
-                    <span class="material-symbols-outlined text-[#A8A29E] text-lg">chevron_right</span>
-                </a>
-                <a href="#" class="upcoming-item">
-                    <div class="upcoming-time">
-                        <p class="text-sm font-bold text-[#1C1917]">21:00</p>
-                        <p class="text-[10px] text-[#A8A29E] uppercase">GMT</p>
-                    </div>
-                    <div class="flex items-center gap-3 flex-1">
-                        <span class="material-symbols-outlined text-[#7C3AED]" style="font-variation-settings:'FILL' 1;">sports_esports</span>
-                        <div class="upcoming-teams-info">
-                            <p class="text-sm font-semibold text-[#1C1917]">T1 vs Gen.G</p>
-                            <p class="text-xs text-[#A8A29E]">League of Legends · LCK Finals</p>
-                        </div>
-                    </div>
-                    <span class="material-symbols-outlined text-[#A8A29E] text-lg">chevron_right</span>
-                </a>
+            <!-- Populated by liveScores.js from /api/live (upcoming fixtures). -->
+            <div class="flex flex-col gap-1 stagger-children" id="upcoming-list">
+                <p class="text-sm text-[#A8A29E] px-2 py-4">Loading upcoming fixtures…</p>
             </div>
         </div>
     </div>
 
-    <!-- ── SIDEBAR ──────────────────────────────────────────────── -->
-    <aside class="live-sidebar col-span-3 flex flex-col gap-6">
-
-        <!-- Live Stats -->
-        <div class="live-side-stats">
-            <span class="material-symbols-outlined bg-icon" style="font-variation-settings:'FILL' 1;">sensors</span>
-            <div class="relative z-10">
-                <p class="text-xs font-semibold uppercase tracking-widest text-white/50 mb-5">Live Pulse</p>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-2xl font-bold">6</p>
-                        <p class="text-xs text-white/40 mt-1 uppercase tracking-wider">Live Now</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold">48</p>
-                        <p class="text-xs text-white/40 mt-1 uppercase tracking-wider">Goals Today</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold">12.4K</p>
-                        <p class="text-xs text-white/40 mt-1 uppercase tracking-wider">Watching</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold">2.1K</p>
-                        <p class="text-xs text-white/40 mt-1 uppercase tracking-wider">Comments</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Active Threads -->
-        <div class="nf-card p-6">
-            <div class="section-head mb-4">
-                <div class="section-head-icon" style="background:rgba(239,68,68,0.1);">
-                    <span class="material-symbols-outlined text-red-500 text-base" style="font-variation-settings:'FILL' 1;">forum</span>
-                </div>
-                <h3>Hot Threads</h3>
-            </div>
-            <div class="flex flex-col gap-2 stagger-children">
-                <a href="#" class="flex items-start gap-3 p-3 rounded-xl hover:bg-[#F5F5F4] transition-all group">
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span class="material-symbols-outlined text-white text-sm" style="font-variation-settings:'FILL' 1;">whatshot</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-[#1C1917] truncate group-hover:text-[#C2410C] transition-colors">GOAL! Mexico takes the lead!</p>
-                        <p class="text-xs text-[#A8A29E] mt-1">342 replies · 2.1K views</p>
-                    </div>
-                </a>
-                <a href="#" class="flex items-start gap-3 p-3 rounded-xl hover:bg-[#F5F5F4] transition-all group">
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span class="material-symbols-outlined text-white text-sm" style="font-variation-settings:'FILL' 1;">sports_basketball</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-[#1C1917] truncate group-hover:text-[#C2410C] transition-colors">Lakers comeback is REAL</p>
-                        <p class="text-xs text-[#A8A29E] mt-1">218 replies · 1.8K views</p>
-                    </div>
-                </a>
-                <a href="#" class="flex items-start gap-3 p-3 rounded-xl hover:bg-[#F5F5F4] transition-all group">
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span class="material-symbols-outlined text-white text-sm" style="font-variation-settings:'FILL' 1;">sports_tennis</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-[#1C1917] truncate group-hover:text-[#C2410C] transition-colors">Djokovic vs Alcaraz — best match ever?</p>
-                        <p class="text-xs text-[#A8A29E] mt-1">156 replies · 1.2K views</p>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <!-- Today's Schedule -->
-        <div class="nf-card p-6">
-            <div class="section-head mb-4">
-                <div class="section-head-icon" style="background:rgba(99,102,241,0.1);">
-                    <span class="material-symbols-outlined text-indigo-500 text-base">calendar_today</span>
-                </div>
-                <h3>Today's Schedule</h3>
-            </div>
-            <div class="flex flex-col gap-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-1 h-8 rounded-full bg-gradient-to-b from-green-400 to-green-600"></div>
-                    <div>
-                        <p class="text-xs font-semibold text-[#1C1917]">6 matches live</p>
-                        <p class="text-xs text-[#A8A29E]">Football, NBA, Tennis</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="w-1 h-8 rounded-full bg-gradient-to-b from-orange-400 to-orange-600"></div>
-                    <div>
-                        <p class="text-xs font-semibold text-[#1C1917]">3 matches upcoming</p>
-                        <p class="text-xs text-[#A8A29E]">Starting 18:00 GMT</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="w-1 h-8 rounded-full bg-gradient-to-b from-slate-300 to-slate-400"></div>
-                    <div>
-                        <p class="text-xs font-semibold text-[#1C1917]">4 matches completed</p>
-                        <p class="text-xs text-[#A8A29E]">Results & highlights</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Links -->
-        <div class="nf-card p-6">
-            <div class="section-head mb-4">
-                <div class="section-head-icon" style="background:rgba(249,115,22,0.1);">
-                    <span class="material-symbols-outlined text-orange-500 text-base">explore</span>
-                </div>
-                <h3>Explore</h3>
-            </div>
-            <div class="flex flex-col gap-2">
-                <a href="{{ url_for('Home.trending') }}" class="flex items-center gap-3 text-sm text-[#78716C] hover:text-[#C2410C] transition-colors py-1.5">
-                    <span class="material-symbols-outlined text-lg">whatshot</span> Trending topics
-                </a>
-                <a href="{{ url_for('Home.communities') }}" class="flex items-center gap-3 text-sm text-[#78716C] hover:text-[#C2410C] transition-colors py-1.5">
-                    <span class="material-symbols-outlined text-lg">hub</span> All communities
-                </a>
-                <a href="{{ url_for('Home.search_communities') }}" class="flex items-center gap-3 text-sm text-[#78716C] hover:text-[#C2410C] transition-colors py-1.5">
-                    <span class="material-symbols-outlined text-lg">search</span> Search topics
-                </a>
-            </div>
-        </div>
-    </aside>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════
-     SCRIPTS — Filter Tabs + Scroll Reveal + Live Clock
+     SCRIPTS — Scroll Reveal (live data is handled by liveScores.js)
      ═══════════════════════════════════════════════════════════════════ -->
 <script>
 (function() {
-    /* ── Sport Filter ─────────────────────────────────────────────── */
-    var tabs = document.querySelectorAll('.live-tab');
-    var cards = document.querySelectorAll('.match-card');
-
-    tabs.forEach(function(tab) {
-        tab.addEventListener('click', function() {
-            tabs.forEach(function(t) { t.classList.remove('active'); });
-            tab.classList.add('active');
-
-            var sport = tab.getAttribute('data-sport');
-            var delay = 0;
-
-            cards.forEach(function(card) {
-                var cat = card.getAttribute('data-sport');
-                var show = (sport === 'all' || cat === sport);
-                if (show) {
-                    card.style.display = '';
-                    card.style.animation = 'fadeInUp 0.4s ease-out ' + delay + 's forwards';
-                    delay += 0.05;
-                } else {
-                    card.style.display = 'none';
-                    card.style.animation = '';
-                }
-            });
-        });
-    });
-
-    /* ── Scroll Reveal ────────────────────────────────────────────── */
+    /* ── Scroll Reveal for the static parts of the page (hero, sidebar). ──
+       Match cards are injected by liveScores.js already marked `visible`. */
     var revealEls = document.querySelectorAll('.reveal');
     if ('IntersectionObserver' in window && revealEls.length) {
         var obs = new IntersectionObserver(function(entries) {
@@ -1107,34 +802,8 @@
     } else {
         revealEls.forEach(function(el) { el.classList.add('visible'); });
     }
-
-    /* ── Featured Match Clock (ticks every minute) ────────────────── */
-    var clockEl = document.getElementById('featured-min');
-    if (clockEl) {
-        setInterval(function() {
-            var m = parseInt(clockEl.textContent, 10);
-            if (m < 90) clockEl.textContent = m + 1;
-        }, 60000);
-    }
-
-    /* ── Pull Live Data from API (optional enhancement) ───────────── */
-    var scoreEl = document.getElementById('featured-score');
-    function refreshLive() {
-        fetch('/api/live-matches', { credentials: 'same-origin' })
-            .then(function(r) { return r.ok ? r.json() : null; })
-            .then(function(data) {
-                if (!data || !data.matches || !data.matches.length) return;
-                var top = data.matches[0];
-                if (scoreEl && top.home_score !== undefined) {
-                    scoreEl.textContent = top.home_score + ' - ' + top.away_score;
-                }
-                var countEl = document.getElementById('live-count');
-                if (countEl) countEl.textContent = data.matches.length;
-            })
-            .catch(function() { /* silent — keep static data */ });
-    }
-    refreshLive();
-    setInterval(refreshLive, 30000);
 })();
 </script>
+<!-- Live scoreboard engine: polls /api/live (server-side proxy) every 30s. -->
+<script src="{{ url_for('static', filename='liveScores.js') }}"></script>
 {% endblock %}

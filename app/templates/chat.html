@@ -18,14 +18,6 @@
     gap: 0;
 }
 
-.chat-layout.has-profile {
-    grid-template-columns: 340px 1fr 300px;
-}
-
-@media (max-width: 1200px) {
-    .chat-layout.has-profile { grid-template-columns: 340px 1fr; }
-    .chat-profile-panel { display: none; }
-}
 
 @media (max-width: 768px) {
     .chat-layout { grid-template-columns: 1fr; height: auto; }
@@ -340,6 +332,7 @@
     display: flex;
     flex-direction: column;
     max-width: 70%;
+    width: fit-content;
     animation: msgFadeIn 0.3s ease-out;
 }
 
@@ -351,6 +344,7 @@
 .chat-msg.mine {
     align-self: flex-end;
     align-items: flex-end;
+    margin-left: auto;
 }
 
 .chat-msg.theirs {
@@ -441,6 +435,7 @@
     font-size: 14px;
     color: #1C1917;
     outline: none;
+    text-align: right;
 }
 
 .chat-input-form input::placeholder {
@@ -491,15 +486,6 @@
 }
 
 /* ── Right Panel: Profile ─────────────────────────────────────────── */
-.chat-profile-panel {
-    background: var(--nf-surface, #fff);
-    border-left: 1px solid var(--nf-border, #E7E5E4);
-    border-radius: 0 20px 20px 0;
-    overflow-y: auto;
-    padding: 24px;
-}
-
-.profile-card {
     text-align: center;
     padding-bottom: 24px;
     border-bottom: 1px solid #F5F5F4;
@@ -602,31 +588,6 @@
     margin-top: 2px;
 }
 
-/* Quick share buttons */
-.quick-share-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.quick-share-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 16px 12px;
-    border-radius: 14px;
-    border: 1px solid #E7E5E4;
-    background: #FAFAF9;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.quick-share-btn:hover {
-    border-color: rgba(194, 65, 12, 0.2);
-    background: rgba(194, 65, 12, 0.04);
-}
-
 /* Share form */
 .share-form {
     padding: 16px;
@@ -652,16 +613,14 @@
 {% endblock %}
 
 {% block content %}
-<div class="chat-layout {% if other %}has-profile{% endif %}">
+<div class="chat-layout">
 
     <!-- ── LEFT: Conversations ──────────────────────────────────── -->
     <aside class="chat-sidebar">
         <div class="chat-sidebar-header">
             <div class="chat-sidebar-title">
                 <h2>Messages</h2>
-                {% if conversations %}
-                <span class="badge">{{ conversations|length }}</span>
-                {% endif %}
+                {# badge removed per UX request #}
             </div>
             <div class="chat-search">
                 <span class="material-symbols-outlined search-icon text-base">search</span>
@@ -683,7 +642,7 @@
                 <div class="chat-contact-info">
                     <p class="chat-contact-name">{{ c.name }}</p>
                     <p class="chat-contact-preview">
-                        {% if c.last_at %}Tap to continue conversation{% else %}Start a conversation{% endif %}
+                        {% if c.last_at %}{{ c.last_message|default('') }}{% else %}Start a conversation{% endif %}
                     </p>
                 </div>
             </a>
@@ -756,112 +715,11 @@
         {% endif %}
     </div>
 
-    <!-- ── RIGHT: Profile Panel ─────────────────────────────────── -->
-    {% if other %}
-    <aside class="chat-profile-panel" id="profilePanel">
-        <!-- Profile Card -->
-        <div class="profile-card">
-            <div class="profile-avatar-lg">
-                {% if other.profile_pic %}
-                    <img src="{{ url_for('static', filename=other.profile_pic) }}" alt="">
-                {% else %}{{ other.name[0]|upper }}{% endif %}
-            </div>
-            <p class="profile-name-lg">{{ other.name }}</p>
-            {% if other.bio %}
-            <p class="profile-bio">{{ other.bio }}</p>
-            {% endif %}
-        </div>
-
-        <!-- Mutual Communities -->
-        <div class="panel-section">
-            <div class="panel-section-title">
-                <span class="material-symbols-outlined text-[#C2410C] text-base" style="font-variation-settings:'FILL' 1;">hub</span>
-                <h3>Shared Communities</h3>
-            </div>
-            {% for c in mutual_communities %}
-            <a href="{{ url_for('Home.community_detail', community_id=c.id) }}" class="mutual-item">
-                <div class="mutual-item-icon">
-                    <span class="material-symbols-outlined text-[#C2410C] text-lg">groups</span>
-                </div>
-                <div>
-                    <p class="mutual-item-name">c/{{ c.name }}</p>
-                    {% if c.description %}
-                    <p class="mutual-item-desc">{{ c.description[:30] }}{% if c.description|length > 30 %}...{% endif %}</p>
-                    {% endif %}
-                </div>
-            </a>
-            {% else %}
-            <p class="text-xs text-[#A8A29E] px-2">No shared communities yet.</p>
-            {% endfor %}
-        </div>
-
-        <!-- Quick Share -->
-        <div class="panel-section">
-            <div class="panel-section-title">
-                <span class="material-symbols-outlined text-orange-500 text-base">share</span>
-                <h3>Quick Share</h3>
-            </div>
-            <div class="quick-share-grid">
-                <button type="button" onclick="openShare('live')" class="quick-share-btn">
-                    <span class="material-symbols-outlined text-red-500 text-xl" style="font-variation-settings:'FILL' 1;">sensors</span>
-                    <span class="text-xs font-semibold text-[#1C1917]">Live Match</span>
-                </button>
-                <button type="button" onclick="openShare('thread')" class="quick-share-btn">
-                    <span class="material-symbols-outlined text-[#C2410C] text-xl" style="font-variation-settings:'FILL' 1;">edit_note</span>
-                    <span class="text-xs font-semibold text-[#1C1917]">Thread</span>
-                </button>
-            </div>
-
-            <!-- Share Form -->
-            <form id="shareForm" action="{{ url_for('Chat.share_card', other_id=other.id) }}" method="POST" class="share-form hidden mt-4">
-                <input type="hidden" name="share_type" id="shareType" value="">
-                <p id="sharePrompt" class="text-xs text-[#78716C] mb-3">Select a community:</p>
-                {% if my_communities %}
-                <select name="community_id" required>
-                    {% for c in my_communities %}
-                    <option value="{{ c.id }}">c/{{ c.name }}</option>
-                    {% endfor %}
-                </select>
-                <div class="flex justify-end gap-2 mt-3">
-                    <button type="button" onclick="closeShare()" class="px-3 py-1.5 rounded-lg border border-[#E7E5E4] text-xs font-semibold text-[#78716C] hover:bg-[#F5F5F4]">Cancel</button>
-                    <button type="submit" class="px-3 py-1.5 rounded-lg bg-[#C2410C] text-white text-xs font-semibold hover:bg-[#9a3412]">Share</button>
-                </div>
-                {% else %}
-                <p class="text-xs text-[#A8A29E]">Join a community to share.</p>
-                {% endif %}
-            </form>
-        </div>
-    </aside>
-    {% endif %}
 </div>
 
 {% if other %}
 <script>
-    // ── Toggle Profile Panel ──────────────────────────────────────────
-    function toggleProfilePanel() {
-        const panel = document.getElementById('profilePanel');
-        if (!panel) return;
-        panel.classList.toggle('hidden');
-        if (panel.classList.contains('hidden')) {
-            document.querySelector('.chat-layout')?.classList.remove('has-profile');
-        } else {
-            document.querySelector('.chat-layout')?.classList.add('has-profile');
-        }
-    }
-
-    // ── Share Shortcut ────────────────────────────────────────────────
-    function openShare(type) {
-        const form = document.getElementById('shareForm');
-        document.getElementById('shareType').value = type;
-        document.getElementById('sharePrompt').textContent =
-            type === 'live' ? 'Share a live match:' : 'Share a thread:';
-        form.classList.remove('hidden');
-        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    function closeShare() {
-        document.getElementById('shareForm').classList.add('hidden');
-    }
-
+    // ── Search Conversations ──────────────────────────────────────────
     // ── Search Conversations ──────────────────────────────────────────
     document.getElementById('chatSearch')?.addEventListener('input', function(e) {
         const q = e.target.value.toLowerCase();

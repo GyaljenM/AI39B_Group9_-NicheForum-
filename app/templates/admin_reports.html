@@ -43,7 +43,7 @@
                             <button type="submit" class="px-4 py-2 rounded-full border border-slate-200 text-sm text-on-surface-variant hover:bg-slate-50 transition-all">Dismiss</button>
                         </form>
                         <form action="{{ url_for('Home.delete_post', post_id=r.post_id) }}" method="POST" onsubmit="return confirm('Delete this post permanently?')">
-                            <button type="submit" class="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-label-bold hover:bg-red-700 transition-all">Delete post</button>
+                            <button type="submit" class="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-all">Delete post</button>
                         </form>
                     </div>
                 </div>
@@ -80,7 +80,7 @@
                             <button type="submit" class="px-4 py-2 rounded-full border border-slate-200 text-sm text-on-surface-variant hover:bg-slate-50 transition-all">Dismiss</button>
                         </form>
                         <form action="{{ url_for('Thread.delete_thread', thread_id=r.thread_id) }}" method="POST" onsubmit="return confirm('Delete this thread permanently?')">
-                            <button type="submit" class="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-label-bold hover:bg-red-700 transition-all">Delete thread</button>
+                            <button type="submit" class="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-all">Delete thread</button>
                         </form>
                     </div>
                 </div>

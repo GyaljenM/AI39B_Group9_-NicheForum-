@@ -2,45 +2,46 @@
 {% block title %}Verify Your Account - NicheForum{% endblock %}
 
 {% block styles %}
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <script id="tailwind-config">
     tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    "primary": "#4648d4",
-                    "primary-container": "#6063ee",
-                    "surface-bright": "#f7f9fb",
-                    "on-surface": "#191c1e",
-                    "outline": "#767586",
-                },
-                fontFamily: {
-                    "lexend": ["Lexend"],
-                    "work-sans": ["Work Sans"],
-                }
-            }
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#C2410C",
+            "primary-hover": "#9a3412",
+            "surface": "#FFFFFF",
+            "muted": "#78716C",
+            "forum-bg": "#F8F6F1",
+            "border": "#E5E3DE",
+            "teal": "#0D9488",
+          },
+          fontFamily: {
+            "sans": ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+          },
+          borderRadius: {
+            DEFAULT: "4px",
+          }
         }
+      }
     }
 </script>
 {% endblock %}
 
 {% block content %}
-<div class="min-h-[85vh] flex flex-col items-center justify-center px-6 py-12">
+<div class="min-h-screen flex flex-col items-center justify-center px-4 py-10 bg-[#F8F6F1]">
     <div class="w-full max-w-md">
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
-                <span class="material-symbols-outlined text-primary text-4xl">mail_lock</span>
+            <div class="inline-flex items-center justify-center w-12 h-12 bg-orange-50 rounded mb-4 border border-[#E5E3DE]">
+                <span class="material-symbols-outlined text-[#C2410C] text-2xl">mail_opened</span>
             </div>
-            <h1 class="text-3xl font-black text-indigo-600 font-lexend mb-2">Verify Account</h1>
-            <p class="text-slate-500 font-medium">Enter the 6-digit code we sent to your email</p>
+            <h1 class="text-2xl font-semibold text-[#1C1917] mb-1">Verify Account</h1>
+            <p class="text-[#78716C] text-sm">Enter the 6-digit code we sent to your email</p>
         </div>
 
-        <div class="glass-card rounded-2xl p-8 shadow-xl border border-slate-100">
-            <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div class="bg-white rounded p-6 border border-[#E5E3DE]">
+            <div class="mb-6 p-4 bg-blue-50 rounded border border-blue-200">
                 <p class="text-sm text-blue-800 font-medium">
-                    <span class="font-bold">{{ email }}</span>
+                    <span class="font-semibold">{{ email }}</span>
                 </p>
             </div>
 
@@ -48,52 +49,49 @@
                 <input type="hidden" name="email" value="{{ email }}">
 
                 <div>
-                    <label for="otp" class="block text-sm font-bold text-slate-700 mb-2 font-lexend">Verification Code</label>
-                    <div class="relative">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">pin</span>
-                        <input 
-                            type="text" 
-                            id="otp" 
-                            name="otp" 
-                            maxlength="6" 
-                            pattern="\d{6}" 
-                            required 
-                            class="w-full pl-10 pr-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-center text-2xl font-bold tracking-widest"
-                            placeholder="000000"
-                            inputmode="numeric">
-                    </div>
-                    <p class="mt-2 text-xs text-slate-400 font-medium">Enter the 6 digits from your email</p>
+                    <label for="otp" class="block text-xs font-medium text-[#78716C] mb-1">Verification Code</label>
+                    <input 
+                        type="text" 
+                        id="otp" 
+                        name="otp" 
+                        maxlength="6" 
+                        pattern="\d{6}" 
+                        required 
+                        class="w-full py-3 bg-[#F8F6F1] border border-[#E5E3DE] rounded focus:outline-none focus:border-[#C2410C] text-center text-xl font-semibold tracking-widest transition-colors"
+                        placeholder="000000"
+                        inputmode="numeric">
+                    <p class="mt-2 text-xs text-[#78716C]">Enter the 6 digits from your email</p>
                 </div>
 
                 <button 
                     type="submit" 
-                    class="w-full py-4 bg-primary hover:bg-primary-container text-white rounded-xl font-bold transition-all shadow-lg active:scale-[0.98]">
+                    class="w-full py-3 bg-[#C2410C] hover:bg-[#9a3412] text-white rounded text-sm font-medium transition-colors">
                     <span class="inline-flex items-center gap-2">
-                        <span class="material-symbols-outlined">check_circle</span>
+                        <span class="material-symbols-outlined">circle_check</span>
                         Verify Code
                     </span>
                 </button>
             </form>
 
-            <div class="mt-6 pt-6 border-t border-slate-100">
-                <p class="text-sm text-slate-500 font-medium mb-3 text-center">Didn't receive a code?</p>
+            <div class="mt-6 pt-6 border-t border-[#E5E3DE]">
+                <p class="text-sm text-[#78716C] mb-3 text-center">Didn't receive a code?</p>
                 <form method="POST" action="{{ url_for('Auth.resend_otp') }}" class="mb-3">
                     <input type="hidden" name="email" value="{{ email }}">
                     <button 
                         type="submit" 
-                        class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition-all flex items-center justify-center gap-2">
+                        class="w-full py-3 bg-[#F8F6F1] hover:bg-[#E5E3DE] text-[#1C1917] rounded text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-[#E5E3DE]">
                         <span class="material-symbols-outlined text-base">send</span>
                         Resend Code
                     </button>
                 </form>
                 <div class="flex gap-3 justify-center text-sm">
-                    <a href="{{ url_for('Auth.register') }}" class="inline-flex items-center font-bold text-slate-400 hover:text-primary transition-all">
+                    <a href="{{ url_for('Auth.register') }}" class="inline-flex items-center text-sm font-medium text-[#78716C] hover:text-[#1C1917] transition-colors">
                         <span class="material-symbols-outlined mr-1 text-base">refresh</span>
-                        New Registration
+                        Try Again
                     </a>
-                    <span class="text-slate-300">•</span>
-                    <a href="{{ url_for('Auth.login') }}" class="inline-flex items-center font-bold text-primary hover:underline transition-all">
-                        <span class="material-symbols-outlined mr-1 text-base">arrow_back</span>
+                    <span class="text-[#E5E3DE]">•</span>
+                    <a href="{{ url_for('Auth.login') }}" class="inline-flex items-center text-sm font-medium text-[#C2410C] hover:underline transition-colors">
+                        <span class="material-symbols-outlined mr-1 text-base">arrow_left</span>
                         Back to Login
                     </a>
                 </div>
@@ -101,8 +99,8 @@
         </div>
 
         <div class="mt-8 text-center">
-            <a href="{{ url_for('Home.home') }}" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-primary transition-all">
-                <span class="material-symbols-outlined mr-2">home</span>
+            <a href="{{ url_for('Home.home') }}" class="inline-flex items-center text-sm font-medium text-[#78716C] hover:text-[#1C1917] transition-colors">
+                <span class="material-symbols-outlined mr-2 text-base">home</span>
                 Back to Home
             </a>
         </div>

@@ -26,7 +26,7 @@
                 placeholder="Search people, communities, posts..."
                 class="w-full pl-12 pr-28 py-3 bg-white border border-slate-200 rounded-full text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
             <button type="submit"
-                class="absolute right-2 top-1/2 -translate-y-1/2 px-5 py-2 bg-primary text-white rounded-full font-label-bold text-xs shadow-md hover:bg-primary-container transition-all">Search</button>
+                 class="absolute right-2 top-1/2 -translate-y-1/2 px-5 py-2 bg-primary text-white rounded-full font-medium text-xs hover:bg-primary-container transition-all">Search</button>
         </div>
     </form>
 
@@ -49,7 +49,7 @@
         {% if people %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             {% for person in people %}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-4">
+                <div class="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-4">
                 <a href="{{ url_for('User.profile', user_id=person.id) }}"
                    class="h-14 w-14 shrink-0 rounded-full bg-primary text-white flex items-center justify-center text-xl font-semibold overflow-hidden">
                     {% if person.profile_pic %}
@@ -88,12 +88,12 @@
         {% if communities %}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for community in communities %}
-            <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-slate-100 flex flex-col group">
+            <div class="bg-white rounded-2xl overflow-hidden transition-all border border-slate-100 flex flex-col group">
                 <div class="h-32 bg-slate-100 relative overflow-hidden">
                     <div class="absolute inset-0 bg-primary/10 group-hover:bg-primary/20 transition-colors"></div>
                     <div class="absolute -bottom-6 left-6">
-                        <div class="w-12 h-12 rounded-xl bg-white p-1 shadow-lg">
-                            <div class="w-full h-full bg-primary rounded-lg flex items-center justify-center text-white">
+                        <div class="w-12 h-12 rounded bg-white p-1">
+                            <div class="w-full h-full bg-primary rounded flex items-center justify-center text-white">
                                 <span class="material-symbols-outlined">groups</span>
                             </div>
                         </div>
@@ -110,13 +110,13 @@
                     <div class="flex items-center justify-between mt-auto">
                         <span class="text-xs font-semibold text-slate-500">{{ community.member_count }} member{{ '' if community.member_count == 1 else 's' }}</span>
                         <div class="flex gap-2">
-                            <a href="{{ url_for('Home.community_detail', community_id=community.id) }}" class="px-4 py-2 bg-slate-50 text-slate-600 rounded-lg font-label-bold text-xs hover:bg-slate-100 transition-all">View</a>
+                            <a href="{{ url_for('Home.community_detail', community_id=community.id) }}" class="px-4 py-2 bg-slate-50 text-slate-600 rounded font-medium text-xs hover:bg-slate-100 transition-all">View</a>
                             {% if current_user_id and community.id not in user_communities %}
                             <form action="{{ url_for('Home.join_community', community_id=community.id) }}" method="POST">
-                                <button type="submit" class="px-4 py-2 bg-primary/10 text-primary rounded-lg font-label-bold text-xs hover:bg-primary hover:text-white transition-all">Join</button>
+                                <button type="submit" class="px-4 py-2 bg-primary/10 text-primary rounded font-medium text-xs hover:bg-primary hover:text-white transition-all">Join</button>
                             </form>
                             {% elif community.id in user_communities %}
-                            <span class="px-4 py-2 bg-green-50 text-green-600 rounded-lg font-label-bold text-xs">Joined</span>
+                            <span class="px-4 py-2 bg-green-50 text-green-600 rounded font-medium text-xs">Joined</span>
                             {% endif %}
                         </div>
                     </div>
@@ -138,7 +138,7 @@
         <div class="space-y-3 max-w-3xl">
             {% for post in posts %}
             <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}"
-               class="block bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-all">
+                    class="block bg-white rounded-2xl border border-slate-100 p-5 transition-all">
                 <div class="flex items-center gap-2 text-xs text-on-surface-variant mb-1">
                     <span class="font-semibold text-primary">c/{{ post.community_name }}</span>
                     <span>&middot;</span>

@@ -1,590 +1,441 @@
 {% extends "base.html" %}
-{% from '_post_parts.html' import render_media %}
 
-{% block title %}Activity Feed - NicheForum{% endblock %}
+{% block title %}{{ user.name or user_name }} — Profile | NicheForum{% endblock %}
 
-{% block content %}
-<div class="activity-dashboard">
-    <!-- Profile Header -->
-    <header class="profile-header">
-        <div class="profile-cover"></div>
-        <div class="profile-info-container">
-            <div class="profile-avatar">
-                {% if user.profile_pic %}
-                    <img src="{{ url_for('static', filename=user.profile_pic) }}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px;">
-                {% else %}
-                    {{ (user.name or session.get('user_name'))[0]|upper }}
-                {% endif %}
-            </div>
-            <div class="profile-details">
-                <h1 class="profile-name">{{ user.name or session.get('user_name') }}</h1>
-                <p class="profile-handle">@{{ (user.name or session.get('user_name')).lower().replace(' ', '_') }}</p>
-                <p class="profile-bio">{{ user.bio or 'Community enthusiast and niche forum explorer.' }}</p>
-                <div class="profile-stats">
-                    <button type="button" class="profile-stat" data-tab="posts">
-                        <strong>{{ posts|length }}</strong> Posts
-                    </button>
-                    <button type="button" class="profile-stat" data-tab="followers">
-                        <strong>{{ follower_count }}</strong> Followers
-                    </button>
-                    <button type="button" class="profile-stat" data-tab="following">
-                        <strong>{{ following_count }}</strong> Following
-                    </button>
-                </div>
-            </div>
-            <div class="profile-actions">
-                <button class="edit-profile-btn" onclick="openEditProfileModal()">Edit Profile</button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Tab Bar -->
-    <nav class="activity-tabs">
-        <div class="tabs-container">
-            <button class="tab-item active" data-tab="overview">Overview</button>
-            <button class="tab-item" data-tab="posts">Posts</button>
-            <button class="tab-item" data-tab="followers">Followers</button>
-            <button class="tab-item" data-tab="following">Following</button>
-            <button class="tab-item" data-tab="comments">Comments</button>
-        </div>
-        <div class="tabs-actions">
-            <label class="theme-switcher" for="theme-toggle">
-                <span class="theme-label">Dark mode</span>
-                <input type="checkbox" id="theme-toggle" aria-label="Toggle dark mode">
-                <span class="theme-slider" aria-hidden="true"></span>
-            </label>
-        </div>
-    </nav>
-
-    <!-- Activity Feed Content -->
-    <main class="feed-content">
-        <div id="overview-tab" class="tab-pane active">
-            {% if posts %}
-                {% for post in posts %}
-                <article class="feed-card">
-                    <!-- Reddit-like Header -->
-                    <div class="card-header-new">
-                        <div class="flex items-center gap-2">
-                            <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="font-bold text-xs hover:underline">c/{{ post.community_name }}</a>
-                            <span class="text-slate-400 text-xs">•</span>
-                            <span class="text-slate-500 text-xs">Posted by u/{{ post.user_name or session.get('user_name') }}</span>
-                            <span class="text-slate-400 text-xs">{{ post.created_at }}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="card-body-new">
-                        <h2 class="card-title-new">{{ post.title }}</h2>
-                        <div class="card-content-new">
-                            <p class="text-sm text-on-surface-variant line-clamp-3">{{ post.content }}</p>
-                        </div>
-                        {{ render_media(post.media) }}
-                    </div>
-
-                    <!-- Reddit-like Action Bar -->
-                    <div class="card-footer-new">
-                        <div class="flex items-center gap-1">
-                            <button class="action-item">
-                                <span class="material-symbols-outlined text-xl">mode_comment</span>
-                                <span class="text-xs font-bold">0 Comments</span>
-                            </button>
-                            <button class="action-item">
-                                <span class="material-symbols-outlined text-xl">share</span>
-                                <span class="text-xs font-bold">Share</span>
-                            </button>
-                            <button class="action-item">
-                                <span class="material-symbols-outlined text-xl">bookmark</span>
-                                <span class="text-xs font-bold">Save</span>
-                            </button>
-                        </div>
-                    </div>
-                </article>
-                {% endfor %}
-{% else %}
-                <div class="empty-state">
-                    <span class="material-symbols-outlined">post_add</span>
-                    <p>No posts yet. Start by joining a community!</p>
-                </div>
-            {% endif %}
-        </div>
-
-        <div id="posts-tab" class="tab-pane">
-            {% if posts %}
-                {% for post in posts %}
-                <article class="feed-card">
-                    <div class="card-header">
-                        <span class="meta-tag">C/{{ post.community_name|upper }}</span>
-                        <span class="meta-time">{{ post.created_at }}</span>
-                    </div>
-                    <div class="card-body">
-                        <h2 class="card-title">{{ post.title }}</h2>
-                        <p class="card-text">{{ post.content }}</p>
-                    </div>
-                    <div class="card-actions">
-                        <button class="action-btn"><span class="material-symbols-outlined">share</span> Share</button>
-                    </div>
-                </article>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">
-                    <span class="material-symbols-outlined">edit_note</span>
-                    <p>You haven't posted anything yet.</p>
-                </div>
-            {% endif %}
-        </div>
-
-        <div id="comments-tab" class="tab-pane">
-            <div class="empty-state">
-                <span class="material-symbols-outlined">speaker_notes_off</span>
-                <p>Comment history is currently private or empty.</p>
-            </div>
-        </div>
-
-        <div id="followers-tab" class="tab-pane">
-            {% if followers %}
-                <div class="people-grid">
-                    {% for f in followers %}
-                    <a class="person-card" href="{{ url_for('User.profile', user_id=f.id) }}">
-                        <span class="person-avatar">
-                            {% if f.profile_pic %}
-                                <img src="{{ url_for('static', filename=f.profile_pic) }}" alt="">
-                            {% else %}{{ f.name[0]|upper }}{% endif %}
-                        </span>
-                        <span class="person-meta">
-                            <span class="person-name">{{ f.name }}</span>
-                            <span class="person-handle">@{{ f.name.lower().replace(' ', '_') }}</span>
-                        </span>
-                    </a>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-state">
-                    <span class="material-symbols-outlined">group</span>
-                    <p>No followers yet.</p>
-                </div>
-            {% endif %}
-        </div>
-
-        <div id="following-tab" class="tab-pane">
-            {% if following %}
-                <div class="people-grid">
-                    {% for f in following %}
-                    <a class="person-card" href="{{ url_for('User.profile', user_id=f.id) }}">
-                        <span class="person-avatar">
-                            {% if f.profile_pic %}
-                                <img src="{{ url_for('static', filename=f.profile_pic) }}" alt="">
-                            {% else %}{{ f.name[0]|upper }}{% endif %}
-                        </span>
-                        <span class="person-meta">
-                            <span class="person-name">{{ f.name }}</span>
-                            <span class="person-handle">@{{ f.name.lower().replace(' ', '_') }}</span>
-                        </span>
-                    </a>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-state">
-                    <span class="material-symbols-outlined">person_search</span>
-                    <p>You're not following anyone yet. Use search to find people.</p>
-                </div>
-            {% endif %}
-        </div>
-    </main>
-</div>
-
-<!-- Edit Profile Modal -->
-<div id="editProfileModal" class="login-modal-overlay" style="display: none;">
-    <div class="login-modal-backdrop" onclick="closeEditProfileModal()"></div>
-    <div class="login-modal-container">
-        <button class="login-modal-close" onclick="closeEditProfileModal()">
-            <span class="material-symbols-outlined">close</span>
-        </button>
-
-        <div class="login-modal-content">
-            <div class="login-modal-header">
-                <h2>Edit Profile</h2>
-                <p>Update your public information</p>
-            </div>
-
-            <form action="{{ url_for('Home.update_profile') }}" method="POST" enctype="multipart/form-data" class="login-form">
-                <div class="form-group">
-                    <label>Profile Picture</label>
-                    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
-                        <div style="width: 64px; height: 64px; border-radius: 12px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1.5px solid #e2e8f0;">
-                            {% if user.profile_pic %}
-                                <img id="preview-img" src="{{ url_for('static', filename=user.profile_pic) }}" style="width: 100%; height: 100%; object-fit: cover;">
-                            {% else %}
-                                <span id="preview-placeholder" class="material-symbols-outlined" style="color: #94a3b8; font-size: 32px;">account_circle</span>
-                                <img id="preview-img" style="width: 100%; height: 100%; object-fit: cover; display: none;">
-                            {% endif %}
-                        </div>
-                        <input type="file" id="edit-pic" name="profile_pic" accept="image/*" style="font-size: 13px; color: #64748b;" onchange="previewImage(this)">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="edit-name">Display Name</label>
-                    <input type="text" id="edit-name" name="name" value="{{ user_name }}" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit-bio">Bio</label>
-                    <textarea id="edit-bio" name="bio" placeholder="Tell us about yourself..." 
-                        style="width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 15px; min-height: 100px; resize: vertical;">{{ user.bio or '' }}</textarea>
-                </div>
-                <button type="submit" class="submit-btn">Save Changes</button>
-            </form>
-        </div>
-    </div>
-</div>
-
+{% block styles %}
 <style>
-/* Layout Styles */
-.activity-dashboard {
-    max-width: 100%;
-    margin: 0;
-    background: #f8fafc;
-    min-height: 100vh;
+/* ═══════════════════════════════════════════════════════════════════
+   Profile Page — Premium Personal Dashboard
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Hero Section ─────────────────────────────────────────────────── */
+.prof-hero {
+    position: relative;
+    overflow: hidden;
+    background: var(--prof-bg, linear-gradient(135deg, #0C0A09 0%, #1C1917 30%, #292524 60%, #0C0A09 100%));
+    min-height: 340px;
+    transition: background 0.5s ease;
 }
 
-/* Profile Header */
-.profile-header {
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
+.prof-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--prof-glow, 
+        radial-gradient(ellipse at 25% 40%, rgba(194, 65, 12, 0.28) 0%, transparent 50%),
+        radial-gradient(ellipse at 75% 70%, rgba(249, 115, 22, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 50% 30%, rgba(194, 65, 12, 0.06) 0%, transparent 60%));
+    transition: background 0.5s ease;
 }
 
-.profile-cover {
-    height: 160px;
-    background: #64748b;
+.prof-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(to top, var(--nf-bg, #FAFAF9), transparent);
+    pointer-events: none;
+    z-index: 1;
 }
 
-.profile-info-container {
-    max-width: 1200px;
-    margin: -48px auto 0;
-    padding: 0 32px 24px;
+.prof-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.22;
+    animation: float 9s ease-in-out infinite;
+    transition: background 0.5s ease;
+}
+
+/* ── Color Picker Swatches ────────────────────────────────────────── */
+.color-swatches {
     display: flex;
-    align-items: flex-end;
-    gap: 24px;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
-.profile-avatar {
-    width: 120px;
-    height: 120px;
-    background: #64748b;
-    color: white;
-    border: 4px solid white;
-    border-radius: 24px;
+.color-swatch {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+}
+
+.color-swatch:hover {
+    transform: scale(1.15);
+}
+
+.color-swatch.active {
+    border-color: #1C1917;
+    box-shadow: 0 0 0 3px white, 0 0 0 5px #1C1917;
+}
+
+.color-swatch.active::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 48px;
+    color: white;
+    font-size: 16px;
     font-weight: 800;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
 
-.profile-details {
-    flex: 1;
-    padding-bottom: 8px;
+/* ── Profile Card (overlaps hero) ─────────────────────────────────── */
+.prof-card {
+    max-width: 1280px;
+    margin: -60px auto 0;
+    padding: 0 24px;
+    position: relative;
+    z-index: 2;
 }
 
-.profile-name {
-    font-size: 28px;
-    font-weight: 800;
-    color: #1e293b;
-    font-family: 'Lexend', sans-serif;
+.prof-card-inner {
+    background: var(--nf-surface, #fff);
+    border: 1px solid var(--nf-border, #E7E5E4);
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12);
 }
 
-.profile-handle {
-    color: #64748b;
-    font-weight: 500;
-    margin-bottom: 8px;
-}
-
-.profile-bio {
-    color: #475569;
-    font-size: 14px;
-    max-width: 500px;
-}
-
-.edit-profile-btn {
-    padding: 10px 20px;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 12px;
-    font-weight: 600;
-    color: #475569;
-    background: white;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-bottom: 8px;
-}
-
-.edit-profile-btn:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-}
-
-/* Tabs */
-.activity-tabs {
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
-    position: sticky;
-    top: 64px; /* Adjust based on your main navbar height */
-    z-index: 10;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .tabs-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 32px;
-        display: flex;
-        gap: 32px;
-        align-items: center;
-    }
-
-    .tabs-actions {
-        display: flex;
-        align-items: center;
-        padding-right: 32px;
-    }
-
-    .theme-switcher {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        cursor: pointer;
-        color: #475569;
-        font-size: 14px;
-        font-weight: 600;
-        user-select: none;
-    }
-
-    .theme-switcher input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-        position: absolute;
-        pointer-events: none;
-    }
-
-    .theme-slider {
-        width: 48px;
-        height: 24px;
-        background: #e2e8f0;
-        border-radius: 9999px;
-        position: relative;
-        transition: background 0.2s ease;
-        display: inline-block;
-    }
-
-    .theme-slider::before {
-        content: '';
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        top: 2px;
-        left: 2px;
-        background: white;
-        border-radius: 9999px;
-        transition: transform 0.2s ease;
-        box-shadow: 0 5px 12px rgba(0, 0, 0, 0.12);
-    }
-
-    #theme-toggle:checked + .theme-slider {
-        background: #64748b;
-    }
-
-    #theme-toggle:checked + .theme-slider::before {
-        transform: translateX(24px);
-    }
-
-    .theme-label {
-        white-space: nowrap;
-    border-bottom: 2px solid transparent;
-    font-weight: 600;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.tab-item:hover {
-    color: #64748b;
-}
-
-.tab-item.active {
-    color: #64748b;
-    border-bottom-color: #64748b;
-}
-
-/* Feed Content */
-.feed-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 24px 32px;
-}
-
-.tab-pane {
-    display: none;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.tab-pane.active {
+.prof-top {
     display: flex;
+    align-items: flex-start;
+    gap: 28px;
 }
 
-/* Feed Cards */
-.feed-card {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px; /* More Reddit-like squared corners */
-    padding: 12px;
-    transition: background 0.1s;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
+.prof-avatar-ring {
+    width: 110px;
+    height: 110px;
+    border-radius: 28px;
+    background: linear-gradient(135deg, #C2410C, #EA580C, #F97316);
+    padding: 4px;
+    flex-shrink: 0;
+    box-shadow: 0 8px 24px rgba(194, 65, 12, 0.25);
 }
 
-.feed-card:hover {
-    border-color: #878a8c;
-}
-
-.card-header-new {
-    margin-bottom: 8px;
-}
-
-.card-title-new {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1c1c1c;
-    margin-bottom: 8px;
-    line-height: 22px;
-}
-
-.card-body-new {
-    flex: 1;
-}
-
-.card-content-new {
-    margin-bottom: 8px;
-}
-
-.card-footer-new {
+.prof-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #C2410C, #EA580C);
     display: flex;
     align-items: center;
-    gap: 4px;
-    margin-top: 4px;
+    justify-content: center;
+    font-size: 40px;
+    font-weight: 800;
+    color: white;
+    overflow: hidden;
 }
 
-.action-item {
+.prof-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.prof-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.prof-name {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1C1917;
+    line-height: 1.2;
+}
+
+.prof-handle {
+    font-size: 14px;
+    color: #A8A29E;
+    margin-top: 2px;
+}
+
+.prof-bio {
+    font-size: 14px;
+    color: #78716C;
+    line-height: 1.6;
+    max-width: 500px;
+    margin-top: 10px;
+}
+
+/* Stats row */
+.prof-stats {
+    display: flex;
+    gap: 4px;
+    margin-top: 20px;
+}
+
+.prof-stat-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 14px;
+    background: #FAFAF9;
+    border: 1px solid #F5F5F4;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-decoration: none;
+}
+
+.prof-stat-btn:hover {
+    border-color: rgba(194, 65, 12, 0.2);
+    background: rgba(194, 65, 12, 0.04);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.prof-stat-btn.active {
+    background: linear-gradient(135deg, rgba(194, 65, 12, 0.08), rgba(234, 88, 12, 0.06));
+    border-color: rgba(194, 65, 12, 0.2);
+}
+
+.prof-stat-num {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1C1917;
+    line-height: 1;
+}
+
+.prof-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #A8A29E;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* Edit profile button */
+.prof-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #C2410C, #EA580C);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 14px rgba(194, 65, 12, 0.25);
+}
+
+.prof-edit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(194, 65, 12, 0.35);
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────────── */
+.prof-tabs {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 8px;
-    border-radius: 2px;
-    color: #878a8c;
-    background: transparent;
-    border: none;
+    padding: 20px 24px 0;
+    max-width: 1280px;
+    margin: 0 auto;
+    overflow-x: auto;
+}
+
+.prof-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 100px;
+    border: 1.5px solid var(--nf-border, #E7E5E4);
+    background: var(--nf-surface, #fff);
+    color: #78716C;
     cursor: pointer;
-    transition: background 0.1s;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
 }
 
-.action-item:hover {
-    background: #f6f7f8;
+.prof-tab:hover {
+    border-color: rgba(194, 65, 12, 0.3);
+    color: #C2410C;
+    background: rgba(194, 65, 12, 0.04);
 }
 
-.action-item .material-symbols-outlined {
-    font-size: 20px;
+.prof-tab.active {
+    background: linear-gradient(135deg, #C2410C, #EA580C);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(194, 65, 12, 0.3);
 }
 
-.dark .feed-card {
-    background: #1a1a1b;
-    border-color: #343536;
+/* ── Content Area ─────────────────────────────────────────────────── */
+.prof-content {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px;
 }
 
-.dark .feed-card:hover {
-    border-color: #444546;
+.prof-pane {
+    display: none;
 }
 
-.dark .card-title-new {
-    color: #d7dadc;
+.prof-pane.active {
+    display: block;
+    animation: fadeInUp 0.4s ease-out;
 }
 
-.dark .action-item {
-    color: #818384;
+/* ── Post Cards ───────────────────────────────────────────────────── */
+.prof-post {
+    background: var(--nf-surface, #fff);
+    border: 1px solid var(--nf-border, #E7E5E4);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    margin-bottom: 16px;
 }
 
-.dark .action-item:hover {
-    background: #272729;
+.prof-post:hover {
+    border-color: rgba(194, 65, 12, 0.15);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
 }
 
-.dark .meta-tag {
-    background: #272729;
-    color: #d7dadc;
-}
-
-/* Profile follow stats */
-.profile-stats {
+.prof-post-header {
     display: flex;
-    gap: 24px;
-    margin-top: 14px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid #F5F5F4;
 }
 
-.profile-stat {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    font-size: 14px;
-    color: #64748b;
-    transition: color 0.2s;
-}
-
-.profile-stat strong {
-    color: #1e293b;
+.prof-community-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    border-radius: 100px;
+    background: rgba(194, 65, 12, 0.06);
+    font-size: 11px;
     font-weight: 700;
-    margin-right: 4px;
+    color: #C2410C;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
-.profile-stat:hover {
-    color: #64748b;
+.prof-community-chip:hover {
+    background: rgba(194, 65, 12, 0.12);
 }
 
-/* People (followers / following) lists */
+.prof-post-body {
+    padding: 22px;
+}
+
+.prof-post-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1C1917;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.prof-post-excerpt {
+    font-size: 14px;
+    color: #78716C;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.prof-post-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 22px;
+    border-top: 1px solid #F5F5F4;
+}
+
+.prof-post-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.prof-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: #FAFAF9;
+    border: 1px solid #F5F5F4;
+    font-size: 12px;
+    font-weight: 600;
+    color: #78716C;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.prof-action-btn:hover {
+    border-color: rgba(194, 65, 12, 0.2);
+    color: #C2410C;
+    background: rgba(194, 65, 12, 0.04);
+}
+
+.prof-post-time {
+    font-size: 12px;
+    color: #A8A29E;
+}
+
+/* ── People Grid ──────────────────────────────────────────────────── */
 .people-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
 }
 
 .person-card {
     display: flex;
     align-items: center;
-    gap: 12px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 12px 16px;
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: 18px;
+    background: var(--nf-surface, #fff);
+    border: 1px solid var(--nf-border, #E7E5E4);
     text-decoration: none;
-    transition: box-shadow 0.2s, border-color 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .person-card:hover {
-    border-color: #c7d2fe;
-    box-shadow: 0 4px 16px -6px rgba(70, 58, 203, 0.25);
+    border-color: rgba(194, 65, 12, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
 }
 
 .person-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 9999px;
-    background: #64748b;
-    color: white;
-    font-weight: 700;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C2410C, #EA580C);
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
     flex-shrink: 0;
+    overflow: hidden;
 }
 
 .person-avatar img {
@@ -593,230 +444,1038 @@
     object-fit: cover;
 }
 
-.person-meta {
-    display: flex;
-    flex-direction: column;
+.person-info {
+    flex: 1;
     min-width: 0;
 }
 
 .person-name {
-    font-weight: 600;
-    color: #1e293b;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1C1917;
 }
 
 .person-handle {
     font-size: 12px;
-    color: #94a3b8;
+    color: #A8A29E;
+    margin-top: 2px;
 }
 
-/* Empty State */
-.empty-state {
+.person-arrow {
+    color: #D6D3D1;
+    transition: all 0.2s;
+}
+
+.person-card:hover .person-arrow {
+    color: #C2410C;
+    transform: translateX(2px);
+}
+
+/* ── Empty State ──────────────────────────────────────────────────── */
+.prof-empty {
     text-align: center;
-    padding: 60px 20px;
-    color: #94a3b8;
+    padding: 60px 24px;
 }
 
-.empty-state .material-symbols-outlined {
-    font-size: 48px;
-    margin-bottom: 12px;
+.prof-empty-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #FFF7ED, #FEF3C7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    animation: float 3s ease-in-out infinite;
 }
 
-@media (max-width: 640px) {
-    .profile-info-container {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-    .profile-details {
-        padding-bottom: 16px;
-    }
-    .tabs-container {
-        padding: 0 16px;
-        gap: 16px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    .tabs-actions {
-        width: 100%;
-        justify-content: center;
-        padding: 12px 16px 16px;
-    }
+/* ── Edit Profile Modal (Split Layout) ──────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: none;
+    align-items: center;
+    justify-content: center;
 }
 
-    .dark .activity-dashboard {
-        background: #0f172a;
-        color: #e2e8f0;
-    }
+.modal-overlay.show {
+    display: flex;
+}
 
-    .dark .profile-header {
-        background: #111827;
-        border-color: #1f2937;
-    }
+.modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
 
-    .dark .profile-cover {
-        background: #475569;
-    }
+.modal-container {
+    position: relative;
+    width: 100%;
+    max-width: 820px;
+    max-height: 90vh;
+    background: var(--nf-surface, #fff);
+    border-radius: 28px;
+    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.25);
+    animation: modalIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+    margin: 24px;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+}
 
-    .dark .profile-info-container {
-        background: transparent;
-    }
+@keyframes modalIn {
+    from { transform: scale(0.9) translateY(30px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
 
-    .dark .profile-avatar {
-        background: #1f2937;
-        color: #e2e8f0;
-        border-color: #111827;
-    }
+/* ── Left: Preview Panel ──────────────────────────────────────── */
+.modal-preview {
+    background: linear-gradient(135deg, #1C1917, #292524, #44403C);
+    padding: 36px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
 
-    .dark .profile-name {
-        color: #f8fafc;
-    }
+.modal-preview::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 30% 20%, rgba(194, 65, 12, 0.25) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(249, 115, 22, 0.12) 0%, transparent 40%);
+}
 
-    .dark .profile-handle,
-    .dark .profile-bio,
-    .dark .theme-switcher {
-        color: #cbd5e1;
-    }
+.modal-preview-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.2;
+}
 
-    .dark .edit-profile-btn {
-        background: #111827;
-        border-color: #374151;
-        color: #e2e8f0;
-    }
+.modal-preview-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}
 
-    .dark .edit-profile-btn:hover {
-        background: #1f2937;
-        border-color: #4b5563;
-    }
+.modal-avatar-wrap {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C2410C, #EA580C, #F97316);
+    padding: 4px;
+    margin: 0 auto 18px;
+    box-shadow: 0 12px 32px rgba(194, 65, 12, 0.35);
+    position: relative;
+}
 
-    .dark .activity-tabs {
-        background: #111827;
-        border-color: #1f2937;
-    }
+.modal-avatar-preview {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C2410C, #EA580C);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    font-weight: 800;
+    color: white;
+    overflow: hidden;
+}
 
-    .dark .tab-item {
-        color: #cbd5e1;
-    }
+.modal-avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 
-    .dark .tab-item.active,
-    .dark .tab-item:hover {
-        color: #c7d2fe;
-        border-bottom-color: #64748b;
-    }
+.modal-camera-btn {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #1C1917;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
 
-    .dark .feed-content {
-        background: #0f172a;
-    }
+.modal-camera-btn:hover {
+    transform: scale(1.1);
+    background: #FFF7ED;
+}
 
-    .dark .feed-card {
-        background: #111827;
-        border-color: #1f2937;
-    }
+.modal-preview-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 4px;
+    word-break: break-word;
+}
 
-    .dark .meta-tag {
-        background: #1f2937;
-        color: #c7d2fe;
-    }
+.modal-preview-handle {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 24px;
+}
 
-    .dark .meta-time,
-    .dark .card-text,
-    .dark .empty-state {
-        color: #cbd5e1;
-    }
+.modal-preview-divider {
+    width: 40px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+    margin: 0 auto 24px;
+}
 
-    .dark .card-title {
-        color: #f8fafc;
-    }
+.modal-preview-bio {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.6;
+    max-width: 220px;
+    font-style: italic;
+}
 
-    .dark .card-actions {
-        border-color: #1f2937;
-    }
+.modal-preview-tip {
+    margin-top: auto;
+    padding-top: 24px;
+    position: relative;
+    z-index: 1;
+}
 
-    .dark .action-btn {
-        color: #cbd5e1;
-    }
+.modal-preview-tip p {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.35);
+    line-height: 1.5;
+}
 
-    .dark .action-btn:hover {
-        background: #1f2937;
-        color: #c7d2fe;
+/* ── Right: Form Panel ────────────────────────────────────────── */
+.modal-form-panel {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-form-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 28px;
+    border-bottom: 1px solid #F5F5F4;
+}
+
+.modal-form-top h2 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1C1917;
+}
+
+.modal-form-top p {
+    font-size: 13px;
+    color: #A8A29E;
+    margin-top: 2px;
+}
+
+.modal-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #F5F5F4;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #78716C;
+    transition: all 0.25s;
+    flex-shrink: 0;
+}
+
+.modal-close:hover {
+    background: #E7E5E4;
+    color: #1C1917;
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 28px;
+    flex: 1;
+}
+
+.modal-form-group {
+    margin-bottom: 22px;
+}
+
+.modal-form-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #44403C;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+}
+
+.modal-input-wrap {
+    position: relative;
+}
+
+.modal-input-wrap .input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #A8A29E;
+    pointer-events: none;
+    transition: color 0.2s;
+    font-size: 20px !important;
+}
+
+.modal-input-wrap:focus-within .input-icon {
+    color: #C2410C;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 14px;
+    border: 1.5px solid #E7E5E4;
+    background: #FAFAF9;
+    font-size: 14px;
+    color: #1C1917;
+    outline: none;
+    transition: all 0.25s;
+}
+
+.modal-input:focus {
+    border-color: #C2410C;
+    box-shadow: 0 0 0 4px rgba(194, 65, 12, 0.08);
+    background: white;
+}
+
+.modal-textarea {
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 14px;
+    border: 1.5px solid #E7E5E4;
+    background: #FAFAF9;
+    font-size: 14px;
+    color: #1C1917;
+    outline: none;
+    resize: vertical;
+    min-height: 110px;
+    transition: all 0.25s;
+    line-height: 1.6;
+}
+
+.modal-textarea:focus {
+    border-color: #C2410C;
+    box-shadow: 0 0 0 4px rgba(194, 65, 12, 0.08);
+    background: white;
+}
+
+.modal-bio-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 6px;
+}
+
+.modal-char-count {
+    font-size: 11px;
+    color: #A8A29E;
+}
+
+/* File upload area */
+.modal-file-drop {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 14px;
+    border: 2px dashed #E7E5E4;
+    background: #FAFAF9;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.modal-file-drop:hover {
+    border-color: rgba(194, 65, 12, 0.3);
+    background: rgba(194, 65, 12, 0.03);
+}
+
+.modal-file-drop.dragover {
+    border-color: #C2410C;
+    background: rgba(194, 65, 12, 0.06);
+}
+
+.modal-file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.modal-file-info p {
+    font-size: 13px;
+    font-weight: 600;
+    color: #44403C;
+}
+
+.modal-file-info span {
+    font-size: 11px;
+    color: #A8A29E;
+}
+
+.modal-file-btn {
+    padding: 8px 16px;
+    border-radius: 10px;
+    background: rgba(194, 65, 12, 0.08);
+    color: #C2410C;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.modal-file-btn:hover {
+    background: rgba(194, 65, 12, 0.15);
+}
+
+/* Submit area */
+.modal-footer {
+    padding: 0 28px 28px;
+    display: flex;
+    gap: 12px;
+}
+
+.modal-cancel {
+    flex: 1;
+    padding: 14px;
+    border-radius: 14px;
+    background: #F5F5F4;
+    color: #78716C;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modal-cancel:hover {
+    background: #E7E5E4;
+    color: #44403C;
+}
+
+.modal-submit {
+    flex: 2;
+    padding: 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #C2410C, #EA580C);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 14px rgba(194, 65, 12, 0.25);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.modal-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(194, 65, 12, 0.35);
+}
+
+/* ── Responsive Modal ─────────────────────────────────────────── */
+@media (max-width: 720px) {
+    .modal-container {
+        grid-template-columns: 1fr;
+        max-width: 500px;
     }
+    .modal-preview { display: none; }
+}
+
+/* ── Responsive ───────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .prof-top { flex-direction: column; align-items: center; text-align: center; }
+    .prof-stats { justify-content: center; flex-wrap: wrap; }
+    .prof-bio { max-width: 100%; }
+    .prof-card-inner { padding: 24px 20px; }
+    .prof-edit-btn { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+    .prof-avatar-ring { width: 88px; height: 88px; }
+    .prof-name { font-size: 22px; }
+    .people-grid { grid-template-columns: 1fr; }
 }
 </style>
+{% endblock %}
 
+{% block content %}
+<!-- ═══════════════════════════════════════════════════════════════════
+     HERO SECTION
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="prof-hero flex items-end">
+    <div class="prof-orb" style="width:280px;height:280px;background:#C2410C;top:5%;left:10%;animation-delay:0s;"></div>
+    <div class="prof-orb" style="width:160px;height:160px;background:#F97316;bottom:20%;right:15%;animation-delay:3s;"></div>
+    <div class="prof-orb" style="width:100px;height:100px;background:#FBBF24;top:50%;right:40%;animation-delay:5s;"></div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     PROFILE CARD
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="prof-card">
+    <div class="prof-card-inner">
+        <div class="prof-top">
+            <!-- Avatar -->
+            <div class="prof-avatar-ring">
+                <div class="prof-avatar">
+                    {% if user.profile_pic %}
+                        <img src="{{ url_for('static', filename=user.profile_pic) }}" alt="">
+                    {% else %}
+                        {{ (user.name or session.get('user_name'))[0]|upper }}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="prof-info">
+                <h1 class="prof-name">{{ user.name or session.get('user_name') }}</h1>
+                <p class="prof-handle">@{{ (user.name or session.get('user_name')).lower().replace(' ', '_') }}</p>
+                <p class="prof-bio">{{ user.bio or 'Community enthusiast and niche forum explorer.' }}</p>
+
+                <!-- Stats -->
+                <div class="prof-stats">
+                    <button type="button" class="prof-stat-btn" data-tab="posts">
+                        <div>
+                            <p class="prof-stat-num">{{ posts|length }}</p>
+                            <p class="prof-stat-label">Posts</p>
+                        </div>
+                    </button>
+                    <button type="button" class="prof-stat-btn" data-tab="followers">
+                        <div>
+                            <p class="prof-stat-num">{{ follower_count }}</p>
+                            <p class="prof-stat-label">Followers</p>
+                        </div>
+                    </button>
+                    <button type="button" class="prof-stat-btn" data-tab="following">
+                        <div>
+                            <p class="prof-stat-num">{{ following_count }}</p>
+                            <p class="prof-stat-label">Following</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <button class="prof-edit-btn" onclick="openEditProfileModal()">
+                <span class="material-symbols-outlined text-lg">edit</span>
+                Edit Profile
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     TABS
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="prof-tabs">
+    <button class="prof-tab active" data-tab="overview">
+        <span class="material-symbols-outlined text-base">dashboard</span>
+        Overview
+    </button>
+    <button class="prof-tab" data-tab="posts">
+        <span class="material-symbols-outlined text-base">article</span>
+        Posts
+    </button>
+    <button class="prof-tab" data-tab="followers">
+        <span class="material-symbols-outlined text-base">group</span>
+        Followers
+    </button>
+    <button class="prof-tab" data-tab="following">
+        <span class="material-symbols-outlined text-base">person_add</span>
+        Following
+    </button>
+    <button class="prof-tab" data-tab="comments">
+        <span class="material-symbols-outlined text-base">chat_bubble</span>
+        Comments
+    </button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     TAB CONTENT
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="prof-content">
+
+    <!-- Overview Tab -->
+    <div id="overview-tab" class="prof-pane active">
+        {% if posts %}
+            {% for post in posts %}
+            <article class="prof-post reveal">
+                <div class="prof-post-header">
+                    <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="prof-community-chip">
+                        <span class="material-symbols-outlined text-sm">hub</span>
+                        {{ post.community_name }}
+                    </a>
+                    <span class="prof-post-time">{{ post.created_at }}</span>
+                </div>
+                <div class="prof-post-body">
+                    <h2 class="prof-post-title">{{ post.title }}</h2>
+                    <p class="prof-post-excerpt">{{ post.content }}</p>
+                </div>
+                <div class="prof-post-footer">
+                    <div class="prof-post-actions">
+                        <span class="prof-action-btn">
+                            <span class="material-symbols-outlined text-sm">thumb_up</span> Like
+                        </span>
+                        <span class="prof-action-btn">
+                            <span class="material-symbols-outlined text-sm">chat_bubble</span> Comment
+                        </span>
+                    </div>
+                    <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="prof-action-btn">
+                        Read more <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </a>
+                </div>
+            </article>
+            {% endfor %}
+        {% else %}
+            <div class="prof-empty nf-card p-12">
+                <div class="prof-empty-icon">
+                    <span class="material-symbols-outlined text-4xl text-[#C2410C]" style="font-variation-settings:'FILL' 1;">post_add</span>
+                </div>
+                <h3 class="text-lg font-bold text-[#1C1917] mb-2">No posts yet</h3>
+                <p class="text-sm text-[#78716C] mb-6">Join a community and share your first post!</p>
+                <a href="{{ url_for('Home.communities') }}" class="nf-btn nf-btn-primary inline-flex items-center gap-2">
+                    <span class="material-symbols-outlined text-lg">hub</span>
+                    Explore Communities
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Posts Tab -->
+    <div id="posts-tab" class="prof-pane">
+        {% if posts %}
+            {% for post in posts %}
+            <article class="prof-post reveal">
+                <div class="prof-post-header">
+                    <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="prof-community-chip">
+                        <span class="material-symbols-outlined text-sm">hub</span>
+                        {{ post.community_name }}
+                    </a>
+                    <span class="prof-post-time">{{ post.created_at }}</span>
+                </div>
+                <div class="prof-post-body">
+                    <h2 class="prof-post-title">{{ post.title }}</h2>
+                    <p class="prof-post-excerpt">{{ post.content }}</p>
+                </div>
+                <div class="prof-post-footer">
+                    <span class="prof-action-btn">
+                        <span class="material-symbols-outlined text-sm">share</span> Share
+                    </span>
+                    <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="prof-action-btn">
+                        Read more <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </a>
+                </div>
+            </article>
+            {% endfor %}
+        {% else %}
+            <div class="prof-empty nf-card p-12">
+                <div class="prof-empty-icon">
+                    <span class="material-symbols-outlined text-4xl text-[#C2410C]" style="font-variation-settings:'FILL' 1;">edit_note</span>
+                </div>
+                <h3 class="text-lg font-bold text-[#1C1917] mb-2">No posts yet</h3>
+                <p class="text-sm text-[#78716C]">You haven't posted anything yet.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Comments Tab -->
+    <div id="comments-tab" class="prof-pane">
+        <div class="prof-empty nf-card p-12">
+            <div class="prof-empty-icon">
+                <span class="material-symbols-outlined text-4xl text-[#C2410C]" style="font-variation-settings:'FILL' 1;">chat_bubble</span>
+            </div>
+            <h3 class="text-lg font-bold text-[#1C1917] mb-2">Comments coming soon</h3>
+            <p class="text-sm text-[#78716C]">Your comment history will appear here.</p>
+        </div>
+    </div>
+
+    <!-- Followers Tab -->
+    <div id="followers-tab" class="prof-pane">
+        {% if followers %}
+            <div class="people-grid">
+                {% for f in followers %}
+                <a class="person-card reveal" href="{{ url_for('User.profile', user_id=f.id) }}">
+                    <div class="person-avatar">
+                        {% if f.profile_pic %}
+                            <img src="{{ url_for('static', filename=f.profile_pic) }}" alt="">
+                        {% else %}{{ f.name[0]|upper }}{% endif %}
+                    </div>
+                    <div class="person-info">
+                        <p class="person-name">{{ f.name }}</p>
+                        <p class="person-handle">@{{ f.name.lower().replace(' ', '_') }}</p>
+                    </div>
+                    <span class="material-symbols-outlined person-arrow text-lg">chevron_right</span>
+                </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="prof-empty nf-card p-12">
+                <div class="prof-empty-icon">
+                    <span class="material-symbols-outlined text-4xl text-[#C2410C]" style="font-variation-settings:'FILL' 1;">group</span>
+                </div>
+                <h3 class="text-lg font-bold text-[#1C1917] mb-2">No followers yet</h3>
+                <p class="text-sm text-[#78716C]">When people follow you, they'll show up here.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Following Tab -->
+    <div id="following-tab" class="prof-pane">
+        {% if following %}
+            <div class="people-grid">
+                {% for f in following %}
+                <a class="person-card reveal" href="{{ url_for('User.profile', user_id=f.id) }}">
+                    <div class="person-avatar">
+                        {% if f.profile_pic %}
+                            <img src="{{ url_for('static', filename=f.profile_pic) }}" alt="">
+                        {% else %}{{ f.name[0]|upper }}{% endif %}
+                    </div>
+                    <div class="person-info">
+                        <p class="person-name">{{ f.name }}</p>
+                        <p class="person-handle">@{{ f.name.lower().replace(' ', '_') }}</p>
+                    </div>
+                    <span class="material-symbols-outlined person-arrow text-lg">chevron_right</span>
+                </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="prof-empty nf-card p-12">
+                <div class="prof-empty-icon">
+                    <span class="material-symbols-outlined text-4xl text-[#C2410C]" style="font-variation-settings:'FILL' 1;">person_search</span>
+                </div>
+                <h3 class="text-lg font-bold text-[#1C1917] mb-2">Not following anyone</h3>
+                <p class="text-sm text-[#78716C] mb-6">Find people to follow and connect with.</p>
+                <a href="{{ url_for('Home.search_communities') }}" class="nf-btn nf-btn-primary inline-flex items-center gap-2">
+                    <span class="material-symbols-outlined text-lg">search</span>
+                    Search People
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     EDIT PROFILE MODAL (Split Layout)
+     ═══════════════════════════════════════════════════════════════════ -->
+<div id="editProfileModal" class="modal-overlay">
+    <div class="modal-backdrop" onclick="closeEditProfileModal()"></div>
+    <div class="modal-container">
+
+        <!-- Left: Live Preview -->
+        <div class="modal-preview">
+            <div class="modal-preview-orb" style="width:120px;height:120px;background:#C2410C;top:-20px;left:-20px;"></div>
+            <div class="modal-preview-orb" style="width:80px;height:80px;background:#F97316;bottom:40px;right:-10px;"></div>
+
+            <div class="modal-preview-content">
+                <!-- Avatar -->
+                <div class="modal-avatar-wrap">
+                    <div class="modal-avatar-preview">
+                        {% if user.profile_pic %}
+                            <img id="preview-img" src="{{ url_for('static', filename=user.profile_pic) }}" alt="">
+                        {% else %}
+                            <span id="preview-placeholder" class="material-symbols-outlined" style="font-size:48px;font-variation-settings:'FILL' 1;">account_circle</span>
+                            <img id="preview-img" style="width:100%;height:100%;object-fit:cover;display:none;">
+                        {% endif %}
+                    </div>
+                    <button type="button" class="modal-camera-btn" onclick="document.getElementById('edit-pic').click()">
+                        <span class="material-symbols-outlined text-[#C2410C]" style="font-size:16px;">photo_camera</span>
+                    </button>
+                </div>
+
+                <!-- Live name -->
+                <p class="modal-preview-name" id="preview-name">{{ user_name }}</p>
+                <p class="modal-preview-handle">@{{ (user_name or 'user').lower().replace(' ', '_') }}</p>
+
+                <div class="modal-preview-divider"></div>
+
+                <!-- Live bio -->
+                <p class="modal-preview-bio" id="preview-bio">{{ user.bio or 'Tell us about yourself...' }}</p>
+            </div>
+
+            <div class="modal-preview-tip">
+                <p>Changes will be visible to everyone who views your profile.</p>
+            </div>
+        </div>
+
+        <!-- Right: Form -->
+        <div class="modal-form-panel">
+            <div class="modal-form-top">
+                <div>
+                    <h2>Edit Profile</h2>
+                    <p>Update your public information</p>
+                </div>
+                <button class="modal-close" onclick="closeEditProfileModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <form action="{{ url_for('Home.update_profile') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <!-- Profile Picture -->
+                    <div class="modal-form-group">
+                        <label>
+                            <span class="material-symbols-outlined text-sm">photo_camera</span>
+                            Profile Picture
+                        </label>
+                        <div class="modal-file-drop" id="fileDrop" onclick="document.getElementById('edit-pic').click()">
+                            <span class="material-symbols-outlined text-[#C2410C] text-2xl" style="font-variation-settings:'FILL' 1;">cloud_upload</span>
+                            <div class="modal-file-info">
+                                <p id="file-name">No file chosen</p>
+                                <span>JPG, PNG or GIF — max 5MB</span>
+                            </div>
+                            <span class="modal-file-btn">Browse</span>
+                        </div>
+                        <input type="file" id="edit-pic" name="profile_pic" accept="image/*" onchange="previewImage(this)" style="display:none;">
+                    </div>
+
+                    <!-- Display Name -->
+                    <div class="modal-form-group">
+                        <label for="edit-name">
+                            <span class="material-symbols-outlined text-sm">person</span>
+                            Display Name
+                        </label>
+                        <div class="modal-input-wrap">
+                            <input type="text" id="edit-name" name="name" value="{{ user_name }}" class="modal-input" required oninput="document.getElementById('preview-name').textContent = this.value || 'Your Name'">
+                        </div>
+                    </div>
+
+                    <!-- Cover Color -->
+                    <div class="modal-form-group">
+                        <label>
+                            <span class="material-symbols-outlined text-sm">palette</span>
+                            Cover Color
+                        </label>
+                        <div class="color-swatches">
+                            <button type="button" class="color-swatch active" data-color="ember" style="background:linear-gradient(135deg,#C2410C,#EA580C);" title="Ember (Default)"></button>
+                            <button type="button" class="color-swatch" data-color="ocean" style="background:linear-gradient(135deg,#0369A1,#0EA5E9);" title="Ocean"></button>
+                            <button type="button" class="color-swatch" data-color="forest" style="background:linear-gradient(135deg,#15803D,#22C55E);" title="Forest"></button>
+                            <button type="button" class="color-swatch" data-color="violet" style="background:linear-gradient(135deg,#7C3AED,#A78BFA);" title="Violet"></button>
+                            <button type="button" class="color-swatch" data-color="rose" style="background:linear-gradient(135deg,#BE185D,#F43F5E);" title="Rose"></button>
+                            <button type="button" class="color-swatch" data-color="gold" style="background:linear-gradient(135deg,#B45309,#F59E0B);" title="Gold"></button>
+                            <button type="button" class="color-swatch" data-color="slate" style="background:linear-gradient(135deg,#334155,#64748B);" title="Slate"></button>
+                        </div>
+                    </div>
+
+                    <!-- Bio -->
+                    <div class="modal-form-group">
+                        <label for="edit-bio">
+                            <span class="material-symbols-outlined text-sm">description</span>
+                            Bio
+                        </label>
+                        <textarea id="edit-bio" name="bio" class="modal-textarea" placeholder="Tell us about yourself — your interests, favorite sports, what brings you here..." maxlength="280" oninput="updateBioPreview(this)">{{ user.bio or '' }}</textarea>
+                        <div class="modal-bio-footer">
+                            <span class="modal-char-count" id="bioCharCount">{{ (user.bio or '')|length }}/280</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="modal-cancel" onclick="closeEditProfileModal()">Cancel</button>
+                    <button type="submit" class="modal-submit">
+                        <span class="material-symbols-outlined text-lg">check_circle</span>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCRIPTS
+     ═══════════════════════════════════════════════════════════════════ -->
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const tabs = document.querySelectorAll('.tab-item');
-    const panes = document.querySelectorAll('.tab-pane');
-    const themeToggle = document.getElementById('theme-toggle');
+(function() {
+    /* ── Tab Switching ────────────────────────────────────────────── */
+    var tabs = document.querySelectorAll('.prof-tab');
+    var statBtns = document.querySelectorAll('.prof-stat-btn');
+    var panes = document.querySelectorAll('.prof-pane');
 
-    function activateTab(target) {
-        tabs.forEach(t => t.classList.toggle('active', t.getAttribute('data-tab') === target));
-        panes.forEach(pane => pane.classList.toggle('active', pane.id === `${target}-tab`));
+    function activateTab(name) {
+        tabs.forEach(function(t) { t.classList.toggle('active', t.getAttribute('data-tab') === name); });
+        statBtns.forEach(function(s) { s.classList.toggle('active', s.getAttribute('data-tab') === name); });
+        panes.forEach(function(p) { p.classList.toggle('active', p.id === name + '-tab'); });
     }
 
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => activateTab(tab.getAttribute('data-tab')));
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() { activateTab(tab.getAttribute('data-tab')); });
+    });
+    statBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() { activateTab(btn.getAttribute('data-tab')); });
     });
 
-    // The follower/following/post counters in the header also jump to their tab.
-    document.querySelectorAll('.profile-stat').forEach(stat => {
-        stat.addEventListener('click', () => activateTab(stat.getAttribute('data-tab')));
-    });
-
-    const savedTheme = localStorage.getItem('nicheForumTheme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
-
-    // Delegate to the site-wide controller (defined in base.html) so the
-    // navbar toggle, this switch and every other page stay in sync.
-    function applyTheme(darkMode) {
-        if (window.applySiteTheme) {
-            window.applySiteTheme(darkMode);
-        } else {
-            document.documentElement.classList.toggle('dark', darkMode);
-            document.documentElement.classList.toggle('light', !darkMode);
-            localStorage.setItem('nicheForumTheme', darkMode ? 'dark' : 'light');
-        }
-        if (themeToggle) themeToggle.checked = darkMode;
+    /* ── Scroll Reveal ────────────────────────────────────────────── */
+    var revealEls = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window && revealEls.length) {
+        var obs = new IntersectionObserver(function(entries) {
+            entries.forEach(function(e) {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    obs.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        revealEls.forEach(function(el) { obs.observe(el); });
+    } else {
+        revealEls.forEach(function(el) { el.classList.add('visible'); });
     }
 
-    applyTheme(isDark);
-
-    if (themeToggle) {
-        themeToggle.addEventListener('change', () => {
-            applyTheme(themeToggle.checked);
-        });
-    }
-
-    // Open the edit-profile modal automatically when arriving from the navbar
-    // "Edit profile" menu item, which links to Home.profile?edit=1.
+    /* ── Auto-open edit modal via URL param ───────────────────────── */
     if (new URLSearchParams(window.location.search).get('edit') === '1') {
         openEditProfileModal();
     }
-});
+})();
 
+/* ── Modal Controls ───────────────────────────────────────────────── */
 function openEditProfileModal() {
-    document.getElementById('editProfileModal').style.display = 'flex';
+    document.getElementById('editProfileModal').classList.add('show');
     document.body.style.overflow = 'hidden';
 }
 
 function closeEditProfileModal() {
-    document.getElementById('editProfileModal').style.display = 'none';
+    document.getElementById('editProfileModal').classList.remove('show');
     document.body.style.overflow = '';
 }
 
+/* ── Image Preview ────────────────────────────────────────────────── */
 function previewImage(input) {
     if (input.files && input.files[0]) {
-        const reader = new FileReader();
+        var reader = new FileReader();
         reader.onload = function(e) {
-            const previewImg = document.getElementById('preview-img');
-            const placeholder = document.getElementById('preview-placeholder');
-            
+            var previewImg = document.getElementById('preview-img');
+            var placeholder = document.getElementById('preview-placeholder');
             previewImg.src = e.target.result;
             previewImg.style.display = 'block';
             if (placeholder) placeholder.style.display = 'none';
-        }
+            // Update file drop label
+            var fn = document.getElementById('file-name');
+            if (fn) fn.textContent = input.files[0].name;
+        };
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+/* ── Bio Live Preview + Char Count ────────────────────────────────── */
+function updateBioPreview(textarea) {
+    var bio = textarea.value.trim() || 'Tell us about yourself...';
+    var el = document.getElementById('preview-bio');
+    if (el) el.textContent = bio;
+    var counter = document.getElementById('bioCharCount');
+    if (counter) counter.textContent = textarea.value.length + '/280';
+}
+
+/* ── File Drop Zone ───────────────────────────────────────────────── */
+(function() {
+    var drop = document.getElementById('fileDrop');
+    var input = document.getElementById('edit-pic');
+    if (!drop || !input) return;
+
+    ['dragenter', 'dragover'].forEach(function(evt) {
+        drop.addEventListener(evt, function(e) {
+            e.preventDefault();
+            drop.classList.add('dragover');
+        });
+    });
+    ['dragleave', 'drop'].forEach(function(evt) {
+        drop.addEventListener(evt, function(e) {
+            e.preventDefault();
+            drop.classList.remove('dragover');
+        });
+    });
+    drop.addEventListener('drop', function(e) {
+        if (e.dataTransfer.files.length) {
+            input.files = e.dataTransfer.files;
+            previewImage(input);
+        }
+    });
+})();
+
+/* ── Cover Color Picker ───────────────────────────────────────────── */
+(function() {
+    var themes = {
+        ember:  { bg: 'linear-gradient(135deg, #0C0A09 0%, #1C1917 30%, #292524 60%, #0C0A09 100%)',
+                  glow: 'radial-gradient(ellipse at 25% 40%, rgba(194,65,12,0.28) 0%, transparent 50%), radial-gradient(ellipse at 75% 70%, rgba(249,115,22,0.12) 0%, transparent 45%), radial-gradient(circle at 50% 30%, rgba(194,65,12,0.06) 0%, transparent 60%)',
+                  orbs: ['#C2410C', '#F97316', '#FBBF24'] },
+        ocean:  { bg: 'linear-gradient(135deg, #0C1929 0%, #0F2B46 30%, #164E63 60%, #0C1929 100%)',
+                  glow: 'radial-gradient(ellipse at 25% 40%, rgba(3,105,161,0.28) 0%, transparent 50%), radial-gradient(ellipse at 75% 70%, rgba(14,165,233,0.12) 0%, transparent 45%), radial-gradient(circle at 50% 30%, rgba(3,105,161,0.06) 0%, transparent 60%)',
+                  orbs: ['#0369A1', '#0EA5E9', '#38BDF8'] },
+        forest: { bg: 'linear-gradient(135deg, #052E16 0%, #14532D 30%, #166534 60%, #052E16 100%)',
+                  glow: 'radial-gradient(ellipse at 25% 40%, rgba(21,128,61,0.28) 0%, transparent 50%), radial-gradient(ellipse at 75% 70%, rgba(34,197,94,0.12) 0%, transparent 45%), radial-gradient(circle at 50% 30%, rgba(21,128,61,0.06) 0%, transparent 60%)',
+                  orbs: ['#15803D', '#22C55E', '#4ADE80'] },
+        violet: { bg: 'linear-gradient(135deg, #1E1033 0%, #2E1065 30%, #4C1D95 60%, #1E1033 100%)',
+                  glow: 'radial-gradient(ellipse at 25% 40%, rgba(124,58,237,0.28) 0%, transparent 50%), radial-gradient(ellipse at 75% 70%, rgba(167,139,250,0.12) 0%, transparent 45%), radial-gradient(circle at 50% 30%, rgba(124,58,237,0.06) 0%, transparent 60%)',
+                  orbs: ['#7C3AED', '#A78BFA', '#C4B5FD'] },
+        rose:   { bg: 'linear-gradient(135deg, #1A0A14 0%, #4C0519 30%, #881337 60%, #1A0A14 100%)',
+                  glow: 'radial-gradient(ellipse at 25% 40%, rgba(190,24,93,0.28) 0%, transparent 50%), radial-gradient(ellipse at 75% 70%, rgba(244,63,94,0.12) 0%, transparent 45%), radial-gradient(circle at 50% 30%, rgba(190,24,93,0.06) 0%, transparent 60%)',
+                  orbs: ['#BE185D', '#F43F5E', '#FB7185'] },
+        gold:   { bg: 'linear-gradient(135deg, #1C1508 0%, #422006 30%, #78350F 60%, #1C1508 100%)',
+                  glow: 'radial-gradient(ellipse at 25% 40%, rgba(180,83,9,0.28) 0%, transparent 50%), radial-gradient(ellipse at 75% 70%, rgba(245,158,11,0.12) 0%, transparent 45%), radial-gradient(circle at 50% 30%, rgba(180,83,9,0.06) 0%, transparent 60%)',
+                  orbs: ['#B45309', '#F59E0B', '#FBBF24'] },
+        slate:  { bg: 'linear-gradient(135deg, #0F172A 0%, #1E293B 30%, #334155 60%, #0F172A 100%)',
+                  glow: 'radial-gradient(ellipse at 25% 40%, rgba(51,65,85,0.35) 0%, transparent 50%), radial-gradient(ellipse at 75% 70%, rgba(100,116,139,0.15) 0%, transparent 45%), radial-gradient(circle at 50% 30%, rgba(51,65,85,0.08) 0%, transparent 60%)',
+                  orbs: ['#334155', '#64748B', '#94A3B8'] }
+    };
+
+    var hero = document.querySelector('.prof-hero');
+    var orbs = document.querySelectorAll('.prof-orb');
+    var swatches = document.querySelectorAll('.color-swatch');
+
+    function applyTheme(name) {
+        var t = themes[name];
+        if (!t || !hero) return;
+        hero.style.setProperty('--prof-bg', t.bg);
+        hero.style.setProperty('--prof-glow', t.glow);
+        orbs.forEach(function(orb, i) {
+            if (t.orbs[i]) orb.style.background = t.orbs[i];
+        });
+        swatches.forEach(function(s) {
+            s.classList.toggle('active', s.getAttribute('data-color') === name);
+        });
+        try { localStorage.setItem('profColor', name); } catch(e) {}
+    }
+
+    swatches.forEach(function(swatch) {
+        swatch.addEventListener('click', function() {
+            applyTheme(swatch.getAttribute('data-color'));
+        });
+    });
+
+    // Load saved color on page load
+    try {
+        var saved = localStorage.getItem('profColor');
+        if (saved && themes[saved]) applyTheme(saved);
+    } catch(e) {}
+})();
 </script>
 {% endblock %}

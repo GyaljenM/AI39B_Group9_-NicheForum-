@@ -24,7 +24,7 @@
         {% if post_reports %}
         <div class="space-y-4">
             {% for r in post_reports %}
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+            <div class="bg-white rounded-2xl border border-slate-100 p-5">
                 <div class="flex items-start justify-between gap-4 flex-wrap">
                     <div class="min-w-0">
                         <div class="flex items-center gap-2 mb-1">
@@ -42,8 +42,9 @@
                         <form action="{{ url_for('Home.resolve_post_report', report_id=r.id) }}" method="POST">
                             <button type="submit" class="px-4 py-2 rounded-full border border-slate-200 text-sm text-on-surface-variant hover:bg-slate-50 transition-all">Dismiss</button>
                         </form>
-                        <button type="button" onclick="openDeleteModal('{{ url_for('Home.delete_post', post_id=r.post_id) }}', 'post')"
-                            class="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-label-bold hover:bg-red-700 transition-all active:scale-95">Delete post</button>
+                        <form action="{{ url_for('Home.delete_post', post_id=r.post_id) }}" method="POST" onsubmit="return confirm('Delete this post permanently?')">
+                            <button type="submit" class="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-label-bold hover:bg-red-700 transition-all">Delete post</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -60,7 +61,7 @@
         {% if thread_reports %}
         <div class="space-y-4">
             {% for r in thread_reports %}
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+            <div class="bg-white rounded-2xl border border-slate-100 p-5">
                 <div class="flex items-start justify-between gap-4 flex-wrap">
                     <div class="min-w-0">
                         <div class="flex items-center gap-2 mb-1">
@@ -78,8 +79,9 @@
                         <form action="{{ url_for('Thread.resolve_thread_report', report_id=r.id) }}" method="POST">
                             <button type="submit" class="px-4 py-2 rounded-full border border-slate-200 text-sm text-on-surface-variant hover:bg-slate-50 transition-all">Dismiss</button>
                         </form>
-                        <button type="button" onclick="openDeleteModal('{{ url_for('Thread.delete_thread', thread_id=r.thread_id) }}', 'thread')"
-                            class="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-label-bold hover:bg-red-700 transition-all active:scale-95">Delete thread</button>
+                        <form action="{{ url_for('Thread.delete_thread', thread_id=r.thread_id) }}" method="POST" onsubmit="return confirm('Delete this thread permanently?')">
+                            <button type="submit" class="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-label-bold hover:bg-red-700 transition-all">Delete thread</button>
+                        </form>
                     </div>
                 </div>
             </div>

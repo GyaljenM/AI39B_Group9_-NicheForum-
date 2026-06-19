@@ -9,37 +9,49 @@
 
         <div class="login-modal-content">
             <div class="login-modal-header">
+                <div class="login-modal-logo">
+                    <div class="login-modal-logo-icon">
+                        <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1;">forum</span>
+                    </div>
+                </div>
                 <h2>Welcome Back</h2>
-                <p>Please enter your details to sign in</p>
+                <p>Enter your credentials to sign in</p>
             </div>
 
-
-
             <!-- Form -->
-            <form action="/login" method="POST" class="login-form">
+            <form action="{{ url_for('Auth.login') }}" method="POST" class="login-form">
                 <div class="form-group">
                     <label for="modal-email">Email Address</label>
-                    <input type="email" id="modal-email" name="email" placeholder="name@gmail.com" required>
+                    <div class="login-input-wrap">
+                        <span class="material-symbols-outlined login-input-icon">mail</span>
+                        <input type="email" id="modal-email" name="email" placeholder="name@gmail.com" required>
+                    </div>
                 </div>
                 <div class="form-group">
                     <div class="label-wrapper">
                         <label for="modal-password">Password</label>
-                        <a href="/forgot-password" class="forgot-link">Forgot?</a>
+                        <a href="{{ url_for('Auth.forgot_password') }}" class="forgot-link">Forgot?</a>
                     </div>
-                    <input type="password" id="modal-password" name="password" placeholder="••••••••" required>
+                    <div class="login-input-wrap">
+                        <span class="material-symbols-outlined login-input-icon">lock</span>
+                        <input type="password" id="modal-password" name="password" placeholder="••••••••" required>
+                    </div>
                 </div>
-                <button type="submit" class="submit-btn">Sign In</button>
+                <button type="submit" class="login-submit-btn">
+                    <span class="material-symbols-outlined text-lg">login</span>
+                    Sign In
+                </button>
             </form>
 
             <div class="login-modal-footer">
-                <p>Don't have an account? <a href="/register">Create an account</a></p>
+                <p>Don't have an account? <a href="{{ url_for('Auth.register') }}">Create account</a></p>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-/* Modal Base Styles */
+/* ═══ Login Modal Styles ═══ */
 .login-modal-overlay {
     position: fixed;
     top: 0;
@@ -54,12 +66,10 @@
 
 .login-modal-backdrop {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .login-modal-container {
@@ -67,27 +77,27 @@
     background: #ffffff;
     width: 100%;
     max-width: 440px;
-    border-radius: 24px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    border-radius: 28px;
+    box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.2);
     padding: 40px;
     margin: 20px;
-    animation: modalScaleIn 0.3s ease-out;
+    animation: loginModalIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes modalScaleIn {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+@keyframes loginModalIn {
+    from { transform: scale(0.92) translateY(20px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
 }
 
 /* Close Button */
 .login-modal-close {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    background: none;
+    top: 16px;
+    right: 16px;
+    background: #F5F5F4;
     border: none;
     cursor: pointer;
-    color: #94a3b8;
+    color: #78716C;
     padding: 8px;
     border-radius: 50%;
     transition: all 0.2s;
@@ -97,88 +107,61 @@
 }
 
 .login-modal-close:hover {
-    background: #f1f5f9;
-    color: #475569;
+    background: #E7E5E4;
+    color: #1C1917;
+    transform: rotate(90deg);
 }
 
 /* Header */
 .login-modal-header {
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
 }
 
-.login-modal-header h2 {
-    font-size: 28px;
-    font-weight: 800;
-    color: #64748b;
-    margin-bottom: 8px;
-    font-family: 'Lexend', sans-serif;
+.login-modal-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
 }
 
-.login-modal-header p {
-    color: #64748b;
-    font-weight: 500;
-}
-
-/* Google Button */
-.google-btn {
-    width: 100%;
+.login-modal-logo-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #C2410C, #EA580C);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    background: white;
-    font-weight: 600;
-    color: #334155;
-    cursor: pointer;
-    transition: background 0.2s;
+    box-shadow: 0 6px 20px rgba(194, 65, 12, 0.3);
 }
 
-.google-btn:hover {
-    background: #f8fafc;
+.login-modal-header h2 {
+    font-size: 26px;
+    font-weight: 800;
+    color: #1C1917;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
 }
 
-/* Divider */
-.divider {
-    position: relative;
-    text-align: center;
-    margin: 24px 0;
-}
-
-.divider::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 1px;
-    background: #e2e8f0;
-}
-
-.divider span {
-    position: relative;
-    background: white;
-    padding: 0 16px;
-    color: #94a3b8;
+.login-modal-header p {
+    color: #78716C;
     font-size: 14px;
     font-weight: 500;
 }
 
 /* Form Styles */
 .login-form .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 }
 
 .login-form label {
     display: block;
-    font-size: 14px;
-    font-weight: 600;
-    color: #334155;
+    font-size: 12px;
+    font-weight: 700;
+    color: #44403C;
     margin-bottom: 6px;
-    margin-left: 4px;
+    margin-left: 2px;
+    letter-spacing: 0.02em;
 }
 
 .label-wrapper {
@@ -188,9 +171,9 @@
 }
 
 .forgot-link {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    color: #64748b;
+    color: #C2410C;
     text-decoration: none;
 }
 
@@ -198,55 +181,85 @@
     text-decoration: underline;
 }
 
+/* Input styling */
+.login-input-wrap {
+    position: relative;
+}
+
+.login-input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #A8A29E;
+    font-size: 18px;
+    pointer-events: none;
+}
+
 .login-form input {
     width: 100%;
-    padding: 12px 16px;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 12px;
-    font-size: 15px;
+    padding: 12px 16px 12px 44px;
+    border: 1.5px solid #E7E5E4;
+    border-radius: 14px;
+    font-size: 14px;
     outline: none;
-    transition: all 0.2s;
+    transition: all 0.25s ease;
     box-sizing: border-box;
+    background: #FAFAF9;
+}
+
+.login-form input::placeholder {
+    color: #D6D3D1;
 }
 
 .login-form input:focus {
-    border-color: #64748b;
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    border-color: #C2410C;
+    box-shadow: 0 0 0 4px rgba(194, 65, 12, 0.08);
+    background: white;
 }
 
-.submit-btn {
+/* Submit button */
+.login-submit-btn {
     width: 100%;
     padding: 14px;
-    background: #64748b;
+    background: linear-gradient(135deg, #C2410C, #EA580C);
     color: white;
     border: none;
-    border-radius: 12px;
-    font-size: 16px;
+    border-radius: 14px;
+    font-size: 15px;
     font-weight: 700;
     cursor: pointer;
-    transition: transform 0.1s, background 0.2s;
-    box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     margin-top: 8px;
 }
 
-.submit-btn:hover {
-    background: #475569;
+.login-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(194, 65, 12, 0.35);
 }
 
-.submit-btn:active {
+.login-submit-btn:active {
     transform: scale(0.98);
 }
 
 /* Footer */
 .login-modal-footer {
     text-align: center;
-    margin-top: 32px;
-    font-size: 14px;
-    color: #64748b;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid #E7E5E4;
+    font-size: 13px;
+    color: #78716C;
 }
 
 .login-modal-footer a {
-    color: #64748b;
+    color: #C2410C;
     font-weight: 700;
     text-decoration: none;
 }
@@ -257,28 +270,17 @@
 </style>
 
 <script>
-/**
- * Shows the login modal and disables body scrolling
- */
 function openLoginModal() {
-    const modal = document.getElementById('loginModal');
-    modal.style.display = 'flex';
+    document.getElementById('loginModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
 
-/**
- * Hides the login modal and restores body scrolling
- */
 function closeLoginModal() {
-    const modal = document.getElementById('loginModal');
-    modal.style.display = 'none';
+    document.getElementById('loginModal').style.display = 'none';
     document.body.style.overflow = '';
 }
 
-// Optional: Close modal when pressing 'Escape' key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        closeLoginModal();
-    }
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLoginModal();
 });
 </script>

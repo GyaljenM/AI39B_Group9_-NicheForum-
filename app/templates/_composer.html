@@ -22,11 +22,11 @@
 
     <!-- Shared title -->
     <input type="text" name="title" placeholder="{{ title_placeholder }}" required
-           class="w-full px-4 py-2 rounded-xl bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+           class="w-full px-4 py-2 rounded bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
 
     {% if categories %}
     <!-- Shared category selector (lives outside the panels so it always submits) -->
-    <select name="category" class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+    <select name="category" class="w-full px-4 py-2 rounded border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
         {% for c in categories %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
     </select>
     {% endif %}
@@ -34,7 +34,7 @@
     <!-- TEXT panel -->
     <div data-panel="text" class="space-y-3">
         <textarea name="content" rows="4" placeholder="What's on your mind?" required
-                  class="w-full px-4 py-2 rounded-xl bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
+                  class="w-full px-4 py-2 rounded bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
         <label data-dropzone class="flex flex-col items-center justify-center gap-1 w-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-center cursor-pointer hover:border-primary transition-all">
             <span class="material-symbols-outlined text-2xl text-slate-400">cloud_upload</span>
             <span class="text-sm text-slate-500">Attach images or videos (optional)</span>
@@ -45,7 +45,7 @@
 
     <!-- IMAGES & VIDEOS panel -->
     <div data-panel="media" class="space-y-3 hidden">
-        <label data-dropzone class="flex flex-col items-center justify-center gap-1 w-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-100 px-4 py-8 text-center cursor-pointer hover:border-primary transition-all">
+        <label data-dropzone class="flex flex-col items-center justify-center gap-1 w-full rounded border-2 border-dashed border-slate-300 bg-slate-100 px-4 py-8 text-center cursor-pointer hover:border-primary transition-all">
             <span class="material-symbols-outlined text-3xl text-slate-400">cloud_upload</span>
             <span class="text-sm text-slate-500">Drag &amp; drop images/videos here, or click to upload</span>
             <span class="text-xs text-slate-400">Images: png, jpg, gif, webp &middot; Videos: mp4, webm, mov, ogg</span>
@@ -53,25 +53,25 @@
             <input type="file" name="media" multiple accept="image/*,video/*" class="hidden">
         </label>
         <textarea name="content" rows="2" placeholder="Add a caption (optional)"
-                  class="w-full px-4 py-2 rounded-xl bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
+                  class="w-full px-4 py-2 rounded bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
     </div>
 
     <!-- POLL panel -->
     <div data-panel="poll" class="space-y-3 hidden">
         <textarea name="content" rows="2" placeholder="Add context for your poll (optional)"
-                  class="w-full px-4 py-2 rounded-xl bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
+                  class="w-full px-4 py-2 rounded bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"></textarea>
         <div data-poll-options class="space-y-2">
             <input type="text" name="poll_options" placeholder="Option 1" required
-                   class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-primary">
+                   class="w-full px-4 py-2 rounded border border-slate-200 outline-none focus:ring-2 focus:ring-primary">
             <input type="text" name="poll_options" placeholder="Option 2" required
-                   class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-primary">
+                   class="w-full px-4 py-2 rounded border border-slate-200 outline-none focus:ring-2 focus:ring-primary">
         </div>
         <button type="button" data-add-option class="text-sm text-primary font-medium hover:underline flex items-center gap-1">
             <span class="material-symbols-outlined text-base">add</span> Add option
         </button>
     </div>
 
-    <button type="submit" class="w-full py-3 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all active:scale-95">
+    <button type="submit" class="w-full py-3 bg-primary text-white rounded font-medium hover:bg-primary-container transition-all">
         {{ submit_label }}
     </button>
 </form>
@@ -144,7 +144,7 @@
                 const div = document.createElement('div');
                 div.className = 'flex gap-2';
                 div.innerHTML =
-                    '<input type="text" name="poll_options" placeholder="Option ' + n + '" class="flex-1 px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-primary">' +
+                    '<input type="text" name="poll_options" placeholder="Option ' + n + '" class="flex-1 px-4 py-2 rounded border border-slate-200 outline-none focus:ring-2 focus:ring-primary">' +
                     '<button type="button" data-remove-option class="px-2 text-slate-400 hover:text-red-500"><span class="material-symbols-outlined">close</span></button>';
                 wrap.appendChild(div);
             });

@@ -4,73 +4,149 @@
 
 {% block title %}NicheForum{% endblock %}
 
+{% block styles %}
+<style>
+/* Hero background - CSS-only gradient mesh (no external images) */
+.hero-bg {
+    background: 
+        linear-gradient(135deg, #1C1917 0%, #292524 30%, #44403C 60%, #1C1917 100%);
+}
+.hero-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+        radial-gradient(ellipse at 20% 0%, rgba(194, 65, 12, 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(120, 113, 108, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(194, 65, 12, 0.08) 0%, transparent 60%);
+}
+.hero-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.5;
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<!-- Hero Section -->
-<section class="relative h-[480px] w-full flex items-center justify-center">
-<img alt="Sports Stadium" class="absolute inset-0 w-full h-full object-cover" data-alt="A wide-angle cinematic shot of a massive, modern sports stadium at dusk, with floodlights beaming down onto a pristine green pitch. The atmosphere is electric with a hazy, energetic mist in the air, captured in a high-contrast corporate modern style. The color palette features deep indigo skies and brilliant emerald turf, evoking a sense of elite athletic competition and vibrant community energy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAN0Pz_Z9HnHKgRt1w1hTAQbV5Siee4WwfASzQr7RVYy_XWCjy5Xgw3GcGgIKT8occOXumUYQBwOflzA_-pA1KKH6LwTcPSEu6yjIY5xfQ8DsphfnLLrHH302gucF3Y3gm5Q7UDWFcPyJLn3PgPIQN450e7ukujC94j7JicCsVS6jec6sm3oHZNqYCVaPzhfh309NnHdMt6arpnrz8eE2sGitbAMIrIZnlO4p50cE3_yopMRDvHCZPA6yJjDBfZTw4tSdBEXXlge1g">
-<div class="absolute inset-0 hero-gradient"></div>
-<div class="relative z-10 text-center px-6 max-w-3xl">
-<span class="inline-block px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-white font-label-bold mb-6 border border-white/30 uppercase tracking-wider">The Heart of Sports</span>
-<h1 class="font-display-lg text-white text-display-lg mb-6 leading-tight">Find Your Tribe in the World of Athletics</h1>
-<p class="font-body-lg text-white/90 text-body-lg mb-10 max-w-2xl mx-auto">Join over 250,000 sports enthusiasts across 1,200 specialized communities. From obscure esports to the world cup, your team is here.</p>
-<div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-<a href="{{ url_for('Home.trending') }}" class="w-full sm:w-auto px-8 py-4 bg-white text-primary rounded-xl font-label-bold shadow-xl hover:scale-105 transition-all active:scale-95 text-center">Discover Trending</a>
-<a href="{{ url_for('Home.communities') }}" class="w-full sm:w-auto px-8 py-4 bg-primary-container text-white rounded-xl font-label-bold shadow-xl border border-white/20 hover:bg-primary transition-all active:scale-95 text-center">Explore Communities</a>
-<a href="{{ url_for('Home.live') }}" class="w-full sm:w-auto px-8 py-4 bg-secondary text-white rounded-xl font-label-bold shadow-xl border border-secondary/20 hover:bg-secondary-container transition-all active:scale-95 text-center">Watch Live</a>
-</div>
-</div>
+<!-- ═══════════════════════════════════════════════════════════════
+     HERO SECTION
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="hero-section hero-bg relative min-h-[520px] flex items-center">
+    <div class="relative z-10 max-w-[1280px] mx-auto px-6 py-16 w-full">
+        <div class="max-w-2xl">
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/10 mb-8">
+                <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                <span class="text-white/90 text-sm font-medium">2,400+ fans online now</span>
+            </div>
+            
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-[1.1] tracking-tight">
+                Where sports fans
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300"> find their tribe</span>
+            </h1>
+            
+            <p class="text-lg text-white/70 mb-10 max-w-lg leading-relaxed">
+                Join 250,000+ enthusiasts across 1,200 specialized communities. From local leagues to the World Cup.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="{{ url_for('Home.trending') }}" class="nf-btn nf-btn-primary px-8 py-4 text-base">
+                    <span class="material-symbols-outlined">trending_up</span>
+                    Trending Now
+                </a>
+                <a href="{{ url_for('Home.communities') }}" class="nf-btn bg-white/10 text-white border border-white/20 hover:bg-white/20 backdrop-blur-sm px-8 py-4 text-base">
+                    <span class="material-symbols-outlined">groups</span>
+                    Explore Communities
+                </a>
+            </div>
+        </div>
+    </div>
 </section>
-<section class="max-w-[1280px] mx-auto px-6 mt-10">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <a href="{{ url_for('Home.live') }}" class="block rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-lg transition-all">
-            <div class="flex items-center justify-between mb-4">
-                <span class="text-sm font-semibold text-primary uppercase">Live Matches</span>
-                <span class="text-xs font-bold text-slate-500">Real-time</span>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     QUICK ACCESS CARDS
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="max-w-[1280px] mx-auto px-6 -mt-12 relative z-20">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 stagger-children">
+        <!-- Live Matches -->
+        <a href="{{ url_for('Home.live') }}" class="nf-card nf-card-interactive p-6 block group">
+            <div class="flex items-start justify-between mb-4">
+                <div class="icon-chip">
+                    <span class="material-symbols-outlined">sensors</span>
+                </div>
+                <span class="nf-chip nf-chip-danger">
+                    <span class="live-dot" style="width:6px;height:6px;"></span>
+                    LIVE
+                </span>
             </div>
-            <h3 class="text-2xl font-semibold mb-2">Watch live sports threads</h3>
-            <p class="text-on-surface-variant text-sm">Jump into ongoing games, score updates, and live fan discussion.</p>
+            <h3 class="text-lg font-semibold text-[#1C1917] mb-1 group-hover:text-[#C2410C] transition-colors">Live Matches</h3>
+            <p class="text-sm text-[#78716C]">Real-time scores and live fan discussions</p>
         </a>
-        <a href="{{ url_for('Home.trending') }}" class="block rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-lg transition-all">
-            <div class="flex items-center justify-between mb-4">
-                <span class="text-sm font-semibold text-primary uppercase">Trending</span>
-                <span class="text-xs font-bold text-slate-500">Top picks</span>
+
+        <!-- Trending -->
+        <a href="{{ url_for('Home.trending') }}" class="nf-card nf-card-interactive p-6 block group">
+            <div class="flex items-start justify-between mb-4">
+                <div class="icon-chip">
+                    <span class="material-symbols-outlined">trending_up</span>
+                </div>
+                <span class="nf-chip nf-chip-primary">HOT</span>
             </div>
-            <h3 class="text-2xl font-semibold mb-2">See what’s trending</h3>
-            <p class="text-on-surface-variant text-sm">Explore the hottest topics and most active conversations today.</p>
+            <h3 class="text-lg font-semibold text-[#1C1917] mb-1 group-hover:text-[#C2410C] transition-colors">Trending Topics</h3>
+            <p class="text-sm text-[#78716C]">Today's most active conversations</p>
         </a>
-        <a href="{{ url_for('Home.communities') }}" class="block rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-lg transition-all">
-            <div class="flex items-center justify-between mb-4">
-                <span class="text-sm font-semibold text-primary uppercase">Communities</span>
-                <span class="text-xs font-bold text-slate-500">All hubs</span>
+
+        <!-- Communities -->
+        <a href="{{ url_for('Home.communities') }}" class="nf-card nf-card-interactive p-6 block group">
+            <div class="flex items-start justify-between mb-4">
+                <div class="icon-chip">
+                    <span class="material-symbols-outlined">hub</span>
+                </div>
+                <span class="nf-chip nf-chip-neutral">1,200+</span>
             </div>
-            <h3 class="text-2xl font-semibold mb-2">Find your community</h3>
-            <p class="text-on-surface-variant text-sm">Browse communities by sport, league, and fan interest.</p>
+            <h3 class="text-lg font-semibold text-[#1C1917] mb-1 group-hover:text-[#C2410C] transition-colors">Communities</h3>
+            <p class="text-sm text-[#78716C]">Browse by sport, league, and interest</p>
         </a>
     </div>
 </section>
-<!-- World Cup 2026 — Live Goal Tracker -->
-<section class="max-w-[1280px] mx-auto px-6 mt-10">
-    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
-            <div class="flex items-center gap-3">
-                <span class="material-symbols-outlined text-3xl text-primary">sports_soccer</span>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     WORLD CUP 2026 — LIVE TRACKER
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="max-w-[1280px] mx-auto px-6 mt-12">
+    <div class="nf-card p-6 md:p-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C2410C] to-[#9a3412] flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white text-2xl" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+                </div>
                 <div>
-                    <h2 class="text-2xl font-bold text-on-background">World Cup 2026 — Live</h2>
-                    <p class="text-on-surface-variant text-sm">Goal counts refresh automatically every 30 seconds.</p>
+                    <h2 class="text-xl font-bold text-[#1C1917]">World Cup 2026</h2>
+                    <p class="text-sm text-[#78716C]">Live goal tracker — auto-refreshes every 30s</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <span id="wc-source-badge" class="hidden text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"></span>
-                <span class="flex items-center gap-2">
-                    <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                <span id="wc-source-badge" class="hidden nf-chip"></span>
+                <div class="flex items-center gap-2">
+                    <span class="live-dot"></span>
                     <span class="text-sm font-semibold text-red-500 uppercase tracking-wider">Live</span>
-                </span>
+                </div>
             </div>
         </div>
 
-        <div id="wc-status" class="text-center text-on-surface-variant text-sm py-10">Loading live matches…</div>
-        <div id="wc-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-        <p class="text-right text-[11px] text-slate-400 mt-4">Last updated: <span id="wc-updated">—</span></p>
+        <div id="wc-status" class="text-center py-12">
+            <div class="flex flex-col items-center gap-4">
+                <div class="w-16 h-16 rounded-full bg-[#F5F5F4] flex items-center justify-center">
+                    <span class="material-symbols-outlined text-3xl text-[#A8A29E] animate-pulse">sensors</span>
+                </div>
+                <p class="text-[#78716C]">Loading live matches…</p>
+            </div>
+        </div>
+        <div id="wc-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children"></div>
+        <div id="wc-footer" class="hidden flex justify-end mt-4 pt-4 border-t border-[#E7E5E4]">
+            <p class="text-xs text-[#A8A29E]">Last updated: <span id="wc-updated">—</span></p>
+        </div>
     </div>
 </section>
 
@@ -79,30 +155,33 @@
     const grid = document.getElementById('wc-grid');
     const statusEl = document.getElementById('wc-status');
     const updatedEl = document.getElementById('wc-updated');
+    const footerEl = document.getElementById('wc-footer');
     const badge = document.getElementById('wc-source-badge');
 
     function teamBlock(team) {
         const flag = team.flag
-            ? `<img src="${team.flag}" alt="" class="w-10 h-10 object-contain rounded-full bg-slate-100">`
-            : `<span class="material-symbols-outlined text-3xl text-slate-400">shield</span>`;
+            ? `<img src="${team.flag}" alt="" class="w-12 h-12 object-contain rounded-full bg-[#F5F5F4] p-1">`
+            : `<div class="w-12 h-12 rounded-full bg-[#F5F5F4] flex items-center justify-center"><span class="material-symbols-outlined text-xl text-[#A8A29E]">shield</span></div>`;
         return `
             <div class="flex-1 text-center">
-                <div class="w-12 h-12 mx-auto mb-2 flex items-center justify-center">${flag}</div>
-                <p class="font-bold text-sm truncate">${team.name ?? 'TBD'}</p>
+                <div class="flex justify-center mb-3">${flag}</div>
+                <p class="font-semibold text-sm text-[#1C1917] truncate">${team.name ?? 'TBD'}</p>
             </div>`;
     }
 
     function matchCard(m) {
         const minute = m.minute != null ? `${m.minute}'` : (m.status ?? 'LIVE');
         return `
-            <div class="rounded-2xl border border-slate-200 p-5 shadow-sm hover:border-primary/30 transition-all">
+            <div class="wc-match-card">
                 <div class="flex justify-between items-center mb-4">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] truncate">${m.round ?? 'World Cup'}</span>
-                    <span class="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full whitespace-nowrap">${minute}</span>
+                    <span class="text-[10px] font-bold text-[#A8A29E] uppercase tracking-[0.15em]">${m.round ?? 'World Cup'}</span>
+                    <span class="nf-chip nf-chip-primary text-[10px]">${minute}</span>
                 </div>
                 <div class="flex items-center justify-between gap-4">
                     ${teamBlock(m.home)}
-                    <div class="text-3xl font-black text-on-background whitespace-nowrap">${m.home.goals} - ${m.away.goals}</div>
+                    <div class="px-4 py-2 bg-[#1C1917] rounded-lg">
+                        <span class="text-2xl font-bold text-white tracking-wider">${m.home.goals} — ${m.away.goals}</span>
+                    </div>
                     ${teamBlock(m.away)}
                 </div>
             </div>`;
@@ -111,11 +190,11 @@
     function showBadge(source) {
         if (source === 'sample') {
             badge.textContent = 'Sample data';
-            badge.className = 'text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-amber-100 text-amber-700';
+            badge.className = 'nf-chip nf-chip-neutral';
             badge.classList.remove('hidden');
         } else if (source === 'error') {
             badge.textContent = 'Offline';
-            badge.className = 'text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-red-100 text-red-700';
+            badge.className = 'nf-chip nf-chip-danger';
             badge.classList.remove('hidden');
         } else {
             badge.classList.add('hidden');
@@ -130,393 +209,300 @@
 
             if (!data.matches || data.matches.length === 0) {
                 grid.innerHTML = '';
-                statusEl.textContent = data.message || 'No live World Cup matches right now. Check back at kick-off!';
+                statusEl.innerHTML = `
+                    <div class="flex flex-col items-center gap-4">
+                        <div class="w-16 h-16 rounded-full bg-[#F5F5F4] flex items-center justify-center">
+                            <span class="material-symbols-outlined text-3xl text-[#A8A29E]">event_busy</span>
+                        </div>
+                        <p class="text-[#78716C]">${data.message || 'No live matches right now. Check back at kick-off!'}</p>
+                    </div>`;
                 statusEl.classList.remove('hidden');
+                footerEl.classList.add('hidden');
             } else {
                 statusEl.classList.add('hidden');
+                footerEl.classList.remove('hidden');
+                footerEl.classList.add('flex');
                 grid.innerHTML = data.matches.map(matchCard).join('');
             }
             updatedEl.textContent = new Date().toLocaleTimeString();
         } catch (err) {
             console.error('Live update failed:', err);
-            statusEl.textContent = 'Could not load live matches. Retrying…';
+            statusEl.innerHTML = `<p class="text-[#78716C]">Could not load live matches. Retrying…</p>`;
             statusEl.classList.remove('hidden');
         }
     }
 
     refresh();
-    setInterval(refresh, 30000); // poll every 30 seconds
+    setInterval(refresh, 30000);
 })();
 </script>
-<!-- Main Content Cluster -->
-<div class="max-w-[1280px] mx-auto px-6 mt-16 grid grid-cols-12 gap-gutter">
-<!-- SideNav Navigation -->
-<aside class="col-span-12 lg:col-span-3 flex flex-col gap-stack-lg">
-<div class="bg-white rounded-xl p-6 community-card-shadow">
-<h2 class="font-headline-sm text-headline-sm mb-4">Featured Communities</h2>
-<nav class="flex flex-col gap-1">
-<a href="{{ url_for('Thread.view_community', category_name='Football') }}" class="flex items-center gap-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 font-semibold rounded-lg cursor-pointer group">
-<span class="material-symbols-outlined" data-icon="sports_soccer">sports_soccer</span>
-<span class="font-lexend text-sm">Football</span>
-<span class="ml-auto text-[10px] font-bold tracking-wide bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">HOT</span>
-</a>
-<a href="{{ url_for('Thread.view_community', category_name='Basketball') }}" class="flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-all hover:translate-x-1">
-<span class="material-symbols-outlined" data-icon="sports_basketball">sports_basketball</span>
-<span class="font-lexend text-sm">Basketball</span>
-</a>
-<a href="{{ url_for('Thread.view_community', category_name='Tennis') }}" class="flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-all hover:translate-x-1">
-<span class="material-symbols-outlined" data-icon="sports_tennis">sports_tennis</span>
-<span class="font-lexend text-sm">Tennis</span>
-</a>
-<a href="{{ url_for('Thread.view_community', category_name='Cricket') }}" class="flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-all hover:translate-x-1">
-<span class="material-symbols-outlined" data-icon="sports_cricket">sports_cricket</span>
-<span class="font-lexend text-sm">Cricket</span>
-</a>
-<a href="{{ url_for('Thread.view_community', category_name='eSports') }}" class="flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-all hover:translate-x-1">
-<span class="material-symbols-outlined" data-icon="sports_esports">sports_esports</span>
-<span class="font-lexend text-sm">eSports</span>
-</a>
-</nav>
-<a href="{{ url_for('Home.communities') }}" class="mt-6 block text-center w-full py-2 text-primary font-label-bold text-sm border border-primary/20 rounded-lg hover:bg-primary/5 transition-all">View All Communities</a>
-</div>
-<!-- Stats Card -->
-<div class="bg-primary rounded-xl p-6 text-white overflow-hidden relative">
-<div class="absolute -right-4 -bottom-4 opacity-20">
-<span class="material-symbols-outlined text-[120px]" style="font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 48;">groups</span>
-</div>
-<div class="relative z-10">
-<h3 class="font-headline-sm text-headline-sm mb-1">Global Community</h3>
-<p class="text-white/80 text-sm mb-4">You're part of something big.</p>
-<div class="flex items-center gap-4">
-<div>
-<p class="font-bold text-2xl">4.2M</p>
-<p class="text-[10px] uppercase tracking-widest text-white/60">Active Users</p>
-</div>
-<div class="w-px h-8 bg-white/20"></div>
-<div>
-<p class="font-bold text-2xl">12k+</p>
-<p class="text-[10px] uppercase tracking-widest text-white/60">Communities</p>
-</div>
-</div>
-</div>
-</div>
-</aside>
-<!-- Community Feed (Bento Grid) -->
-<main class="col-span-12 lg:col-span-9">
-<div class="flex items-center justify-between mb-8">
-<div>
-<h2 class="font-headline-md text-headline-md text-on-background">Featured Communities</h2>
-<p class="text-on-surface-variant text-body-md mt-1">Based on your interests and recent activity.</p>
-</div>
-<div class="flex gap-2">
-<button class="p-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-50"><span class="material-symbols-outlined">grid_view</span></button>
-<button class="p-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-400"><span class="material-symbols-outlined">view_list</span></button>
-</div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-<!-- Community Card 1 -->
-<div class="bg-white rounded-2xl overflow-hidden community-card-shadow flex flex-col bento-hover transition-all duration-300">
-<div class="h-32 relative">
-<img alt="Stadium lights" class="w-full h-full object-cover" data-alt="An atmospheric, close-up photograph of bright stadium floodlights against a navy blue evening sky. The light flares create a dramatic, starburst effect, illuminating a soft haze in the air. The aesthetic is clean, professional, and high-contrast, fitting a modern corporate sports platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiww80AT8ggewJc526e5-VSpglJt0Rl21ZQB4hIOjX5N797Iwym8yp_fcuYbl7Uaf7Xxhboa9R-XJNfyQv31Ia-WP4lXJ7deHCOCQQY5A3Ct0qZeuf1aPYaC8NTXAX36Dm7x0todwMskGWl1EfCkJhutvWtn7OMkZ7VSjhIn39xcGTLfPuvlZmlor-Q6z8QVLJRRLAdvBrNGjQzpx9RenGcd_sHn9Lw3KZsqd4905fl3SpKd4emAaXERHUdvBLqKhorZ8JTz8TvkU">
-<div class="absolute inset-0 bg-black/30"></div>
-<div class="absolute -bottom-6 left-6">
-<div class="w-12 h-12 rounded-xl bg-white p-1 shadow-lg">
-<div class="w-full h-full bg-primary rounded-lg flex items-center justify-center text-white">
-<span class="material-symbols-outlined">sports_soccer</span>
-</div>
-</div>
-</div>
-</div>
-<div class="p-6 pt-8 flex-1">
-<div class="flex justify-between items-start mb-2">
-<h3 class="font-headline-sm text-headline-sm">Premier League Hub</h3>
-<span class="material-symbols-outlined text-tertiary-container" style="font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;">verified</span>
-</div>
-<p class="text-on-surface-variant text-sm line-clamp-2 mb-4">Official community for the world's most watched football league. Real-time updates and discussions.</p>
-<div class="flex items-center gap-3 mb-6">
-<div class="flex -space-x-2">
-<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200"></div>
-<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-300"></div>
-<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-400"></div>
-</div>
-<span class="text-label-sm text-on-surface-variant">82k members</span>
-</div>
-<a href="{{ url_for('Thread.view_community', category_name='Football') }}" class="block w-full text-center py-3 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all shadow-md active:scale-95">Join Community</a>
-</div>
-</div>
-<!-- Community Card 2 -->
-<div class="bg-white rounded-2xl overflow-hidden community-card-shadow flex flex-col bento-hover transition-all duration-300">
-<div class="h-32 relative">
-<img alt="Basketball court" class="w-full h-full object-cover" data-alt="A stylized, architectural photograph of an empty, minimalist indoor basketball court with polished wooden floors reflecting warm overhead lighting. The composition is symmetrical and clean, with a focus on geometric lines and high-quality textures. The lighting is soft and professional, emphasizing a modern, corporate athletic aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-4hCvkWeHur2c7OS0pk6r5BEh9IPzpIRAtSj58IsF6u0VYgtW-ET7g4oG1w2lGREqSOpEdbOHaI4jSUKaN1X-iKjtrTE1awAkCVdNUgc4NE4vBKzwSoKvio51_IEnoekOzcdeS4ADpVx28tySPaxzT_S2nCqhnTDHQEsneMABF0gGFmBg7SsTYaaGMFyaDu0NotgnGN5K4C1RqYtNbTCBK9MO4P-zkBzX7IbcPehsaKSknLqMbdeNn3BW_aHE0WkXZLX6FJeOErw">
-<div class="absolute inset-0 bg-black/30"></div>
-<div class="absolute -bottom-6 left-6">
-<div class="w-12 h-12 rounded-xl bg-white p-1 shadow-lg">
-<div class="w-full h-full bg-secondary-container rounded-lg flex items-center justify-center text-white">
-<span class="material-symbols-outlined">sports_basketball</span>
-</div>
-</div>
-</div>
-</div>
-<div class="p-6 pt-8 flex-1">
-<h3 class="font-headline-sm text-headline-sm mb-2">NBA Insiders</h3>
-<p class="text-on-surface-variant text-sm line-clamp-2 mb-4">The ultimate destination for draft analysis, trade rumors, and tactical breakdowns of the association.</p>
-<div class="flex items-center gap-3 mb-6">
-<div class="flex -space-x-2">
-<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200"></div>
-<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-300"></div>
-</div>
-<span class="text-label-sm text-on-surface-variant">45k members</span>
-</div>
-<a href="{{ url_for('Thread.view_community', category_name='Basketball') }}" class="block w-full text-center py-3 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all shadow-md active:scale-95">Join Community</a>
-</div>
-</div>
-<!-- Community Card 3 -->
-<div class="bg-white rounded-2xl overflow-hidden community-card-shadow flex flex-col bento-hover transition-all duration-300">
-<div class="h-32 relative">
-<img alt="Tennis player" class="w-full h-full object-cover" data-alt="A high-speed action shot of a professional tennis player mid-serve, with the tennis ball captured in sharp focus against a blurred background of a red clay court. The lighting is bright and crisp, showcasing vivid colors and dynamic motion. The overall style is modern, energetic, and clean, perfectly capturing the spirit of competitive sport." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOnzMLFIVZe6OiXK6h6kHInM-BA-2VHNlzOcLlS2kfK_h2HCYcOdLe45BQtmf2bMrDZgoHR36kiGC4CHcZqIyFthbbK4AR4QWSrjTXW9vV_t72OS8iDntYKZNHs4tysct-G8SwL50H9yhBfrvGnGY_2pPdf68xgCslTasAtwPkHkBG2ByORN50Cz3IRWRVaXppY2EgHF6u9RpZ2bWM3AUvZOjsppvC9POEKqj6_sxm_dB5CfSmo63SxdH8AOnPQnuQhDbXvn5xt-4">
-<div class="absolute inset-0 bg-black/30"></div>
-<div class="absolute -bottom-6 left-6">
-<div class="w-12 h-12 rounded-xl bg-white p-1 shadow-lg">
-<div class="w-full h-full bg-tertiary-container rounded-lg flex items-center justify-center text-white">
-<span class="material-symbols-outlined">sports_tennis</span>
-</div>
-</div>
-</div>
-</div>
-<div class="p-6 pt-8 flex-1">
-<h3 class="font-headline-sm text-headline-sm mb-2">Grand Slam Fanatics</h3>
-<p class="text-on-surface-variant text-sm line-clamp-2 mb-4">Coverage of ATP and WTA tours. From Wimbledon grass to Roland-Garros clay, we discuss it all.</p>
-<div class="flex items-center gap-3 mb-6">
-<div class="flex -space-x-2">
-<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200"></div>
-</div>
-<span class="text-label-sm text-on-surface-variant">12k members</span>
-</div>
-<a href="{{ url_for('Thread.view_community', category_name='Tennis') }}" class="block w-full text-center py-3 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all shadow-md active:scale-95">Join Community</a>
-</div>
-</div>
-<!-- Community Card 4 -->
-<div class="bg-white rounded-2xl overflow-hidden community-card-shadow flex flex-col bento-hover transition-all duration-300 lg:col-span-2">
-<div class="grid grid-cols-1 md:grid-cols-2 h-full">
-<div class="h-48 md:h-full relative">
-<img alt="Esports Arena" class="w-full h-full object-cover" data-alt="An expansive view of a professional esports arena during a tournament, filled with glowing neon lights in shades of blue and magenta. Massive screens show game footage while the crowd is silhouetted against the bright stage. The atmosphere is high-tech and electrifying, using a vibrant color palette to represent modern digital competition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQhXeCxv7phwFkCzBe8z-GYVXjTH10TOKwCktp08lanixjgC25IBOgwY11nj4G8L35-7AwgYkQOupAUN_MgZ3tieb9G9gGK_B5QLbMq8XDVfZWCK5pWYzgLfcJ3uWkmXUvjB5UPozzwz0hVaTgQNjBE0AxrE4LF0ceCqe-nIXe06BplxHEy9N8kSQpaPz0doJJTwTIuBLsKP9bG_Vp5GgKH7yiLdRRJrMk6o8EjTD4r7UbMzkmb76tWftAhYYJgYMZ38dQYI-iR8E">
-<div class="absolute inset-0 bg-primary/20 backdrop-blur-[2px]"></div>
-<div class="absolute inset-0 flex items-center justify-center">
-<div class="text-center text-white p-4">
-<span class="material-symbols-outlined text-6xl mb-2">sports_esports</span>
-<p class="font-headline-sm">Trending Now</p>
-</div>
-</div>
-</div>
-<div class="p-8 flex flex-col justify-center">
-<span class="text-secondary font-label-bold text-[10px] mb-2 uppercase tracking-widest flex items-center gap-2">
-<span class="w-2 h-2 bg-secondary rounded-full animate-pulse"></span> Growing +400%
-                                </span>
-<h3 class="font-headline-md text-headline-md mb-3">Valorant Masters</h3>
-<p class="text-on-surface-variant text-body-md mb-6">Strategy, clips, and pro circuit discussion for the fastest growing tactical shooter on the planet.</p>
-<div class="flex items-center gap-4">
-<button class="flex-1 py-3 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all shadow-md">Join Now</button>
-<button class="w-12 h-12 flex items-center justify-center border border-slate-200 rounded-xl hover:bg-slate-50 transition-all">
-<span class="material-symbols-outlined">share</span>
-</button>
-</div>
-</div>
-</div>
-</div>
-<!-- Community Card 5 -->
-<div class="bg-white rounded-2xl overflow-hidden community-card-shadow flex flex-col bento-hover transition-all duration-300">
-<div class="p-6 flex flex-col h-full">
-<div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-primary mb-4">
-<span class="material-symbols-outlined text-3xl">search</span>
-</div>
-<h3 class="font-headline-sm text-headline-sm mb-2">Search Communities</h3>
-<p class="text-on-surface-variant text-sm mb-8">Looking for your niche? Search existing communities, explore what's inside, and join the conversation.</p>
-<div class="mt-auto">
-<a href="{{ url_for('Home.search_communities') }}" class="block text-center w-full py-3 border-2 border-dashed border-primary/30 text-primary rounded-xl font-label-bold hover:bg-primary/5 transition-all">Find a Community</a>
-</div>
-</div>
-</div>
-</div>
-<!-- Secondary Sorting Section -->
-<div class="mt-16 bg-white rounded-2xl p-8 community-card-shadow">
-<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-<h2 class="font-headline-sm text-headline-sm">Popular Sports Topics</h2>
-<div class="flex flex-wrap gap-2">
-<div class="flex items-center gap-2 px-4 py-2 bg-surface-bright border border-slate-200 rounded-full cursor-pointer hover:border-primary transition-all">
-<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
-<span class="text-label-bold">Most Popular</span>
-<span class="material-symbols-outlined text-sm">expand_more</span>
-</div>
-<div class="flex items-center gap-2 px-4 py-2 bg-surface-bright border border-slate-200 rounded-full cursor-pointer hover:border-primary transition-all">
-<span class="w-2 h-2 rounded-full bg-primary"></span>
-<span class="text-label-bold">Highest Votes</span>
-<span class="material-symbols-outlined text-sm">expand_more</span>
-</div>
-<div class="flex items-center gap-2 px-4 py-2 bg-surface-bright border border-slate-200 rounded-full cursor-pointer hover:border-primary transition-all">
-<span class="w-2 h-2 rounded-full bg-secondary"></span>
-<span class="text-label-bold">Latest Thread</span>
-<span class="material-symbols-outlined text-sm">expand_more</span>
-</div>
-</div>
-</div>
-<div class="space-y-4">
-    {% for thread in threads %}
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden animate-in fade-in duration-300">
-        <div class="p-4 flex items-start gap-4">
-            <!-- Interactive Vote Sidebar -->
-            <div class="flex flex-col items-center justify-center p-2 bg-surface-container rounded-xl min-w-[56px]" id="vote-container-{{ thread.id }}">
-                <button data-thread-id="{{ thread.id }}" data-vote="up" class="js-vote-btn w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:text-primary transition-all group" id="upvote-{{ thread.id }}">
-                    <span class="material-symbols-outlined text-2xl group-active:scale-125">arrow_drop_up</span>
-                </button>
-                <span class="font-bold text-lg" id="votes-count-{{ thread.id }}">{{ thread.votes }}</span>
-                <button data-thread-id="{{ thread.id }}" data-vote="down" class="js-vote-btn w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:text-primary transition-all group" id="downvote-{{ thread.id }}">
-                    <span class="material-symbols-outlined text-2xl group-active:scale-125">arrow_drop_down</span>
-                </button>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MAIN CONTENT — SIDEBAR + FEED
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="max-w-[1280px] mx-auto px-6 mt-16 grid grid-cols-12 gap-8">
+    
+    <!-- ── SIDEBAR ──────────────────────────────────────────────── -->
+    <aside class="col-span-12 lg:col-span-3 flex flex-col gap-6">
+        <!-- Featured Communities -->
+        <div class="nf-card p-6">
+            <h2 class="text-sm font-semibold text-[#1C1917] uppercase tracking-wider mb-4">Communities</h2>
+            <nav class="flex flex-col gap-1 stagger-children">
+                <a href="{{ url_for('Thread.view_community', category_name='Football') }}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F5F5F4] transition-all group">
+                    <span class="material-symbols-outlined text-[#C2410C]">sports_soccer</span>
+                    <span class="text-sm font-medium text-[#1C1917] flex-1">Football</span>
+                    <span class="nf-chip nf-chip-primary text-[10px] py-0.5">HOT</span>
+                </a>
+                <a href="{{ url_for('Thread.view_community', category_name='Basketball') }}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F5F5F4] transition-all group">
+                    <span class="material-symbols-outlined text-[#78716C]">sports_basketball</span>
+                    <span class="text-sm font-medium text-[#1C1917] flex-1">Basketball</span>
+                </a>
+                <a href="{{ url_for('Thread.view_community', category_name='Tennis') }}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F5F5F4] transition-all group">
+                    <span class="material-symbols-outlined text-[#78716C]">sports_tennis</span>
+                    <span class="text-sm font-medium text-[#1C1917] flex-1">Tennis</span>
+                </a>
+                <a href="{{ url_for('Thread.view_community', category_name='Cricket') }}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F5F5F4] transition-all group">
+                    <span class="material-symbols-outlined text-[#78716C]">sports_cricket</span>
+                    <span class="text-sm font-medium text-[#1C1917] flex-1">Cricket</span>
+                </a>
+                <a href="{{ url_for('Thread.view_community', category_name='eSports') }}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F5F5F4] transition-all group">
+                    <span class="material-symbols-outlined text-[#78716C]">sports_esports</span>
+                    <span class="text-sm font-medium text-[#1C1917] flex-1">eSports</span>
+                </a>
+            </nav>
+            <a href="{{ url_for('Home.communities') }}" class="mt-4 block text-center w-full py-2.5 text-[#C2410C] font-semibold text-sm border border-[#C2410C]/20 rounded-xl hover:bg-[#C2410C]/5 transition-all">
+                View All
+            </a>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="stats-gradient rounded-2xl p-6 text-white relative overflow-hidden">
+            <div class="absolute -right-6 -bottom-6 opacity-10">
+                <span class="material-symbols-outlined text-[140px]" style="font-variation-settings: 'FILL' 1, 'wght' 300;">groups</span>
             </div>
-            
-            <div class="flex-1">
-                <div class="flex items-start justify-between gap-2">
-                    <a href="{{ url_for('Thread.view_thread', thread_id=thread.id) }}" class="block group flex-1 min-w-0">
-                        <h4 class="text-lg font-bold group-hover:text-primary transition-all mb-1">{{ thread.title }}</h4>
-                        <p class="text-on-surface-variant text-sm line-clamp-2 mb-3">{{ thread.content }}</p>
-                    </a>
-                    {% if session.get('user_id') %}
-                    {{ render_actions_menu(thread, 'thread', session.get('user_id'), session.get('user_name', 'Guest') == thread.author, url_for('Thread.delete_thread', thread_id=thread.id)) }}
-                    {% endif %}
-                </div>
-
-                {{ render_media(thread.media) }}
-                {{ render_poll(thread, url_for('Thread.vote_thread_poll', thread_id=thread.id), session.get('user_id')) }}
-                {{ render_notes(thread, 'thread', session.get('user_id')) }}
-
-                <div class="flex items-center gap-4 text-on-surface-variant text-xs mt-3">
-                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">account_circle</span> @{{ thread.author }}</span>
-                    <span>•</span>
-                    <span>{{ thread.created_at }}</span>
-                    <span>•</span>
-                    <button data-thread-id="{{ thread.id }}" class="js-toggle-replies flex items-center gap-1 hover:text-primary font-bold">
-                        <span class="material-symbols-outlined text-sm">chat_bubble</span>
-                        {{ thread.replies|length }} comments
-                    </button>
-                    {% if session.get('user_name', 'Guest') == thread.author %}
-                    <span>•</span>
-                    <button type="button" onclick="openDeleteModal('{{ url_for('Thread.delete_thread', thread_id=thread.id) }}', 'thread')"
-                        class="flex items-center gap-1 text-red-500 hover:text-red-700 font-bold active:scale-95">
-                        <span class="material-symbols-outlined text-sm">delete</span>
-                        Delete
-                    </button>
-                    {% endif %}
+            <div class="relative z-10">
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-white/60 mb-4">Community Stats</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-3xl font-bold">4.2M</p>
+                        <p class="text-xs text-white/50 uppercase tracking-wider mt-1">Active Users</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold">12K+</p>
+                        <p class="text-xs text-white/50 uppercase tracking-wider mt-1">Communities</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Inline Replies Section (Hidden by default) -->
-        <div id="replies-{{ thread.id }}" class="hidden bg-surface-bright border-t border-slate-50 p-4 animate-in slide-in-from-top-2 duration-200">
-            <div class="space-y-4 max-h-[300px] overflow-y-auto mb-4 pr-2 custom-scrollbar">
-                {% for reply in thread.replies %}
-                <div class="flex gap-3">
-                    <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold">{{ reply.user_email[0]|upper }}</div>
-                    <div class="flex-1 bg-white p-3 rounded-2xl shadow-sm border border-slate-50">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="text-xs font-bold">@{{ reply.user_email }}</span>
-                            <span class="text-[10px] text-on-surface-variant">{{ reply.created_at }}</span>
+        <!-- Quick Links -->
+        <div class="nf-card p-5">
+            <h3 class="text-xs font-semibold text-[#A8A29E] uppercase tracking-wider mb-3">Quick Links</h3>
+            <div class="flex flex-col gap-2">
+                <a href="{{ url_for('Home.search_communities') }}" class="flex items-center gap-3 text-sm text-[#78716C] hover:text-[#C2410C] transition-colors py-1">
+                    <span class="material-symbols-outlined text-lg">search</span> Search communities
+                </a>
+                <a href="{{ url_for('Home.trending') }}" class="flex items-center gap-3 text-sm text-[#78716C] hover:text-[#C2410C] transition-colors py-1">
+                    <span class="material-symbols-outlined text-lg">whatshot</span> What's hot today
+                </a>
+                <a href="{{ url_for('Home.live') }}" class="flex items-center gap-3 text-sm text-[#78716C] hover:text-[#C2410C] transition-colors py-1">
+                    <span class="material-symbols-outlined text-lg">live_tv</span> Live events
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── MAIN FEED ────────────────────────────────────────────── -->
+    <main class="col-span-12 lg:col-span-9">
+        
+        <!-- Section Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-[#1C1917]">Popular Discussions</h2>
+                <p class="text-sm text-[#78716C] mt-1">Threads trending across all communities</p>
+            </div>
+            <button onclick="toggleModal()" class="nf-btn nf-btn-primary">
+                <span class="material-symbols-outlined text-lg">add</span>
+                New Thread
+            </button>
+        </div>
+
+        <!-- Thread List -->
+        <div class="space-y-4 stagger-children">
+            {% for thread in threads %}
+            <div class="thread-card overflow-hidden animate-fade-in-up">
+                <div class="p-5 flex items-start gap-4">
+                    <!-- Vote Sidebar -->
+                    <div class="flex flex-col items-center bg-[#FAFAF9] rounded-xl p-1.5 min-w-[52px]" id="vote-container-{{ thread.id }}">
+                        <button data-thread-id="{{ thread.id }}" data-vote="up" class="vote-btn js-vote-btn" id="upvote-{{ thread.id }}">
+                            <span class="material-symbols-outlined text-xl">arrow_drop_up</span>
+                        </button>
+                        <span class="font-bold text-base text-[#1C1917] py-0.5" id="votes-count-{{ thread.id }}">{{ thread.votes }}</span>
+                        <button data-thread-id="{{ thread.id }}" data-vote="down" class="vote-btn js-vote-btn" id="downvote-{{ thread.id }}">
+                            <span class="material-symbols-outlined text-xl">arrow_drop_down</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Thread Content -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between gap-2">
+                            <a href="{{ url_for('Thread.view_thread', thread_id=thread.id) }}" class="block group flex-1 min-w-0">
+                                <h4 class="text-base font-semibold text-[#1C1917] group-hover:text-[#C2410C] transition-colors mb-1 line-clamp-2">{{ thread.title }}</h4>
+                                <p class="text-sm text-[#78716C] line-clamp-2 mb-3">{{ thread.content }}</p>
+                            </a>
+                            {% if session.get('user_id') %}
+                            {{ render_actions_menu(thread, 'thread', session.get('user_id'), session.get('user_name', 'Guest') == thread.author, url_for('Thread.delete_thread', thread_id=thread.id)) }}
+                            {% endif %}
                         </div>
-                        <p class="text-xs text-on-surface leading-normal">{{ reply.content }}</p>
-                    {% if session.get('user_name', 'Guest') == reply.user_email %}
-                    <div class="mt-2 text-[10px]">
-                        <a href="{{ url_for('Thread.edit_reply', thread_id=thread.id, reply_id=reply.id) }}" class="font-bold text-on-surface-variant hover:text-primary">Edit</a>
-                    </div>
-                    {% endif %}
+
+                        {{ render_media(thread.media) }}
+                        {{ render_poll(thread, url_for('Thread.vote_thread_poll', thread_id=thread.id), session.get('user_id')) }}
+                        {{ render_notes(thread, 'thread', session.get('user_id')) }}
+
+                        <!-- Thread Meta -->
+                        <div class="flex items-center flex-wrap gap-x-3 gap-y-2 text-xs text-[#78716C] mt-3">
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-5 h-5 rounded-full bg-gradient-to-br from-[#C2410C] to-[#9a3412] flex items-center justify-center text-[10px] text-white font-bold">{{ thread.author[0]|upper }}</span>
+                                <span class="font-medium">@{{ thread.author }}</span>
+                            </span>
+                            <span class="text-[#E7E5E4]">·</span>
+                            <span>{{ thread.created_at }}</span>
+                            <span class="text-[#E7E5E4]">·</span>
+                            <button data-thread-id="{{ thread.id }}" class="js-toggle-replies flex items-center gap-1.5 hover:text-[#C2410C] font-semibold transition-colors">
+                                <span class="material-symbols-outlined text-base">chat_bubble_outline</span>
+                                {{ thread.replies|length }}
+                            </button>
+                            {% if session.get('user_name', 'Guest') == thread.author %}
+                            <span class="text-[#E7E5E4]">·</span>
+                            <form action="{{ url_for('Thread.delete_thread', thread_id=thread.id) }}" method="POST" onsubmit="return confirm('Delete this thread permanently?')" class="inline">
+                                <button type="submit" class="flex items-center gap-1 text-red-400 hover:text-red-600 font-semibold transition-colors">
+                                    <span class="material-symbols-outlined text-base">delete_outline</span>
+                                    Delete
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
-                {% else %}
-                <p class="text-center text-xs text-on-surface-variant py-4">No comments yet. Be the first to start the conversation!</p>
-                {% endfor %}
+
+                <!-- Inline Replies (Hidden by default) -->
+                <div id="replies-{{ thread.id }}" class="hidden bg-[#FAFAF9] border-t border-[#E7E5E4] p-5 animate-fade-in-up">
+                    <div class="space-y-3 max-h-[300px] overflow-y-auto mb-4 custom-scrollbar">
+                        {% for reply in thread.replies %}
+                        <div class="flex gap-3 animate-slide-in-right">
+                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#E7E5E4] to-[#D6D3D1] flex items-center justify-center text-[10px] font-bold text-[#44403C] flex-shrink-0">{{ reply.user_email[0]|upper }}</div>
+                            <div class="flex-1 bg-white p-3 rounded-2xl border border-[#E7E5E4]">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs font-semibold text-[#1C1917]">@{{ reply.user_email }}</span>
+                                    <span class="text-[10px] text-[#A8A29E]">{{ reply.created_at }}</span>
+                                </div>
+                                <p class="text-sm text-[#44403C] leading-relaxed">{{ reply.content }}</p>
+                                {% if session.get('user_name', 'Guest') == reply.user_email %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('Thread.edit_reply', thread_id=thread.id, reply_id=reply.id) }}" class="text-[10px] font-semibold text-[#C2410C] hover:underline">Edit</a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-6">
+                            <span class="material-symbols-outlined text-3xl text-[#D6D3D1] block mb-2">forum</span>
+                            <p class="text-sm text-[#A8A29E]">No comments yet. Start the conversation!</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Quick Reply -->
+                    <form action="{{ url_for('Thread.post_reply', thread_id=thread.id) }}" method="POST" class="flex gap-3">
+                        <input name="content" type="text" placeholder="Write a comment..." class="flex-1 text-sm rounded-full bg-white border border-[#E7E5E4] focus:ring-2 focus:ring-[#C2410C]/20 focus:border-[#C2410C] px-5 py-2.5 transition-all" required>
+                        <button type="submit" class="w-10 h-10 bg-[#C2410C] text-white rounded-full flex items-center justify-center hover:bg-[#9a3412] hover:scale-105 active:scale-95 transition-all shadow-md">
+                            <span class="material-symbols-outlined text-lg">send</span>
+                        </button>
+                    </form>
+                </div>
             </div>
-            
-            <!-- Quick Reply Form -->
-            <form action="{{ url_for('Thread.post_reply', thread_id=thread.id) }}" method="POST" class="flex gap-2">
-                <input name="content" type="text" placeholder="Write a comment..." class="flex-1 text-sm rounded-full bg-white border-slate-200 focus:ring-primary focus:border-primary px-4 py-2" required>
-                <button type="submit" class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
-                    <span class="material-symbols-outlined text-lg">send</span>
+            {% else %}
+            <!-- Empty State -->
+            <div class="nf-card p-12 text-center">
+                <div class="w-20 h-20 rounded-full bg-[#F5F5F4] flex items-center justify-center mx-auto mb-4">
+                    <span class="material-symbols-outlined text-4xl text-[#A8A29E]">forum</span>
+                </div>
+                <h3 class="text-lg font-semibold text-[#1C1917] mb-2">No threads yet</h3>
+                <p class="text-sm text-[#78716C] mb-6">Be the first to start a conversation!</p>
+                <button onclick="toggleModal()" class="nf-btn nf-btn-primary">
+                    <span class="material-symbols-outlined">add</span>
+                    Create Thread
                 </button>
-            </form>
+            </div>
+            {% endfor %}
         </div>
-    </div>
-    {% else %}
-    <p class="text-center text-on-surface-variant py-8">No threads yet. Be the first to start a conversation!</p>
-    {% endfor %}
-</div>
 
-<script>
-    const userVotes = {}; // Track user votes in memory for this session
+        <script>
+            const userVotes = {};
 
-    async function vote(threadId, action) {
-        // Prevent voting more than once in the same direction
-        if (userVotes[threadId] === action) {
-            alert(`You have already ${action}voted this thread.`);
-            return;
-        }
+            async function vote(threadId, action) {
+                if (userVotes[threadId] === action) {
+                    alert(`You have already ${action}voted this thread.`);
+                    return;
+                }
 
-        try {
-            const response = await fetch(`/thread/${threadId}/vote`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: action })
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                document.getElementById(`votes-count-${threadId}`).innerText = data.votes;
-                userVotes[threadId] = action; // Mark that user has voted
-                
-                // Visual feedback
-                const upBtn = document.getElementById(`upvote-${threadId}`);
-                const downBtn = document.getElementById(`downvote-${threadId}`);
-                
-                if (action === 'up') {
-                    upBtn.classList.add('text-primary');
-                    downBtn.classList.remove('text-primary');
-                } else {
-                    downBtn.classList.add('text-primary');
-                    upBtn.classList.remove('text-primary');
+                try {
+                    const response = await fetch(`/thread/${threadId}/vote`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: action })
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        document.getElementById(`votes-count-${threadId}`).innerText = data.votes;
+                        userVotes[threadId] = action;
+                        
+                        const upBtn = document.getElementById(`upvote-${threadId}`);
+                        const downBtn = document.getElementById(`downvote-${threadId}`);
+                        
+                        if (action === 'up') {
+                            upBtn.classList.add('active');
+                            downBtn.classList.remove('active');
+                        } else {
+                            downBtn.classList.add('active');
+                            upBtn.classList.remove('active');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error voting:', error);
                 }
             }
-        } catch (error) {
-            console.error('Error voting:', error);
-        }
-    }
 
-    function toggleReplies(threadId) {
-        const repliesDiv = document.getElementById(`replies-${threadId}`);
-        repliesDiv.classList.toggle('hidden');
-    }
+            function toggleReplies(threadId) {
+                const repliesDiv = document.getElementById(`replies-${threadId}`);
+                repliesDiv.classList.toggle('hidden');
+            }
 
-    // Wire up vote and reply-toggle buttons from their data-* attributes.
-    // This keeps Jinja expressions out of inline JS handlers.
-    document.querySelectorAll('.js-vote-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            vote(parseInt(btn.dataset.threadId, 10), btn.dataset.vote);
-        });
-    });
+            document.querySelectorAll('.js-vote-btn').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    vote(parseInt(btn.dataset.threadId, 10), btn.dataset.vote);
+                });
+            });
 
-    document.querySelectorAll('.js-toggle-replies').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            toggleReplies(parseInt(btn.dataset.threadId, 10));
-        });
-    });
-</script>
+            document.querySelectorAll('.js-toggle-replies').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    toggleReplies(parseInt(btn.dataset.threadId, 10));
+                });
+            });
+        </script>
+    </main>
 </div>
-</main>
 
-</div>
-<!-- Modal for Creating New Thread -->
-<div id="threadModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 backdrop-blur-sm p-4">
-    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
-        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-            <h2 class="font-headline-sm text-headline-sm">Create New Thread</h2>
-            <button onclick="toggleModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition-all">
-                <span class="material-symbols-outlined">close</span>
+<!-- ═══════════════════════════════════════════════════════════════
+     CREATE THREAD MODAL
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="threadModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-scale-in">
+        <div class="p-6 border-b border-[#E7E5E4] flex justify-between items-center">
+            <h2 class="text-lg font-bold text-[#1C1917]">Create New Thread</h2>
+            <button onclick="toggleModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#F5F5F4] transition-all">
+                <span class="material-symbols-outlined text-[#78716C]">close</span>
             </button>
         </div>
         <div class="p-6">
@@ -533,4 +519,3 @@
 </script>
 {{ composer_script() }}
 {% endblock %}
-  

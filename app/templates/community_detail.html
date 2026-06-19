@@ -101,7 +101,7 @@
                                 <button type="submit"
                                     class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition-all active:scale-95
                                     {% if post.user_vote == 'like' %}bg-green-50 border-green-200 text-green-700{% else %}border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
-                                    <span class="material-symbols-outlined text-base">thumb_up</span>
+                                    Upvote
                                     <span>{{ post.like_count }}</span>
                                 </button>
                             </form>
@@ -110,7 +110,7 @@
                                 <button type="submit"
                                         class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition-all
                                     {% if post.user_vote == 'dislike' %}bg-red-50 border-red-200 text-red-700{% else %}border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
-                                    <span class="material-symbols-outlined text-base">thumb_down</span>
+                                    Downvote
                                     <span>{{ post.dislike_count }}</span>
                                 </button>
                             </form>

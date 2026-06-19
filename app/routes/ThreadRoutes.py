@@ -18,6 +18,7 @@ class ThreadRoutes:
         self.bp.route("/community/<category_name>")(self.view_community)
         self.bp.route("/thread/<int:thread_id>")(self.view_thread)
         self.bp.route("/thread/<int:thread_id>/reply", methods=["POST"])(self.post_reply)
+        self.bp.route("/thread/<int:thread_id>/reply/<int:reply_id>/vote", methods=["POST"])(self.vote_reply)
         self.bp.route("/thread/<int:thread_id>/reply/<int:reply_id>/edit", methods=["GET", "POST"])(self.edit_reply)
         self.bp.route("/thread/<int:thread_id>/edit", methods=["GET", "POST"])(self.edit_thread)
         self.bp.route("/thread/<int:thread_id>/vote", methods=["POST"])(self.vote_thread)
@@ -71,7 +72,28 @@ class ThreadRoutes:
                 flash("Thread not found!", "danger")
                 return redirect(url_for("Home.home"))
             
-            replies = db.fetch_all("SELECT * FROM replies WHERE thread_id = %s ORDER BY created_at ASC", (thread_id,))
+            replies = db.fetch_all(
+                """
+                SELECT r.*, 
+                    COALESCE((SELECT COUNT(*) FROM reply_votes rv WHERE rv.reply_id = r.id AND rv.vote_type = 'like'), 0) AS like_count,
+                    COALESCE((SELECT COUNT(*) FROM reply_votes rv WHERE rv.reply_id = r.id AND rv.vote_type = 'dislike'), 0) AS dislike_count
+                FROM replies r
+                WHERE r.thread_id = %s
+                ORDER BY r.created_at ASC
+                """,
+                (thread_id,)
+            )
+            user_id = session.get("user_id")
+            if user_id:
+                for reply in replies:
+                    user_vote = db.fetch_one(
+                        "SELECT vote_type FROM reply_votes WHERE reply_id = %s AND user_id = %s",
+                        (reply['id'], user_id)
+                    )
+                    reply['user_vote'] = user_vote['vote_type'] if user_vote else None
+            else:
+                for reply in replies:
+                    reply['user_vote'] = None
             attach_media_and_poll(db, thread, "thread", session.get("user_id"))
             attach_notes(db, thread, "thread", session.get("user_id"))
             db.close()
@@ -135,6 +157,42 @@ class ThreadRoutes:
         except Exception as e:
             flash(f"Error editing reply: {e}", "danger")
             return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
+
+    @login_required
+    def vote_reply(self, thread_id, reply_id):
+        user_id = session.get("user_id")
+        vote_type = request.form.get("vote_type")
+        if vote_type not in ("like", "dislike"):
+            flash("Invalid vote.", "warning")
+            return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
+
+        db = Database()
+        reply = db.fetch_one("SELECT * FROM replies WHERE id = %s AND thread_id = %s", (reply_id, thread_id))
+        if not reply:
+            db.close()
+            flash("Reply not found.", "danger")
+            return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
+
+        existing = db.fetch_one(
+            "SELECT * FROM reply_votes WHERE reply_id = %s AND user_id = %s",
+            (reply_id, user_id)
+        )
+
+        if existing is None:
+            db.execute(
+                "INSERT INTO reply_votes (user_id, reply_id, vote_type) VALUES (%s, %s, %s)",
+                (user_id, reply_id, vote_type)
+            )
+        elif existing['vote_type'] == vote_type:
+            db.execute("DELETE FROM reply_votes WHERE id = %s", (existing['id'],))
+        else:
+            db.execute(
+                "UPDATE reply_votes SET vote_type = %s WHERE id = %s",
+                (vote_type, existing['id'])
+            )
+
+        db.close()
+        return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))
 
     def edit_thread(self, thread_id):
         try:

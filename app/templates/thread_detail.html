@@ -129,13 +129,20 @@
                 
                 <!-- Compact Action Bar -->
                 <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-1 group/btn cursor-pointer">
-                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/btn:text-primary transition-all">arrow_drop_up</span>
-                        <span class="text-xs font-semibold text-on-surface-variant group-hover/btn:text-on-surface">0</span>
-                    </div>
-                    <div class="flex items-center gap-1 group/btn cursor-pointer">
-                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/btn:text-primary transition-all">arrow_drop_down</span>
-                    </div>
+                    <form action="{{ url_for('Thread.vote_reply', thread_id=thread.id, reply_id=reply.id) }}" method="POST" class="flex items-center gap-1">
+                        <input type="hidden" name="vote_type" value="like">
+                        <button type="submit" class="flex items-center gap-1 text-xs font-semibold text-on-surface-variant hover:text-primary transition-all">
+                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/btn:text-primary transition-all">arrow_drop_up</span>
+                            <span class="text-xs font-semibold text-on-surface-variant group-hover/btn:text-on-surface">{{ reply.like_count }}</span>
+                        </button>
+                    </form>
+                    <form action="{{ url_for('Thread.vote_reply', thread_id=thread.id, reply_id=reply.id) }}" method="POST" class="flex items-center gap-1">
+                        <input type="hidden" name="vote_type" value="dislike">
+                        <button type="submit" class="flex items-center gap-1 text-xs font-semibold text-on-surface-variant hover:text-primary transition-all">
+                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/btn:text-primary transition-all">arrow_drop_down</span>
+                            <span class="text-xs font-semibold text-on-surface-variant group-hover/btn:text-on-surface">{{ reply.dislike_count }}</span>
+                        </button>
+                    </form>
                     <button class="text-xs font-bold text-on-surface-variant hover:bg-slate-100 px-3 py-1.5 rounded-full transition-all">Reply</button>
                     {% if session.get('user_name', 'Guest') == reply.user_email %}
                     <a href="{{ url_for('Thread.edit_reply', thread_id=thread.id, reply_id=reply.id) }}" class="text-xs font-bold text-on-surface-variant hover:text-primary px-3 py-1.5 rounded-full transition-all">Edit</a>

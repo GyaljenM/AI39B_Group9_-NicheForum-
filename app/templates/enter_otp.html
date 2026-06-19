@@ -75,15 +75,24 @@
                 </button>
             </form>
 
-            <div class="mt-6 pt-6 border-t border-slate-100 text-center">
-                <p class="text-sm text-slate-500 font-medium mb-3">Didn't receive a code?</p>
-                <div class="flex gap-3 justify-center">
-                    <a href="{{ url_for('Auth.register') }}" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-primary transition-all">
+            <div class="mt-6 pt-6 border-t border-slate-100">
+                <p class="text-sm text-slate-500 font-medium mb-3 text-center">Didn't receive a code?</p>
+                <form method="POST" action="{{ url_for('Auth.resend_otp') }}" class="mb-3">
+                    <input type="hidden" name="email" value="{{ email }}">
+                    <button 
+                        type="submit" 
+                        class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-base">send</span>
+                        Resend Code
+                    </button>
+                </form>
+                <div class="flex gap-3 justify-center text-sm">
+                    <a href="{{ url_for('Auth.register') }}" class="inline-flex items-center font-bold text-slate-400 hover:text-primary transition-all">
                         <span class="material-symbols-outlined mr-1 text-base">refresh</span>
-                        Try Again
+                        New Registration
                     </a>
                     <span class="text-slate-300">•</span>
-                    <a href="{{ url_for('Auth.login') }}" class="inline-flex items-center text-sm font-bold text-primary hover:underline transition-all">
+                    <a href="{{ url_for('Auth.login') }}" class="inline-flex items-center font-bold text-primary hover:underline transition-all">
                         <span class="material-symbols-outlined mr-1 text-base">arrow_back</span>
                         Back to Login
                     </a>

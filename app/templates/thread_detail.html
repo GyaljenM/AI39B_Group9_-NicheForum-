@@ -15,16 +15,16 @@
     </nav>
 
     <!-- Main Thread Content -->
-    <article class="bg-white rounded-[32px] shadow-xl overflow-hidden border border-slate-100">
+        <article class="bg-white rounded-[32px] overflow-hidden border border-slate-100">
         <div class="p-8 md:p-12">
             <div class="flex items-start gap-6">
                 <!-- Vote Sidebar -->
-                <div class="hidden md:flex flex-col items-center gap-2 p-3 bg-surface-container rounded-2xl min-w-[64px]">
-                    <button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white hover:text-primary transition-all">
+                    <div class="hidden md:flex flex-col items-center gap-2 p-3 bg-surface-container rounded min-w-[64px]">
+                        <button class="w-10 h-10 flex items-center justify-center rounded hover:bg-white hover:text-primary transition-all">
                         <span class="material-symbols-outlined text-3xl">arrow_drop_up</span>
                     </button>
                     <span class="text-xl font-bold">{{ thread.votes }}</span>
-                    <button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white transition-all">
+                        <button class="w-10 h-10 flex items-center justify-center rounded hover:bg-white transition-all">
                         <span class="material-symbols-outlined text-3xl">arrow_drop_down</span>
                     </button>
                 </div>
@@ -43,7 +43,7 @@
                         </span>
                     </div>
 
-                    <h1 class="text-3xl md:text-4xl font-black text-on-background mb-6 leading-tight">
+                    <h1 class="text-3xl md:text-4xl font-semibold text-on-background mb-6 leading-tight">
                         {{ thread.title }}
                     </h1>
 
@@ -88,9 +88,9 @@
         <div class="bg-surface-bright p-8 md:p-12 border-t border-slate-100">
             <h3 class="text-xl font-bold mb-6">Join the conversation</h3>
             <form action="{{ url_for('Thread.post_reply', thread_id=thread.id) }}" method="POST" class="space-y-4">
-                <textarea name="content" rows="4" placeholder="What are your thoughts?" class="w-full rounded-2xl border-slate-200 focus:ring-primary focus:border-primary p-6 shadow-inner" required></textarea>
+                <textarea name="content" rows="4" placeholder="What are your thoughts?" class="w-full rounded-2xl border-slate-200 focus:ring-primary focus:border-primary p-6" required></textarea>
                 <div class="flex justify-end">
-                    <button type="submit" class="px-8 py-4 bg-primary text-white rounded-xl font-label-bold hover:bg-primary-container transition-all shadow-lg active:scale-95">
+                    <button type="submit" class="px-8 py-4 bg-primary text-white rounded font-medium hover:bg-primary-container transition-all">
                         Post Reply
                     </button>
                 </div>

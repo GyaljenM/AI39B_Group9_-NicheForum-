@@ -187,6 +187,43 @@
 .reveal-delay-4 { transition-delay: 0.4s; }
 .reveal-delay-5 { transition-delay: 0.5s; }
 
+/* ── Flash Ticker (single horizontal scroll, then disappears) ───── */
+@keyframes flash-marquee {
+    from { transform: translateX(100vw); }
+    to   { transform: translateX(-100%); }
+}
+
+.flash-ticker {
+    position: fixed;
+    top: 4rem;                 /* sits just below the fixed header (h-16) */
+    left: 0;
+    right: 0;
+    z-index: 60;
+    width: 100%;               /* full-length horizontal bar */
+    overflow: hidden;          /* clip the scrolling text */
+    white-space: nowrap;
+    pointer-events: none;      /* never blocks clicks underneath */
+}
+
+.flash-ticker__bar {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 0.3rem 0;         /* thin bar */
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.flash-ticker__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+    font-size: 0.8rem;         /* a bit smaller */
+    /* start off-screen right; scroll across once; hold the end state (off-screen left) */
+    transform: translateX(100vw);
+    animation: flash-marquee 7s linear forwards;
+}
+
 /* ── Live Pulse Indicator ───────────────────────────────────────── */
 .live-dot {
     width: 8px;

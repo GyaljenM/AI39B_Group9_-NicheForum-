@@ -175,7 +175,7 @@
      • Report → opens the shared report modal (defined once in base.html).
      • Delete → existing owner-only delete form.
    Click-to-toggle (mobile friendly); base.html closes open menus on outside click. #}
-{% macro render_actions_menu(item, kind, logged_in, is_owner=False, delete_action=None) %}
+{% macro render_actions_menu(item, kind, logged_in, is_owner=False, delete_action=None, edit_action=None) %}
 {% if kind == 'post' %}
     {% set report_action = url_for('Home.report_post', post_id=item.id) %}
 {% else %}
@@ -189,7 +189,6 @@
     </button>
     <div id="{{ menu_id }}" data-kebab
          class="hidden absolute right-0 top-full mt-2 z-30 bg-white border border-slate-100 rounded-xl shadow-xl py-2 min-w-[200px]">
-        class="hidden absolute right-0 top-full mt-2 z-30 bg-white border border-slate-100 rounded py-2 min-w-[200px]">
         <button type="button" onclick="openNotesPanel('notes-{{ kind }}-{{ item.id }}')"
             class="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-slate-50 flex items-center gap-2 transition-colors">
             <span class="material-symbols-outlined text-base text-amber-600">fact_check</span>
@@ -201,6 +200,12 @@
             <span class="material-symbols-outlined text-base text-slate-500">flag</span>
             Report {{ 'post' if kind == 'post' else 'thread' }}
         </button>
+        {% endif %}
+        {% if is_owner and edit_action %}
+        <a href="{{ edit_action }}" class="w-full block text-left px-4 py-2 text-sm text-on-surface hover:bg-slate-50 flex items-center gap-2 transition-colors">
+            <span class="material-symbols-outlined text-base">edit</span>
+            Edit {{ 'post' if kind == 'post' else 'thread' }}
+        </a>
         {% endif %}
         {% if is_owner and delete_action %}
         <div class="my-1 border-t border-slate-100"></div>

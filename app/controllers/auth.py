@@ -42,7 +42,14 @@ class AuthController:
             else:
                 flash("Incorrect email or password.", "danger")
 
-        return render_template("login.html")
+        # Fetch live stats for auth page displays
+        db = Database()
+        total_communities = db.fetch_one("SELECT COUNT(*) AS count FROM communities")['count'] or 0
+        total_members = db.fetch_one("SELECT COUNT(*) AS count FROM users")['count'] or 0
+        online_now = db.fetch_one("SELECT COUNT(*) AS count FROM users WHERE is_active = 1")['count'] or 0
+        db.close()
+
+        return render_template("login.html", total_communities=total_communities, total_members=total_members, online_now=online_now)
     
     def register(self):
         if request.method == "POST":
@@ -74,20 +81,15 @@ class AuthController:
                 # Try sending the OTP email separately so email failures don't break registration
                 email_sent = False
                 try:
-                    email_sent = EmailService.send_otp(email, otp_code)
-                    if email_sent:
-                        print(f"DEBUG: OTP email sent successfully to {email}")
-                    else:
-                        print(f"DEBUG: OTP email send returned False for {email}")
+                    EmailService.send_otp(email, otp_code)
+                    email_sent = True
                 except Exception as email_err:
                     print(f"WARNING: Failed to send OTP email: {email_err}")
-                    import traceback
-                    traceback.print_exc()
 
                 if email_sent:
-                    flash("Registration successful! A verification code has been sent to your email. Check your inbox and spam folder.", "info")
+                    flash("Registration successful! A verification code was sent to your email.", "info")
                 else:
-                    flash("Registration successful! We had trouble sending the email. Please check your email and spam folder. If you don't receive it within a few minutes, contact support.", "warning")
+                    flash("Registration successful! Check your email for the verification code. If not found, contact support.", "warning")
 
                 return redirect(url_for("Auth.verify_registration", email=email))
             except Exception as e:
@@ -101,7 +103,14 @@ class AuthController:
                 traceback.print_exc()
                 flash("An error occurred during registration. Please try again.", "danger")
 
-        return render_template("register.html")
+        # Fetch live stats for auth page displays
+        db = Database()
+        total_communities = db.fetch_one("SELECT COUNT(*) AS count FROM communities")['count'] or 0
+        total_members = db.fetch_one("SELECT COUNT(*) AS count FROM users")['count'] or 0
+        online_now = db.fetch_one("SELECT COUNT(*) AS count FROM users WHERE is_active = 1")['count'] or 0
+        db.close()
+
+        return render_template("register.html", total_communities=total_communities, total_members=total_members, online_now=online_now)
 
     def forgot_password(self):
         if request.method == "POST":
@@ -225,66 +234,4 @@ class AuthController:
             return redirect(url_for("Auth.login"))
 
         # For GET or other, redirect to register
-        return redirect(url_for("Auth.register"))
-
-    def resend_otp(self):
-        """Resend verification OTP to user's email."""
-        if request.method == "POST":
-            email = request.form.get("email")
-            
-            if not email:
-                flash("Email address is required.", "danger")
-                return redirect(url_for("Auth.register"))
-            
-            db = Database()
-            user = db.fetch_one("SELECT * FROM users WHERE email = %s", (email,))
-            
-            if not user:
-                # Don't reveal whether email exists (security)
-                flash("If an account with that email exists, a new code will be sent.", "info")
-                db.close()
-                return redirect(url_for("Auth.verify_registration", email=email))
-            
-            # Check if already verified
-            if user.get("is_verified"):
-                flash("This account is already verified! You can now login.", "success")
-                db.close()
-                return redirect(url_for("Auth.login"))
-            
-            # Generate new OTP
-            otp_code = EmailService.generate_secure_otp()
-            expiry_dt = datetime.utcnow() + timedelta(minutes=5)
-            
-            try:
-                db.execute(
-                    "UPDATE users SET verification_token = %s, token_expires_at = %s WHERE email = %s",
-                    (otp_code, expiry_dt, email)
-                )
-                db.close()
-                
-                # Send new OTP email
-                email_sent = False
-                try:
-                    email_sent = EmailService.send_otp(email, otp_code)
-                    if email_sent:
-                        print(f"DEBUG: New OTP sent to {email}")
-                except Exception as email_err:
-                    print(f"WARNING: Failed to resend OTP: {email_err}")
-                
-                if email_sent:
-                    flash("A new verification code has been sent to your email. Check inbox and spam folder.", "info")
-                else:
-                    flash("We had trouble sending the code. Please try again in a few moments.", "warning")
-                    
-            except Exception as e:
-                if db:
-                    try:
-                        db.close()
-                    except:
-                        pass
-                print(f"ERROR: Failed to resend OTP: {e}")
-                flash("An error occurred. Please try again.", "danger")
-            
-            return redirect(url_for("Auth.verify_registration", email=email))
-        
         return redirect(url_for("Auth.register"))

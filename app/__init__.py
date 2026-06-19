@@ -32,7 +32,13 @@ def create_app():
     # Cap upload size (images/videos attached to posts & threads) at 50 MB.
     app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 
-    Database.create_tables()
+    # Best-effort schema setup. If MySQL isn't running we still boot the server
+    # so the live scoreboard (/live, /api/live) — which needs no database — keeps
+    # working; the forum features will surface their own errors if used.
+    try:
+        Database.create_tables()
+    except Exception as exc:
+        print(f"[startup] Skipping create_tables (database unavailable): {exc}")
     
     # Configure word censor with banned words
     WordCensor.BANNED_WORDS = [

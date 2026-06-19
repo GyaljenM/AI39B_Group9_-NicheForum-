@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Create Community{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-12 px-6">
+    <div class="nf-card p-8">
+        <h1 class="text-2xl font-bold mb-4">Create a new community</h1>
+        <p class="text-sm text-[#78716C] mb-6">Choose a name and a short description for your community.</p>
+        <form action="{{ url_for('Home.create_community') }}" method="POST">
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">Community name</label>
+                <input name="name" type="text" class="w-full p-3 border rounded-lg" placeholder="e.g. Football Leagues" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">Category</label>
+                <select name="category" class="w-full p-3 border rounded-lg">
+                    {% for c in categories %}
+                    <option value="{{ c }}">{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">Description</label>
+                <textarea name="description" rows="4" class="w-full p-3 border rounded-lg" placeholder="Short description (optional)"></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button type="submit" class="comm-join-btn">Create</button>
+                <a href="{{ url_for('Home.communities') }}" class="comm-view-link">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

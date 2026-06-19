@@ -16,9 +16,6 @@ class AuthRoutes:
         self.bp.route("/verify-registration", methods=["GET","POST"])(
             self.controller.verify_registration
         )
-        self.bp.route("/resend-otp", methods=["POST"])(
-            self.controller.resend_otp
-        )
         self.bp.route("/forgot-password",methods=["GET","POST"])(
             self.controller.forgot_password
         )

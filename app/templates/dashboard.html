@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from '_composer.html' import composer, composer_script %}
+{% from '_post_parts.html' import render_media, render_poll, render_actions_menu, render_notes %}
 
 {% block title %}Dashboard — NicheForum{% endblock %}
 
@@ -176,6 +177,30 @@
     display: flex;
     align-items: center;
     gap: 20px;
+    transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.dark .dash-cta {
+    background: linear-gradient(135deg, #2A2520, #3C3835);
+    border-color: rgba(194, 65, 12, 0.25);
+}
+
+.dash-cta h3 {
+    color: #1C1917;
+    transition: color 0.3s ease;
+}
+
+.dark .dash-cta h3 {
+    color: #FFFFFF;
+}
+
+.dash-cta p {
+    color: #78716C;
+    transition: color 0.3s ease;
+}
+
+.dark .dash-cta p {
+    color: #A8A29E;
 }
 
 .dash-cta-icon {
@@ -492,60 +517,11 @@
                     </div>
                     <span class="dash-quick-label">Live</span>
                 </a>
-                <a href="{{ url_for('Home.profile') }}" class="dash-quick-btn">
-                    <div class="dash-quick-icon" style="background:rgba(129,140,248,0.2);">
-                        <span class="material-symbols-outlined text-indigo-300 text-2xl" style="font-variation-settings:'FILL' 1;">person</span>
-                    </div>
-                    <span class="dash-quick-label">Profile</span>
-                </a>
+
             </div>
         </div>
     </div>
 </section>
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     STATS STRIP
-     ═══════════════════════════════════════════════════════════════════ -->
-<div class="max-w-[1280px] mx-auto px-6 -mt-6 relative z-10 mb-8">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="dash-stat">
-            <div class="dash-stat-icon" style="background:rgba(194,65,12,0.08);">
-                <span class="material-symbols-outlined text-[#C2410C] text-xl" style="font-variation-settings:'FILL' 1;">article</span>
-            </div>
-            <div>
-                <p class="dash-stat-num">{{ posts|length }}</p>
-                <p class="dash-stat-label">Recent Posts</p>
-            </div>
-        </div>
-        <div class="dash-stat">
-            <div class="dash-stat-icon" style="background:rgba(249,115,22,0.08);">
-                <span class="material-symbols-outlined text-orange-500 text-xl" style="font-variation-settings:'FILL' 1;">hub</span>
-            </div>
-            <div>
-                <p class="dash-stat-num">{{ communities|length }}</p>
-                <p class="dash-stat-label">Communities</p>
-            </div>
-        </div>
-        <div class="dash-stat">
-            <div class="dash-stat-icon" style="background:rgba(74,222,128,0.08);">
-                <span class="material-symbols-outlined text-green-500 text-xl" style="font-variation-settings:'FILL' 1;">local_fire_department</span>
-            </div>
-            <div>
-                <p class="dash-stat-num">7</p>
-                <p class="dash-stat-label">Day Streak</p>
-            </div>
-        </div>
-        <div class="dash-stat">
-            <div class="dash-stat-icon" style="background:rgba(129,140,248,0.08);">
-                <span class="material-symbols-outlined text-indigo-500 text-xl" style="font-variation-settings:'FILL' 1;">emoji_events</span>
-            </div>
-            <div>
-                <p class="dash-stat-num">1.2K</p>
-                <p class="dash-stat-label">Reputation</p>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- ═══════════════════════════════════════════════════════════════════
      MAIN CONTENT — FEED + SIDEBAR
@@ -595,20 +571,15 @@
                             <span class="feed-time">{{ post.created_at }}</span>
                         </div>
 
-                        {% if session.get('user_id') == post.user_id %}
-                        <div style="position:relative;">
-                            <button class="feed-menu-btn" onclick="this.nextElementSibling.classList.toggle('show')">
-                                <span class="material-symbols-outlined text-lg">more_vert</span>
-                            </button>
-                            <div class="feed-dropdown">
-                                <form action="{{ url_for('Home.delete_post', post_id=post.id) }}" method="POST" onsubmit="return confirm('Delete this post permanently?')">
-                                    <button type="submit">
-                                        <span class="material-symbols-outlined text-sm">delete</span>
-                                        Delete Post
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+                        {% if session.get('user_id') %}
+                            {{ render_actions_menu(
+                                post,
+                                'post',
+                                session.get('user_id'),
+                                session.get('user_id') == post.user_id,
+                                url_for('Home.delete_post', post_id=post.id),
+                                url_for('Home.edit_post', post_id=post.id)
+                            ) }}
                         {% endif %}
                     </div>
 
@@ -619,6 +590,68 @@
 
                     <!-- Excerpt -->
                     <p class="feed-excerpt">{{ post.content }}</p>
+
+                    {{ render_media(post.media) }}
+                    {{ render_poll(post, url_for('Home.vote_poll', post_id=post.id), session.get('user_id')) }}
+                    {{ render_notes(post, 'post', session.get('user_id')) }}
+
+                    <div class="flex flex-wrap gap-2 items-center mt-4 pt-4 border-t border-slate-100">
+                        <form action="{{ url_for('Home.vote_post', post_id=post.id) }}" method="POST">
+                            <input type="hidden" name="vote_type" value="like">
+                            <button type="submit"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition-all active:scale-95
+                                {% if post.user_vote == 'like' %}bg-green-50 border-green-200 text-green-700{% else %}border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
+                                <span class="material-symbols-outlined text-base">thumb_up</span>
+                                <span>{{ post.like_count }}</span>
+                            </button>
+                        </form>
+                        <form action="{{ url_for('Home.vote_post', post_id=post.id) }}" method="POST">
+                            <input type="hidden" name="vote_type" value="dislike">
+                            <button type="submit"
+                                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition-all
+                                {% if post.user_vote == 'dislike' %}bg-red-50 border-red-200 text-red-700{% else %}border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
+                                <span class="material-symbols-outlined text-base">thumb_down</span>
+                                <span>{{ post.dislike_count }}</span>
+                            </button>
+                        </form>
+                        <button type="button" onclick="document.getElementById('replies-{{ post.id }}').classList.toggle('hidden')"
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm transition-all">
+                            <span class="material-symbols-outlined text-base">chat_bubble</span>
+                            <span>{{ post.comments|length }} {{ 'Reply' if post.comments|length == 1 else 'Replies' }}</span>
+                        </button>
+                    </div>
+
+                    <div id="replies-{{ post.id }}" class="hidden mt-4 space-y-4">
+                        {% for comment in post.comments %}
+                        <div class="flex gap-3">
+                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-sm shrink-0">
+                                {{ comment.user_name[0]|upper }}
+                            </div>
+                            <div class="flex-1 bg-slate-50 rounded-xl px-4 py-2">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <p class="text-sm font-semibold">{{ comment.user_name }}</p>
+                                    <p class="text-xs text-slate-400">{{ comment.created_at }}</p>
+                                </div>
+                                <p class="text-sm text-on-surface-variant whitespace-pre-line">{{ comment.content }}</p>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-sm text-slate-400 pl-1">No replies yet. Start the conversation!</p>
+                        {% endfor %}
+
+                        {% if session.get('user_id') %}
+                        <form action="{{ url_for('Home.comment_post', post_id=post.id) }}" method="POST" class="flex gap-2 pt-2">
+                            <input type="text" name="content" placeholder="Write a reply..." required
+                                class="flex-1 px-4 py-2 rounded-full border border-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm">
+                            <button type="submit" class="px-5 py-2 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary-container transition-all">
+                                Reply
+                            </button>
+                        </form>
+                        {% else %}
+                        <p class="text-sm text-slate-400 pl-1">Please log in to reply.</p>
+                        {% endif %}
+
+                    </div>
 
                     <!-- Footer: Author + Read More -->
                     <div class="feed-meta">
@@ -654,21 +687,6 @@
 
     <!-- ── RIGHT: Sidebar ───────────────────────────────────────── -->
     <aside class="dash-sidebar col-span-12 lg:col-span-4 flex flex-col gap-6">
-
-        <!-- Profile Mini Card -->
-        <div class="nf-card overflow-hidden">
-            <div style="height:60px;background:linear-gradient(135deg,#C2410C,#EA580C);"></div>
-            <div class="profile-mini">
-                <div class="profile-mini-avatar" style="margin-top:-50px;border:4px solid white;">
-                    {{ user_name[0]|upper }}
-                </div>
-                <h3 class="text-base font-bold text-[#1C1917]">{{ user_name }}</h3>
-                <p class="text-xs text-[#A8A29E] mt-1">Active member</p>
-                <a href="{{ url_for('Home.profile') }}" class="mt-4 block w-full py-2.5 text-center text-[#C2410C] font-semibold text-sm border border-[#C2410C]/20 rounded-xl hover:bg-[#C2410C]/5 transition-all">
-                    View Profile
-                </a>
-            </div>
-        </div>
 
         <!-- Your Communities -->
         <div class="nf-card p-6">
@@ -719,43 +737,13 @@
                     <span class="text-sm font-bold text-[#A8A29E] mt-0.5">01</span>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-semibold text-[#1C1917] group-hover:text-[#C2410C] transition-colors">#WorldCup2026</p>
-                        <p class="text-xs text-[#A8A29E]">24.5K posts</p>
                     </div>
                 </a>
-                <a href="{{ url_for('Home.trending') }}" class="flex items-start gap-3 p-3 rounded-xl hover:bg-[#F5F5F4] transition-all group">
-                    <span class="text-sm font-bold text-[#A8A29E] mt-0.5">02</span>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-[#1C1917] group-hover:text-[#C2410C] transition-colors">#ChampionsLeague</p>
-                        <p class="text-xs text-[#A8A29E]">18.2K posts</p>
-                    </div>
-                </a>
-                <a href="{{ url_for('Home.trending') }}" class="flex items-start gap-3 p-3 rounded-xl hover:bg-[#F5F5F4] transition-all group">
-                    <span class="text-sm font-bold text-[#A8A29E] mt-0.5">03</span>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-[#1C1917] group-hover:text-[#C2410C] transition-colors">#NBAPLayoffs</p>
-                        <p class="text-xs text-[#A8A29E]">12.8K posts</p>
-                    </div>
-                </a>
+                {# Only World Cup trending shown on home page per request #}
             </div>
         </div>
 
-        <!-- Quick Links -->
-        <div class="nf-card p-6">
-            <div class="dash-section-head mb-4">
-                <div class="dash-section-icon" style="background:rgba(99,102,241,0.1);">
-                    <span class="material-symbols-outlined text-indigo-500 text-base">explore</span>
-                </div>
-                <h2>Explore</h2>
-            </div>
-            <div class="flex flex-col gap-2">
-                <a href="{{ url_for('Home.live') }}" class="flex items-center gap-3 text-sm text-[#78716C] hover:text-[#C2410C] transition-colors py-1.5">
-                    <span class="material-symbols-outlined text-lg">sensors</span> Live events now
-                </a>
-                <a href="{{ url_for('Home.search_communities') }}" class="flex items-center gap-3 text-sm text-[#78716C] hover:text-[#C2410C] transition-colors py-1.5">
-                    <span class="material-symbols-outlined text-lg">search</span> Search communities
-                </a>
-            </div>
-        </div>
+        <!-- Removed Explore quick links as requested -->
     </aside>
 </div>
 

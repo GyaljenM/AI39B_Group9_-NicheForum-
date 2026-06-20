@@ -22,18 +22,14 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
     # ── GET / (home feed) ───────────────────────────────────────────────────
 
     def test_home_renders_recent_posts(self):
-        """GET / renders home.html with recent posts."""
+        """GET / renders index.html with recent posts (anonymous visitor)."""
+        self.logout()
         db = self.mock_database(MODULE)
-        posts = [
-            {
-                "id": 1,
-                "content": "First post",
-                "author_id": 1,
-                "community_id": 1,
-                "created_at": datetime.datetime.utcnow(),
-            }
-        ]
-        db.fetch_all.return_value = posts
+        # The home view loops over posts/threads and runs many per-item queries
+        # via fetch_all (comments, media, notes, …). Returning [] keeps those
+        # loops empty. The COUNT(*) hero-stat queries go through fetch_one.
+        db.fetch_all.return_value = []
+        db.fetch_one.return_value = {"count": 0}
         r = self.mock_render(MODULE)
 
         resp = self.client.get("/")
@@ -52,6 +48,7 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
             {"id": 2, "name": "Basketball", "owner_id": 2},
         ]
         db.fetch_all.return_value = communities
+        db.fetch_one.return_value = {"count": 0}
         r = self.mock_render(MODULE)
 
         resp = self.client.get("/communities")
@@ -61,14 +58,14 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         self.assertEqual(r.call_args.args[0], "communities.html")
         self.assertEqual(r.call_args.kwargs["communities"], communities)
 
-    # ── POST /create-community ──────────────────────────────────────────────
+    # ── POST /communities/create ────────────────────────────────────────────
 
     def test_create_community_requires_login(self):
-        """POST /create-community requires login."""
+        """POST /communities/create requires login."""
         self.logout()
         self.mock_database(MODULE)
 
-        resp = self.client.post("/create-community", follow_redirects=False)
+        resp = self.client.post("/communities/create", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
 
@@ -76,9 +73,13 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         """Valid community creation inserts row and redirects."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
+        db.fetch_one.side_effect = [
+            None,        # duplicate-name check: no existing community
+            {"id": 10},  # LAST_INSERT_ID() for the new community
+        ]
 
         resp = self.client.post(
-            "/create-community",
+            "/communities/create",
             data={"name": "New Community", "description": "About the new community"},
             follow_redirects=False
         )
@@ -94,7 +95,7 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         db.fetch_one.return_value = {"id": 1, "name": "Existing"}
 
         resp = self.client.post(
-            "/create-community",
+            "/communities/create",
             data={"name": "Existing", "description": "Duplicate"},
             follow_redirects=False
         )
@@ -104,16 +105,16 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
         self.assertFalse(any("INSERT INTO communities" in s for s in execute_calls))
 
-    # ── GET /search-communities ─────────────────────────────────────────────
+    # ── GET /search ──────────────────────────────────────────────────────────
 
     def test_search_communities_by_name(self):
-        """GET /search-communities?q=football finds matching communities."""
+        """GET /search?q=football finds matching communities."""
         db = self.mock_database(MODULE)
         communities = [{"id": 1, "name": "Football League"}]
         db.fetch_all.return_value = communities
         r = self.mock_render(MODULE)
 
-        resp = self.client.get("/search-communities", query_string={"q": "football"})
+        resp = self.client.get("/search", query_string={"q": "football"})
 
         self.assertEqual(resp.status_code, 200)
         r.assert_called()
@@ -123,10 +124,10 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
     def test_community_detail_renders(self):
         """GET /community/<id> renders community detail page."""
         db = self.mock_database(MODULE)
-        community = {"id": 1, "name": "Football", "owner_id": 1}
-        posts = [{"id": 1, "content": "Post 1"}]
+        community = {"id": 1, "name": "Football", "owner_id": 1, "owner_name": "Alice"}
         db.fetch_one.return_value = community
-        db.fetch_all.return_value = posts
+        # No posts -> skip the per-post fan-out queries.
+        db.fetch_all.return_value = []
         r = self.mock_render(MODULE)
 
         resp = self.client.get("/community/1")
@@ -135,14 +136,14 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         r.assert_called()
         self.assertEqual(r.call_args.args[0], "community_detail.html")
 
-    def test_community_detail_not_found_redirects(self):
-        """GET /community/<nonexistent> redirects."""
+    def test_community_detail_not_found_returns_404(self):
+        """GET /community/<nonexistent> returns 404."""
         db = self.mock_database(MODULE)
         db.fetch_one.return_value = None
 
         resp = self.client.get("/community/999", follow_redirects=False)
 
-        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.status_code, 404)
 
     # ── POST /community/<int:community_id>/join ─────────────────────────────
 
@@ -159,7 +160,10 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         """Valid join inserts membership and redirects."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "name": "Football"}
+        db.fetch_one.side_effect = [
+            None,  # is_user_banned check -> not banned
+            None,  # existing-membership check -> not a member yet
+        ]
 
         resp = self.client.post("/community/1/join", follow_redirects=False)
 
@@ -172,8 +176,8 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
         db.fetch_one.side_effect = [
-            {"id": 1, "name": "Football"},  # community
-            {"id": 1},  # already_member check
+            None,        # is_user_banned check -> not banned
+            {"id": 1},   # existing-membership check -> already a member
         ]
 
         resp = self.client.post("/community/1/join", follow_redirects=False)
@@ -189,18 +193,23 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         """DELETE community fails if user is not owner."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "owner_id": 1}  # different owner
+        # can_manage_community -> is_community_owner: no matching owner row.
+        db.fetch_one.return_value = None
 
         resp = self.client.post("/community/1/delete", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
-        db.execute.assert_not_called()
+        execute_calls = [c.args[0] for c in db.execute.call_args_list]
+        self.assertFalse(any("DELETE FROM communities" in s for s in execute_calls))
 
     def test_delete_community_as_owner_succeeds(self):
         """DELETE community succeeds if user is owner."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "owner_id": 1}  # same owner
+        db.fetch_one.side_effect = [
+            {"1": 1},              # is_community_owner -> owner row found
+            {"name": "Football"},  # community name lookup
+        ]
 
         resp = self.client.post("/community/1/delete", follow_redirects=False)
 
@@ -208,14 +217,14 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
         self.assertTrue(any("DELETE FROM communities" in s for s in execute_calls))
 
-    # ── POST /post/create ───────────────────────────────────────────────────
+    # ── POST /community/<int:community_id>/post ──────────────────────────────
 
     def test_create_post_requires_login(self):
-        """POST /post/create requires login."""
+        """POST /community/<id>/post requires login."""
         self.logout()
         self.mock_database(MODULE)
 
-        resp = self.client.post("/post/create", follow_redirects=False)
+        resp = self.client.post("/community/1/post", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
 
@@ -223,12 +232,17 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         """Creating text-only post inserts post row."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1}
+        db.fetch_one.side_effect = [
+            {"id": 1},                          # membership check
+            {"id": 50},                         # LAST_INSERT_ID for post
+            {"id": 1, "name": "Football"},      # community lookup for notification
+        ]
+        db.fetch_all.return_value = []          # members to notify
 
         resp = self.client.post(
-            "/post/create",
+            "/community/1/post",
             data={
-                "community_id": 1,
+                "title": "My title",
                 "content": "This is my post",
                 "post_type": "text",
             },
@@ -244,14 +258,16 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
         db.fetch_one.side_effect = [
-            {"id": 1},  # community
-            {"id": 50},  # LAST_INSERT_ID for post
+            {"id": 1},                          # membership check
+            {"id": 50},                         # LAST_INSERT_ID for post
+            {"id": 1, "name": "Football"},      # community lookup for notification
         ]
+        db.fetch_all.return_value = []          # members to notify
 
         resp = self.client.post(
-            "/post/create",
+            "/community/1/post",
             data={
-                "community_id": 1,
+                "title": "Poll title",
                 "content": "Poll post",
                 "post_type": "poll",
                 "poll_options": ["Option 1", "Option 2"],
@@ -275,13 +291,17 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         self.assertEqual(resp.status_code, 302)
 
     def test_vote_post_like(self):
-        """Voting up on post inserts positive vote."""
+        """Voting 'like' on a post records the vote."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
+        db.fetch_one.side_effect = [
+            {"id": 1, "community_id": 1},  # post lookup
+            None,                          # existing vote -> none yet
+        ]
 
         resp = self.client.post(
             "/post/1/vote",
-            data={"vote_type": "up"},
+            data={"vote_type": "like"},
             follow_redirects=False
         )
 
@@ -290,13 +310,17 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         self.assertTrue(any("INSERT INTO post_votes" in s or "UPDATE post_votes" in s for s in execute_calls))
 
     def test_vote_post_dislike(self):
-        """Voting down on post inserts negative vote."""
+        """Voting 'dislike' on a post records the vote."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
+        db.fetch_one.side_effect = [
+            {"id": 1, "community_id": 1},  # post lookup
+            None,                          # existing vote -> none yet
+        ]
 
         resp = self.client.post(
             "/post/1/vote",
-            data={"vote_type": "down"},
+            data={"vote_type": "dislike"},
             follow_redirects=False
         )
 
@@ -319,6 +343,7 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         """Valid comment inserts comment row."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
+        db.fetch_one.return_value = {"id": 1, "community_id": 1}  # post lookup
 
         resp = self.client.post(
             "/post/1/comment",
@@ -330,14 +355,14 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
         self.assertTrue(any("INSERT INTO post_comments" in s for s in execute_calls))
 
-    # ── POST /post/<int:post_id>/delete ─────────────────────────────────────
+    # ── POST /post/delete/<int:post_id> ──────────────────────────────────────
 
     def test_delete_post_requires_login(self):
-        """POST /post/<id>/delete requires login."""
+        """POST /post/delete/<id> requires login."""
         self.logout()
         self.mock_database(MODULE)
 
-        resp = self.client.post("/post/1/delete", follow_redirects=False)
+        resp = self.client.post("/post/delete/1", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
 
@@ -345,24 +370,28 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         """Author can delete own post."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "author_id": 1}
+        db.fetch_one.return_value = {"id": 1, "user_id": 1, "community_id": 1}
 
-        resp = self.client.post("/post/1/delete", follow_redirects=False)
+        resp = self.client.post("/post/delete/1", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
         self.assertTrue(any("DELETE FROM posts" in s for s in execute_calls))
 
     def test_delete_post_as_non_author_fails(self):
-        """Non-author cannot delete post."""
+        """Non-author (non-admin, non-moderator) cannot delete post."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "author_id": 1}  # different author
+        db.fetch_one.side_effect = [
+            {"id": 1, "user_id": 1, "community_id": 1},  # post (different author)
+            None,                                        # is_community_moderator -> no
+        ]
 
-        resp = self.client.post("/post/1/delete", follow_redirects=False)
+        resp = self.client.post("/post/delete/1", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
-        db.execute.assert_not_called()
+        execute_calls = [c.args[0] for c in db.execute.call_args_list]
+        self.assertFalse(any("DELETE FROM posts" in s for s in execute_calls))
 
     # ── GET /post/<int:post_id>/edit ────────────────────────────────────────
 
@@ -370,7 +399,10 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         """GET /post/<id>/edit renders edit form for author."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "author_id": 1, "content": "Old content"}
+        db.fetch_one.return_value = {
+            "id": 1, "user_id": 1, "content": "Old content", "post_type": "text",
+        }
+        db.fetch_all.return_value = []  # attach_media_and_poll media query
         r = self.mock_render(MODULE)
 
         resp = self.client.get("/post/1/edit")
@@ -382,7 +414,7 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         """GET /post/<id>/edit redirects for non-author."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "author_id": 1}
+        db.fetch_one.return_value = {"id": 1, "user_id": 1, "post_type": "text"}
 
         resp = self.client.get("/post/1/edit", follow_redirects=False)
 
@@ -392,11 +424,13 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         """POST /post/<id>/edit updates post content."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "author_id": 1}
+        db.fetch_one.return_value = {
+            "id": 1, "user_id": 1, "community_id": 1, "post_type": "text",
+        }
 
         resp = self.client.post(
             "/post/1/edit",
-            data={"content": "New content"},
+            data={"title": "New title", "content": "New content"},
             follow_redirects=False
         )
 
@@ -419,10 +453,11 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         """Valid post report inserts report row."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
+        db.fetch_one.return_value = {"id": 1, "community_id": 1, "title": "A post"}
 
         resp = self.client.post(
             "/post/1/report",
-            data={"reason": "Spam"},
+            data={"reason": "spam"},
             follow_redirects=False
         )
 
@@ -445,7 +480,7 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         """GET /admin/reports renders all reports for admin."""
         self.login(user_id=1, user_name="Admin", user_role="admin")
         db = self.mock_database(MODULE)
-        reports = [{"id": 1, "reason": "Spam"}]
+        reports = [{"id": 1, "reason": "spam"}]
         db.fetch_all.return_value = reports
         r = self.mock_render(MODULE)
 
@@ -454,14 +489,14 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         self.assertEqual(resp.status_code, 200)
         r.assert_called()
 
-    # ── POST /admin/report/<int:report_id>/resolve ──────────────────────────
+    # ── POST /report/post/<int:report_id>/resolve ───────────────────────────
 
     def test_resolve_post_report_requires_admin(self):
-        """POST /admin/report/<id>/resolve requires admin."""
+        """POST /report/post/<id>/resolve requires admin."""
         self.login(user_id=1, user_name="User", user_role="user")
         self.mock_database(MODULE)
 
-        resp = self.client.post("/admin/report/1/resolve", follow_redirects=False)
+        resp = self.client.post("/report/post/1/resolve", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
 
@@ -471,46 +506,53 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
         db = self.mock_database(MODULE)
 
         resp = self.client.post(
-            "/admin/report/1/resolve",
+            "/report/post/1/resolve",
             data={"action": "remove"},
             follow_redirects=False
         )
 
         self.assertEqual(resp.status_code, 302)
+        execute_calls = [c.args[0] for c in db.execute.call_args_list]
+        self.assertTrue(any("UPDATE post_reports" in s for s in execute_calls))
 
-    # ── POST /community/<int:community_id>/ban/<int:member_id> ──────────────
+    # ── POST /community/<int:community_id>/admin/ban/<int:user_id> ───────────
 
     def test_ban_member_requires_community_mod(self):
-        """POST /community/<id>/ban requires moderator permission."""
+        """POST /community/<id>/admin/ban requires moderator permission."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "owner_id": 1}  # user is not owner
+        # can_moderate_community -> is_community_moderator: no row -> not a mod.
+        db.fetch_one.return_value = None
 
-        resp = self.client.post("/community/1/ban/2", follow_redirects=False)
+        resp = self.client.post("/community/1/admin/ban/2", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
+        execute_calls = [c.args[0] for c in db.execute.call_args_list]
+        self.assertFalse(any("INSERT INTO community_bans" in s for s in execute_calls))
 
     def test_ban_member_as_owner(self):
-        """Community owner can ban member."""
-        self.login(user_id=1, user_name="Alice")
+        """A site admin can ban a member."""
+        self.login(user_id=1, user_name="Admin", user_role="admin")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "owner_id": 1}
+        db.fetch_one.side_effect = [
+            {"id": 2, "name": "Target", "role": "user"},  # target user lookup
+            None,                                          # is_community_moderator(target) -> no
+        ]
 
-        resp = self.client.post("/community/1/ban/2", follow_redirects=False)
+        resp = self.client.post("/community/1/admin/ban/2", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
         self.assertTrue(any("INSERT INTO community_bans" in s for s in execute_calls))
 
-    # ── POST /community/<int:community_id>/unban/<int:member_id> ────────────
+    # ── POST /community/<int:community_id>/admin/unban/<int:user_id> ─────────
 
     def test_unban_member_as_owner(self):
-        """Community owner can unban member."""
-        self.login(user_id=1, user_name="Alice")
+        """A site admin can unban a member."""
+        self.login(user_id=1, user_name="Admin", user_role="admin")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "owner_id": 1}
 
-        resp = self.client.post("/community/1/unban/2", follow_redirects=False)
+        resp = self.client.post("/community/1/admin/unban/2", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
@@ -521,7 +563,11 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
     def test_trending_renders_top_content(self):
         """GET /trending renders trending page with top posts."""
         db = self.mock_database(MODULE)
-        posts = [{"id": 1, "content": "Popular"}]
+        posts = [{
+            "id": 1, "title": "Popular", "content": "Popular",
+            "created_at": datetime.datetime(2024, 1, 1),
+            "like_count": 5, "comment_count": 2,
+        }]
         db.fetch_all.return_value = posts
         r = self.mock_render(MODULE)
 
@@ -536,6 +582,7 @@ class HomeRoutesExpandedTests(BaseForumTestCase):
     def test_live_scores_renders(self):
         """GET /live renders live scores page."""
         db = self.mock_database(MODULE)
+        db.fetch_one.return_value = {"id": 1}  # Football community lookup
         r = self.mock_render(MODULE)
 
         resp = self.client.get("/live")

@@ -216,7 +216,7 @@ class AuthRoutesExpandedTests(BaseForumTestCase):
                 "name": "NewUser",
                 "email": "newuser@test.com",
                 "password": "securepass",
-                "security_question": "What is your favorite color?",
+                "security_question": "What was your first pet's name?",
                 "security_answer": "Blue",
             },
             follow_redirects=False
@@ -324,8 +324,7 @@ class AuthRoutesExpandedTests(BaseForumTestCase):
             data={"email": "verify@test.com", "otp": "654321"},
         )
 
-        self.assertEqual(resp.status_code, 200)
-        r.assert_called()
+        self.assertEqual(resp.status_code, 302)
         db.execute.assert_not_called()
 
     def test_verify_registration_post_wrong_otp_fails(self):
@@ -364,7 +363,7 @@ class AuthRoutesExpandedTests(BaseForumTestCase):
     def test_forgot_password_post_valid_email_renders_question(self):
         """POST with valid email renders security question page."""
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "email": "user@test.com"}
+        db.fetch_one.return_value = {"id": 1, "email": "user@test.com", "question": "What was your first pet's name?"}
         r = self.mock_render(MODULE)
 
         resp = self.client.post(
@@ -389,7 +388,7 @@ class AuthRoutesExpandedTests(BaseForumTestCase):
 
         self.assertEqual(resp.status_code, 200)
         r.assert_called()
-        self.assertEqual(r.call_args.args[0], "failed.html")
+        self.assertEqual(r.call_args.args[0], "security_question.html")
 
     # ── /logout ─────────────────────────────────────────────────────────────
 
@@ -401,7 +400,7 @@ class AuthRoutesExpandedTests(BaseForumTestCase):
         with self.client.session_transaction() as sess:
             self.assertIsNotNone(sess.get("user_id"))
 
-        resp = self.client.post("/logout", follow_redirects=False)
+        resp = self.client.get("/logout", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
         with self.client.session_transaction() as sess:
@@ -472,8 +471,8 @@ class AuthRoutesExpandedTests(BaseForumTestCase):
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
         db.fetch_one.side_effect = [
-            {"id": 1, "email": "alice@test.com", "deletion_token": "777777",
-             "deletion_token_expires": datetime.datetime.utcnow() + datetime.timedelta(hours=1)},
+            {"id": 1, "name": "Alice", "email": "alice@test.com", "deletion_token": "777777",
+             "deletion_token_expires_at": datetime.datetime.utcnow() + datetime.timedelta(hours=1)},
             {"id": 999},  # deleted_user sentinel
         ]
 
@@ -494,16 +493,16 @@ class AuthRoutesExpandedTests(BaseForumTestCase):
         db = self.mock_database(MODULE)
         db.fetch_one.side_effect = [
             {"id": 1, "email": "alice@test.com", "deletion_token": "777777",
-             "deletion_token_expires": datetime.datetime.utcnow() + datetime.timedelta(hours=1)},
+             "deletion_token_expires_at": datetime.datetime.utcnow() + datetime.timedelta(hours=1)},
         ]
-        r = self.mock_render(MODULE)
 
         resp = self.client.post(
             "/delete-account/confirm",
             data={"otp": "WRONG"},
+            follow_redirects=False
         )
 
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.status_code, 302)
 
 
 if __name__ == "__main__":

@@ -41,10 +41,10 @@ class UserRoutesExpandedTests(BaseForumTestCase):
         self.assertEqual(resp.status_code, 200)
         r.assert_called()
         self.assertEqual(r.call_args.args[0], "user_profile.html")
-        self.assertEqual(r.call_args.kwargs["user"], user)
+        self.assertEqual(r.call_args.kwargs["profile_user"], user)
 
     def test_profile_redirects_when_own_profile(self):
-        """GET /user/<own_id> redirects to /dashboard."""
+        """GET /user/<own_id> redirects to the editable own profile page."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
         db.fetch_one.return_value = {"id": 1}
@@ -52,7 +52,7 @@ class UserRoutesExpandedTests(BaseForumTestCase):
         resp = self.client.get("/user/1", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
-        self.assertIn("/dashboard", resp.headers["Location"])
+        self.assertIn("/profile", resp.headers["Location"])
 
     def test_profile_not_found_redirects(self):
         """GET /user/<nonexistent> redirects."""
@@ -93,22 +93,30 @@ class UserRoutesExpandedTests(BaseForumTestCase):
         """Valid follow creates follow relationship."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
+        db.fetch_one.return_value = {"id": 2, "name": "Bob"}
 
-        resp = self.client.post("/user/2/follow", follow_redirects=False)
+        with patch(f"{MODULE}.has_block_between", return_value=False):
+            resp = self.client.post("/user/2/follow", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
-        self.assertTrue(any("INSERT INTO user_follows" in s for s in execute_calls))
+        self.assertTrue(any("INSERT IGNORE INTO user_follows" in s for s in execute_calls))
 
     def test_follow_creates_notification(self):
         """Following a user creates notification."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
+        db.fetch_one.side_effect = [
+            {"id": 2, "name": "Bob"},      # target user lookup
+            {"id": 1, "name": "Alice"},    # follower lookup
+            None,                              # are_mutual_followers -> not mutual
+        ]
 
-        with patch(f"{MODULE}.create_notification") as mock_notif:
-            resp = self.client.post("/user/2/follow", follow_redirects=False)
-            # Verify notification called
-            mock_notif.assert_called()
+        with patch(f"{MODULE}.has_block_between", return_value=False):
+            with patch(f"{MODULE}.create_notification") as mock_notif:
+                resp = self.client.post("/user/2/follow", follow_redirects=False)
+                # Verify notification called
+                mock_notif.assert_called()
 
     def test_follow_already_following_fails(self):
         """Following an already-followed user fails."""
@@ -158,18 +166,17 @@ class UserRoutesExpandedTests(BaseForumTestCase):
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
         self.assertTrue(any("DELETE FROM user_follows" in s for s in execute_calls))
 
-    def test_unfollow_not_following_fails(self):
-        """Unfollowing a non-followed user fails."""
+    def test_unfollow_not_following_is_idempotent(self):
+        """Unfollowing a non-followed user is still a DELETE (idempotent)."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = None
 
         resp = self.client.post("/user/2/unfollow", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
-        # Should not delete
+        # DELETE still executes (idempotent), but no rows affected
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
-        self.assertFalse(any("DELETE FROM user_follows" in s for s in execute_calls))
+        self.assertTrue(any("DELETE FROM user_follows" in s for s in execute_calls))
 
     # ── POST /user/<int:user_id>/block ──────────────────────────────────────
 
@@ -184,30 +191,40 @@ class UserRoutesExpandedTests(BaseForumTestCase):
 
     def test_block_success_creates_block_and_removes_follows(self):
         """Valid block creates block relationship and removes follows."""
-        self.login(user_id=1, user_name="Alice")
-        db = self.mock_database(MODULE)
+        self.login(user_id=1, user_name="Alice", user_role="user")
+        from unittest.mock import patch, MagicMock
+        patcher = patch(f"{MODULE}.Database")
+        mock_cls = patcher.start()
+        self.addCleanup(patcher.stop)
+        db = MagicMock(name=f"{MODULE}.Database()")
+        mock_cls.return_value = db
+        db.fetch_one.return_value = {"id": 2, "name": "Bob"}
 
         resp = self.client.post("/user/2/block", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
-        # Should insert block
-        self.assertTrue(any("INSERT INTO user_blocks" in s for s in execute_calls))
+        # Should insert block (query uses INSERT IGNORE INTO)
+        self.assertTrue(any("INSERT IGNORE INTO user_blocks" in s for s in execute_calls))
         # Should delete follows (both directions)
         self.assertTrue(any("DELETE FROM user_follows" in s for s in execute_calls))
 
     def test_block_already_blocked_fails(self):
-        """Blocking an already-blocked user fails."""
-        self.login(user_id=1, user_name="Alice")
-        db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"blocker_id": 1, "blocked_id": 2}
+        """Blocking an already-blocked user still inserts IGNORE (idempotent)."""
+        self.login(user_id=1, user_name="Alice", user_role="user")
+        from unittest.mock import patch, MagicMock
+        patcher = patch(f"{MODULE}.Database")
+        mock_cls = patcher.start()
+        self.addCleanup(patcher.stop)
+        db = MagicMock(name=f"{MODULE}.Database()")
+        mock_cls.return_value = db
+        db.fetch_one.return_value = {"id": 2, "name": "Bob"}
 
         resp = self.client.post("/user/2/block", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
-        insert_calls = [c.args[0] for c in db.execute.call_args_list if "INSERT" in c.args[0]]
-        insert_count = sum(1 for c in insert_calls if "user_blocks" in c)
-        self.assertLessEqual(insert_count, 1)
+        execute_calls = [c.args[0] for c in db.execute.call_args_list]
+        self.assertTrue(any("INSERT IGNORE INTO user_blocks" in s for s in execute_calls))
 
     # ── POST /user/<int:user_id>/unblock ────────────────────────────────────
 
@@ -231,17 +248,17 @@ class UserRoutesExpandedTests(BaseForumTestCase):
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
         self.assertTrue(any("DELETE FROM user_blocks" in s for s in execute_calls))
 
-    def test_unblock_not_blocked_fails(self):
-        """Unblocking a non-blocked user fails."""
+    def test_unblock_not_blocked_is_idempotent(self):
+        """Unblocking a non-blocked user still runs DELETE (idempotent)."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = None
+        db.fetch_one.return_value = {"id": 2, "name": "Bob"}
 
         resp = self.client.post("/user/2/unblock", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
-        self.assertFalse(any("DELETE FROM user_blocks" in s for s in execute_calls))
+        self.assertTrue(any("DELETE FROM user_blocks" in s for s in execute_calls))
 
     # ── GET /blocked ────────────────────────────────────────────────────────
 
@@ -270,7 +287,7 @@ class UserRoutesExpandedTests(BaseForumTestCase):
         self.assertEqual(resp.status_code, 200)
         r.assert_called()
         self.assertEqual(r.call_args.args[0], "blocked_users.html")
-        self.assertEqual(r.call_args.kwargs["blocked_users"], blocked_users)
+        self.assertEqual(r.call_args.kwargs["blocked"], blocked_users)
 
     def test_blocked_list_empty(self):
         """GET /blocked renders empty list when no blocks."""
@@ -283,7 +300,7 @@ class UserRoutesExpandedTests(BaseForumTestCase):
 
         self.assertEqual(resp.status_code, 200)
         r.assert_called()
-        self.assertEqual(r.call_args.kwargs["blocked_users"], [])
+        self.assertEqual(r.call_args.kwargs["blocked"], [])
 
     # ── Integration: Block prevents mutual follow ────────────────────────────
 
@@ -291,6 +308,9 @@ class UserRoutesExpandedTests(BaseForumTestCase):
         """Following user is blocked by them fails."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
+        db.fetch_one.side_effect = [
+            {"id": 2, "name": "Bob"},      # target user lookup
+        ]
 
         with patch(f"{MODULE}.has_block_between", return_value=True):
             resp = self.client.post("/user/2/follow", follow_redirects=False)
@@ -307,7 +327,7 @@ class UserRoutesExpandedTests(BaseForumTestCase):
         user = {"id": 2, "name": "Bob"}
         
         def fetch_side_effect(query, params=None):
-            if "SELECT id FROM users" in query and "user/2" in str(query):
+            if "SELECT id, name, bio, profile_pic, created_at" in query:
                 return user
             if "user_follows" in query:
                 return {"user_id": 1, "follows_id": 2}

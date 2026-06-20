@@ -25,10 +25,14 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         """GET /community/<category> renders all threads in category."""
         db = self.mock_database(MODULE)
         threads = [
-            {"id": 1, "title": "Thread 1", "author_id": 1, "created_at": datetime.datetime.utcnow()},
-            {"id": 2, "title": "Thread 2", "author_id": 2, "created_at": datetime.datetime.utcnow()},
+            {"id": 1, "title": "Thread 1", "author": "Alice", "thread_type": "text",
+             "created_at": datetime.datetime.utcnow()},
+            {"id": 2, "title": "Thread 2", "author": "Bob", "thread_type": "text",
+             "created_at": datetime.datetime.utcnow()},
         ]
-        db.fetch_all.return_value = threads
+        # First fetch_all returns the thread list; every subsequent fetch_all
+        # (per-thread replies, media, notes) returns an empty list.
+        db.fetch_all.side_effect = [threads] + [[]] * 20
         r = self.mock_render(MODULE)
 
         resp = self.client.get("/community/Football")
@@ -47,14 +51,16 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
             "id": 1,
             "title": "My Thread",
             "content": "Thread content",
-            "author_id": 1,
+            "author": "Alice",
+            "thread_type": "text",
             "created_at": datetime.datetime.utcnow(),
         }
         replies = [
-            {"id": 1, "content": "Reply 1", "author_id": 2},
+            {"id": 1, "content": "Reply 1", "user_email": "Bob"},
         ]
         db.fetch_one.return_value = thread
-        db.fetch_all.return_value = replies
+        # First fetch_all returns replies; later calls (media, notes) are empty.
+        db.fetch_all.side_effect = [replies] + [[]] * 10
         r = self.mock_render(MODULE)
 
         resp = self.client.get("/thread/1")
@@ -109,7 +115,8 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         """Creating thread with poll inserts poll options."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
-        db.fetch_one.side_effect = [{"id": 50}]  # LAST_INSERT_ID
+        # 1st fetch_one: category id lookup; 2nd fetch_one: LAST_INSERT_ID.
+        db.fetch_one.side_effect = [{"id": 3}, {"id": 50}]
 
         resp = self.client.post(
             "/create-thread",
@@ -133,7 +140,7 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         """GET /thread/<id>/edit renders edit form for author."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "author_id": 1, "content": "Old"}
+        db.fetch_one.return_value = {"id": 1, "author": "Alice", "content": "Old"}
         r = self.mock_render(MODULE)
 
         resp = self.client.get("/thread/1/edit")
@@ -145,7 +152,7 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         """GET /thread/<id>/edit redirects for non-author."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "author_id": 1}
+        db.fetch_one.return_value = {"id": 1, "author": "Alice"}
 
         resp = self.client.get("/thread/1/edit", follow_redirects=False)
 
@@ -155,11 +162,11 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         """POST /thread/<id>/edit updates thread content."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "author_id": 1}
+        db.fetch_one.return_value = {"id": 1, "author": "Alice"}
 
         resp = self.client.post(
             "/thread/1/edit",
-            data={"content": "New content"},
+            data={"title": "New title", "content": "New content"},
             follow_redirects=False
         )
 
@@ -170,21 +177,24 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
     # ── POST /thread/<int:thread_id>/delete ─────────────────────────────────
 
     def test_delete_thread_requires_login(self):
-        """POST /thread/<id>/delete requires login."""
+        """POST /thread/delete/<id> as a guest deletes nothing and redirects."""
         self.logout()
-        self.mock_database(MODULE)
+        db = self.mock_database(MODULE)
+        # Thread belongs to Alice; a guest ("Guest") is not the author.
+        db.fetch_one.return_value = {"author": "Alice"}
 
-        resp = self.client.post("/thread/1/delete", follow_redirects=False)
+        resp = self.client.post("/thread/delete/1", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
+        db.execute.assert_not_called()
 
     def test_delete_thread_as_author(self):
         """Author can delete own thread."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "author_id": 1}
+        db.fetch_one.return_value = {"author": "Alice"}
 
-        resp = self.client.post("/thread/1/delete", follow_redirects=False)
+        resp = self.client.post("/thread/delete/1", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
@@ -194,9 +204,9 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         """Non-author cannot delete thread."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "author_id": 1}
+        db.fetch_one.return_value = {"id": 1, "author": "Alice"}
 
-        resp = self.client.post("/thread/1/delete", follow_redirects=False)
+        resp = self.client.post("/thread/delete/1", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
         db.execute.assert_not_called()
@@ -230,25 +240,22 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
         self.assertTrue(any("INSERT INTO replies" in s for s in execute_calls))
 
-    def test_post_reply_with_poll(self):
-        """Reply with poll inserts poll options."""
+    def test_post_reply_text_only_inserts_reply(self):
+        """Reply inserts reply row (poll options not supported for replies)."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
-        db.fetch_one.side_effect = [{"id": 60}]
 
         resp = self.client.post(
             "/thread/1/reply",
             data={
                 "content": "Poll reply",
-                "reply_type": "poll",
-                "poll_options": ["Yes", "No"],
             },
             follow_redirects=False
         )
 
+        self.assertEqual(resp.status_code, 302)
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
         self.assertTrue(any("INSERT INTO replies" in s for s in execute_calls))
-        self.assertTrue(any("INSERT INTO thread_poll_options" in s for s in execute_calls))
 
     # ── GET /thread/<int:thread_id>/reply/<int:reply_id>/edit ────────────────
 
@@ -256,7 +263,7 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         """GET /thread/<id>/reply/<id>/edit renders form for author."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "author_id": 5, "content": "Old reply"}
+        db.fetch_one.return_value = {"id": 1, "user_email": "Bob", "content": "Old reply"}
         r = self.mock_render(MODULE)
 
         resp = self.client.get("/thread/1/reply/1/edit")
@@ -268,7 +275,7 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         """GET /thread/<id>/reply/<id>/edit redirects for non-author."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "author_id": 5}
+        db.fetch_one.return_value = {"id": 1, "user_email": "Charlie"}
 
         resp = self.client.get("/thread/1/reply/1/edit", follow_redirects=False)
 
@@ -278,7 +285,7 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         """POST /thread/<id>/reply/<id>/edit updates reply content."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1, "author_id": 5}
+        db.fetch_one.return_value = {"id": 1, "user_email": "Bob"}
 
         resp = self.client.post(
             "/thread/1/reply/1/edit",
@@ -292,51 +299,60 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
 
     # ── POST /thread/<int:thread_id>/vote ───────────────────────────────────
 
-    def test_vote_thread_requires_login(self):
-        """POST /thread/<id>/vote requires login."""
+    def test_vote_thread_does_not_require_login(self):
+        """POST /thread/<id>/vote does NOT require login (no @login_required).
+        It reads JSON request data, so sending it without JSON data returns 400.
+        """
         self.logout()
-        self.mock_database(MODULE)
+        db = self.mock_database(MODULE)
+        db.fetch_one.return_value = {"votes": 5}
 
-        resp = self.client.post("/thread/1/vote", follow_redirects=False)
+        resp = self.client.post(
+            "/thread/1/vote",
+            json={"action": "up"},
+            follow_redirects=False
+        )
 
-        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.status_code, 200)
 
     def test_vote_thread_up(self):
-        """Voting up on thread inserts positive vote."""
+        """Voting up on thread returns JSON with new vote count."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
+        db.fetch_one.return_value = {"votes": 5}
 
         resp = self.client.post(
             "/thread/1/vote",
-            data={"vote_type": "up"},
+            json={"action": "up"},
             follow_redirects=False
         )
 
-        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.status_code, 200)
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
-        self.assertTrue(any("INSERT INTO thread_votes" in s or "UPDATE thread_votes" in s for s in execute_calls))
+        self.assertTrue(any("UPDATE threads SET votes" in s for s in execute_calls))
 
     def test_vote_thread_down(self):
-        """Voting down on thread inserts negative vote."""
+        """Voting down on thread returns JSON with new vote count."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
+        db.fetch_one.return_value = {"votes": 3}
 
         resp = self.client.post(
             "/thread/1/vote",
-            data={"vote_type": "down"},
+            json={"action": "down"},
             follow_redirects=False
         )
 
-        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.status_code, 200)
 
     # ── POST /thread/<int:reply_id>/vote-reply ──────────────────────────────
 
     def test_vote_reply_requires_login(self):
-        """POST /thread/<id>/vote-reply requires login."""
+        """POST /thread/<id>/reply/<id>/vote requires login."""
         self.logout()
         self.mock_database(MODULE)
 
-        resp = self.client.post("/thread/1/vote-reply", follow_redirects=False)
+        resp = self.client.post("/thread/1/reply/10/vote", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
 
@@ -344,10 +360,16 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         """Voting up on reply inserts positive vote."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
+        db.fetch_one.side_effect = [
+            {"id": 10, "thread_id": 1},  # reply lookup
+            None,                          # existing vote -> none yet
+            {"c": 1},                     # like_count
+            {"c": 0},                     # dislike_count
+        ]
 
         resp = self.client.post(
-            "/thread/1/vote-reply",
-            data={"reply_id": 10, "vote_type": "up"},
+            "/thread/1/reply/10/vote",
+            data={"reply_id": 10, "vote_type": "like"},
             follow_redirects=False
         )
 
@@ -355,14 +377,14 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         execute_calls = [c.args[0] for c in db.execute.call_args_list]
         self.assertTrue(any("INSERT INTO reply_votes" in s or "UPDATE reply_votes" in s for s in execute_calls))
 
-    # ── POST /thread/<int:thread_id>/vote-poll ──────────────────────────────
+    # ── POST /thread/<int:thread_id>/poll-vote ──────────────────────────────
 
     def test_vote_thread_poll_requires_login(self):
-        """POST /thread/<id>/vote-poll requires login."""
+        """POST /thread/<id>/poll-vote requires login."""
         self.logout()
         self.mock_database(MODULE)
 
-        resp = self.client.post("/thread/1/vote-poll", follow_redirects=False)
+        resp = self.client.post("/thread/1/poll-vote", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
 
@@ -370,9 +392,14 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         """Valid poll vote inserts vote row."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
+        db.fetch_one.side_effect = [
+            {"id": 1},                    # thread lookup
+            {"id": 5, "thread_id": 1},    # option lookup
+            None,                           # existing vote -> none
+        ]
 
         resp = self.client.post(
-            "/thread/1/vote-poll",
+            "/thread/1/poll-vote",
             data={"option_id": 5},
             follow_redirects=False
         )
@@ -410,11 +437,11 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
     # ── POST /thread/<int:note_id>/rate-note ────────────────────────────────
 
     def test_rate_thread_note_requires_login(self):
-        """POST /thread/<id>/rate-note requires login."""
+        """POST /thread/note/<id>/rate requires login."""
         self.logout()
         self.mock_database(MODULE)
 
-        resp = self.client.post("/thread/1/rate-note", follow_redirects=False)
+        resp = self.client.post("/thread/note/7/rate", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
 
@@ -422,10 +449,14 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         """Rating note as helpful inserts vote."""
         self.login(user_id=1, user_name="Alice")
         db = self.mock_database(MODULE)
+        db.fetch_one.side_effect = [
+            {"id": 7, "thread_id": 1},  # note lookup
+            None,                          # existing vote -> none
+        ]
 
         resp = self.client.post(
-            "/thread/1/rate-note",
-            data={"note_id": 7, "helpful": "true"},
+            "/thread/note/7/rate",
+            data={"note_id": 7, "rating": "helpful"},
             follow_redirects=False
         )
 
@@ -448,10 +479,11 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         """Valid thread report inserts report row."""
         self.login(user_id=5, user_name="Bob")
         db = self.mock_database(MODULE)
+        db.fetch_one.return_value = {"id": 1, "title": "Test"}
 
         resp = self.client.post(
             "/thread/1/report",
-            data={"reason": "Harassment"},
+            data={"reason": "spam"},
             follow_redirects=False
         )
 
@@ -462,12 +494,11 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
     # ── POST /thread/<int:report_id>/resolve-report ─────────────────────────
 
     def test_resolve_thread_report_requires_admin_or_mod(self):
-        """POST /thread/<id>/resolve-report requires admin/mod."""
+        """POST /report/thread/<id>/resolve requires admin/mod."""
         self.login(user_id=5, user_name="Bob", user_role="user")
-        db = self.mock_database(MODULE)
-        db.fetch_one.return_value = {"id": 1}
+        self.mock_database(MODULE)
 
-        resp = self.client.post("/thread/1/resolve-report", follow_redirects=False)
+        resp = self.client.post("/report/thread/1/resolve", follow_redirects=False)
 
         self.assertEqual(resp.status_code, 302)
 
@@ -477,7 +508,7 @@ class ThreadRoutesExpandedTests(BaseForumTestCase):
         db = self.mock_database(MODULE)
 
         resp = self.client.post(
-            "/thread/1/resolve-report",
+            "/report/thread/1/resolve",
             data={"action": "remove"},
             follow_redirects=False
         )

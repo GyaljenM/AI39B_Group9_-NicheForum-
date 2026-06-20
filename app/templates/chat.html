@@ -283,6 +283,15 @@
     background: #22c55e;
 }
 
+/* When the other user has turned Active Status off. */
+.chat-header-status.offline {
+    color: #A8A29E;
+}
+
+.chat-header-status.offline::before {
+    background: #D6D3D1;
+}
+
 .chat-header-actions {
     display: flex;
     gap: 8px;
@@ -637,7 +646,7 @@
                     {% if c.profile_pic %}
                         <img src="{{ url_for('static', filename=c.profile_pic) }}" alt="">
                     {% else %}{{ c.name[0]|upper }}{% endif %}
-                    <div class="chat-contact-status"></div>
+                    {% if c.show_online_status %}<div class="chat-contact-status"></div>{% endif %}
                 </div>
                 <div class="chat-contact-info">
                     <p class="chat-contact-name">{{ c.name }}</p>
@@ -671,7 +680,11 @@
                 </div>
                 <div>
                     <p class="chat-header-name">{{ other.name }}</p>
+                    {% if other.show_online_status %}
                     <p class="chat-header-status">Online</p>
+                    {% else %}
+                    <p class="chat-header-status offline">Offline</p>
+                    {% endif %}
                 </div>
             </button>
             <div class="chat-header-actions">

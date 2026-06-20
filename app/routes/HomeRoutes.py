@@ -887,9 +887,16 @@ class HomeRoutes:
         bio = request.form.get("bio")
         profile_pic = request.files.get("profile_pic")
         
+        # Active Status toggle: an unchecked checkbox is simply absent from the
+        # form, so treat "missing" as off (0) and any present value as on (1).
+        show_online = 1 if request.form.get("show_online_status") else 0
+
         db = Database()
         if name:
-            db.execute("UPDATE users SET name = %s, bio = %s WHERE id = %s", (name, bio, user_id))
+            db.execute(
+                "UPDATE users SET name = %s, bio = %s, show_online_status = %s WHERE id = %s",
+                (name, bio, show_online, user_id),
+            )
             session["user_name"] = name
             
             if profile_pic and profile_pic.filename != '':

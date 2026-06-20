@@ -164,6 +164,8 @@ class Database:
                 db.execute("ALTER TABLE users ADD COLUMN verification_token VARCHAR(255) AFTER is_verified")
             if 'token_expires_at' not in user_col_names:
                 db.execute("ALTER TABLE users ADD COLUMN token_expires_at DATETIME AFTER verification_token")
+            if 'show_online_status' not in user_col_names:
+                db.execute("ALTER TABLE users ADD COLUMN show_online_status TINYINT NOT NULL DEFAULT 1 AFTER is_active")
         except Exception as e:
             print(f"Error ensuring users table verification columns: {e}")
 

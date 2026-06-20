@@ -41,7 +41,7 @@ class ChatRoutes:
         """
         return db.fetch_all(
             """
-            SELECT u.id, u.name, u.profile_pic,
+            SELECT u.id, u.name, u.profile_pic, u.show_online_status,
                    (SELECT MAX(dm.created_at) FROM direct_messages dm
                     WHERE (dm.sender_id = u.id AND dm.receiver_id = %s)
                        OR (dm.sender_id = %s AND dm.receiver_id = u.id)) AS last_at
@@ -118,7 +118,7 @@ class ChatRoutes:
             return redirect(url_for("Chat.chat_home"))
 
         db = Database()
-        other = db.fetch_one("SELECT id, name, profile_pic, bio FROM users WHERE id = %s", (other_id,))
+        other = db.fetch_one("SELECT id, name, profile_pic, bio, show_online_status FROM users WHERE id = %s", (other_id,))
         if not other:
             db.close()
             flash("User not found.", "danger")

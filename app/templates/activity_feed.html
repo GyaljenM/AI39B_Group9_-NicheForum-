@@ -789,6 +789,77 @@
     background: white;
 }
 
+/* Active Status toggle row */
+.modal-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1.5px solid #E7E5E4;
+    background: #FAFAF9;
+}
+
+.modal-toggle-text p {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1C1917;
+}
+
+.modal-toggle-text span {
+    display: block;
+    font-size: 12px;
+    color: #78716C;
+    margin-top: 2px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+}
+
+.modal-switch {
+    position: relative;
+    flex-shrink: 0;
+    width: 46px;
+    height: 26px;
+    display: inline-block;
+}
+
+.modal-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.modal-switch .slider {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    background: #D6D3D1;
+    border-radius: 26px;
+    transition: background 0.25s;
+}
+
+.modal-switch .slider::before {
+    content: '';
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.25s;
+}
+
+.modal-switch input:checked + .slider {
+    background: #C2410C;
+}
+
+.modal-switch input:checked + .slider::before {
+    transform: translateX(20px);
+}
+
 .modal-bio-footer {
     display: flex;
     justify-content: flex-end;
@@ -1296,6 +1367,24 @@
                         <textarea id="edit-bio" name="bio" class="modal-textarea" placeholder="Tell us about yourself — your interests, favorite sports, what brings you here..." maxlength="280" oninput="updateBioPreview(this)">{{ user.bio or '' }}</textarea>
                         <div class="modal-bio-footer">
                             <span class="modal-char-count" id="bioCharCount">{{ (user.bio or '')|length }}/280</span>
+                        </div>
+                    </div>
+
+                    <!-- Active Status (privacy) -->
+                    <div class="modal-form-group">
+                        <label>
+                            <span class="material-symbols-outlined text-sm">visibility</span>
+                            Active Status
+                        </label>
+                        <div class="modal-toggle-row">
+                            <div class="modal-toggle-text">
+                                <p>Show when I'm online</p>
+                                <span>When off, you'll always appear offline in chat.</span>
+                            </div>
+                            <label class="modal-switch">
+                                <input type="checkbox" name="show_online_status" value="1" {% if user.show_online_status is not defined or user.show_online_status %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
                         </div>
                     </div>
                 </div>

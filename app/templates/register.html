@@ -200,7 +200,8 @@
     pointer-events: none;
 }
 
-.auth-field input {
+.auth-field input,
+.auth-field select {
     width: 100%;
     padding: 12px 16px 12px 44px;
     border: 1.5px solid #E7E5E4;
@@ -213,11 +214,17 @@
     box-sizing: border-box;
 }
 
+.auth-field select {
+    cursor: pointer;
+    appearance: auto;
+}
+
 .auth-field input::placeholder {
     color: #D6D3D1;
 }
 
-.auth-field input:focus {
+.auth-field input:focus,
+.auth-field select:focus {
     border-color: #C2410C;
     box-shadow: 0 0 0 4px rgba(194, 65, 12, 0.08);
 }
@@ -495,6 +502,37 @@
                     <p class="auth-field-hint">Minimum 8 characters. Use a mix of letters and numbers.</p>
                 </div>
 
+                <div class="auth-field">
+                    <label for="security_question">Security Question</label>
+                    <div class="auth-field-wrap">
+                        <span class="material-symbols-outlined auth-field-icon text-lg">help</span>
+                        <select id="security_question" name="security_question" required onchange="toggleCustomQuestion()">
+                            {% for q in security_questions %}
+                            <option value="{{ q }}">{{ q }}</option>
+                            {% endfor %}
+                            <option value="__custom__">Write my own…</option>
+                        </select>
+                    </div>
+                    <p class="auth-field-hint">Used to recover your account if you forget your password.</p>
+                </div>
+
+                <div class="auth-field" id="customQuestionField" style="display:none;">
+                    <label for="custom_question">Your Question</label>
+                    <div class="auth-field-wrap">
+                        <span class="material-symbols-outlined auth-field-icon text-lg">edit</span>
+                        <input type="text" id="custom_question" name="custom_question" placeholder="Type your own security question">
+                    </div>
+                </div>
+
+                <div class="auth-field">
+                    <label for="security_answer">Answer</label>
+                    <div class="auth-field-wrap">
+                        <span class="material-symbols-outlined auth-field-icon text-lg">key</span>
+                        <input type="text" id="security_answer" name="security_answer" required placeholder="Your answer" autocomplete="off">
+                    </div>
+                    <p class="auth-field-hint">Not case-sensitive. Remember it exactly as you'd type it.</p>
+                </div>
+
                 <div class="auth-terms">
                     <input type="checkbox" id="terms" required>
                     <label for="terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
@@ -519,4 +557,19 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Reveal the free-text "your own question" field only when the user picks
+    // "Write my own…" in the security-question dropdown.
+    function toggleCustomQuestion() {
+        var sel = document.getElementById('security_question');
+        var field = document.getElementById('customQuestionField');
+        var custom = document.getElementById('custom_question');
+        var isCustom = sel.value === '__custom__';
+        field.style.display = isCustom ? 'block' : 'none';
+        custom.required = isCustom;
+        if (!isCustom) custom.value = '';
+    }
+    document.addEventListener('DOMContentLoaded', toggleCustomQuestion);
+</script>
 {% endblock %}

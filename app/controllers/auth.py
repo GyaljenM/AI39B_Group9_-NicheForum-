@@ -2,8 +2,15 @@ from flask import render_template, request, redirect, url_for, flash, session
 from app.models.database import Database
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.utils.email_utils import EmailService
+from app.utils.security import SECURITY_QUESTIONS, hash_answer, verify_answer, decoy_question
 from datetime import datetime, timedelta
 import secrets
+
+# Security-question recovery tuning: lock the flow after this many wrong answers,
+# for this long; the reset token issued on success is valid for this long.
+MAX_ANSWER_ATTEMPTS = 3
+LOCKOUT_MINUTES = 15
+RESET_TOKEN_MINUTES = 15
 
 class AuthController:
     def login(self):
@@ -59,12 +66,26 @@ class AuthController:
             name = request.form.get("name")
             email = request.form.get("email")
             password = request.form.get("password")
-            
+
+            # Security question (required): a preset choice or a custom question,
+            # plus the answer we store bcrypt-hashed for password recovery.
+            selected_question = request.form.get("security_question", "")
+            custom_question = (request.form.get("custom_question") or "").strip()
+            security_answer = (request.form.get("security_answer") or "").strip()
+            if selected_question == "__custom__":
+                question = custom_question
+            else:
+                question = selected_question if selected_question in SECURITY_QUESTIONS else ""
+
+            if not question or not security_answer:
+                flash("Please choose a security question and provide an answer.", "danger")
+                return redirect(url_for("Auth.register"))
+
             hashed_password = generate_password_hash(password)
 
             db = Database()
             existing_user = db.fetch_one("SELECT * FROM users WHERE email = %s", (email,))
-            
+
             if existing_user:
                 db.close()
                 flash("An account with this email already exists.", "danger")
@@ -78,6 +99,13 @@ class AuthController:
                 db.execute(
                     "INSERT INTO users (name, email, password, is_verified, verification_token, token_expires_at) VALUES (%s, %s, %s, 0, %s, %s)",
                     (name, email, hashed_password, otp_code, expiry_dt)
+                )
+
+                # Persist the security question for this new user (answer hashed).
+                new_user = db.fetch_one("SELECT LAST_INSERT_ID() AS id")
+                db.execute(
+                    "INSERT INTO security_questions (user_id, question, answer_hash) VALUES (%s, %s, %s)",
+                    (new_user["id"], question, hash_answer(security_answer)),
                 )
                 db.close()
 
@@ -113,9 +141,163 @@ class AuthController:
         online_now = db.fetch_one("SELECT COUNT(*) AS count FROM users WHERE is_active = 1")['count'] or 0
         db.close()
 
-        return render_template("register.html", total_communities=total_communities, total_members=total_members, online_now=online_now)
+        return render_template("register.html", total_communities=total_communities, total_members=total_members, online_now=online_now, security_questions=SECURITY_QUESTIONS)
+
+    @staticmethod
+    def _fetch_security_row(db, email):
+        """Return the security_questions row for the account with this email, or None."""
+        return db.fetch_one(
+            "SELECT sq.* FROM security_questions sq "
+            "JOIN users u ON u.id = sq.user_id WHERE u.email = %s",
+            (email,),
+        )
 
     def forgot_password(self):
+        """Primary recovery: confirm identity with the user's security question.
+
+        GET shows the email form. POST shows the matching question. The response
+        never reveals whether the email exists — unknown emails get a stable
+        decoy question, and a locked account gets a generic message.
+        """
+        if request.method == "POST":
+            email = (request.form.get("email") or "").strip()
+            if not email:
+                flash("Please enter your email.", "danger")
+                return render_template("forgot_password.html")
+
+            db = Database()
+            sec = self._fetch_security_row(db, email)
+
+            if sec:
+                # Locked: reveal nothing beyond a generic rate-limit message.
+                if sec.get("locked_until") and datetime.utcnow() < sec["locked_until"]:
+                    db.close()
+                    flash("Too many attempts. Please try again later.", "danger")
+                    return render_template("forgot_password.html")
+                # A lapsed lock clears the counter so the user can try again.
+                if sec.get("locked_until"):
+                    db.execute(
+                        "UPDATE security_questions SET failed_attempts = 0, locked_until = NULL WHERE id = %s",
+                        (sec["id"],),
+                    )
+                db.close()
+                return render_template("security_question.html", email=email, question=sec["question"])
+
+            # Unknown email / no question on file: show a decoy, never reveal absence.
+            db.close()
+            return render_template("security_question.html", email=email, question=decoy_question(email))
+
+        return render_template("forgot_password.html")
+
+    def verify_security_answer(self):
+        """Check the submitted security answer (POST only) and gate the reset."""
+        email = (request.form.get("email") or "").strip()
+        answer = request.form.get("answer") or ""
+
+        if not email:
+            flash("Your session expired. Please start again.", "danger")
+            return redirect(url_for("Auth.forgot_password"))
+
+        db = Database()
+        sec = self._fetch_security_row(db, email)
+
+        # No real question → behave exactly like a wrong answer against the decoy.
+        if not sec:
+            db.close()
+            flash("Incorrect answer.", "danger")
+            return render_template("security_question.html", email=email, question=decoy_question(email))
+
+        # Locked: don't even check the answer.
+        if sec.get("locked_until") and datetime.utcnow() < sec["locked_until"]:
+            db.close()
+            flash("Too many attempts. Please try again later.", "danger")
+            return render_template("forgot_password.html")
+
+        # A lapsed lock resets the counter before this fresh attempt.
+        failed = 0 if sec.get("locked_until") else sec["failed_attempts"]
+
+        if verify_answer(answer, sec["answer_hash"]):
+            token = secrets.token_urlsafe(32)
+            token_expiry = datetime.utcnow() + timedelta(minutes=RESET_TOKEN_MINUTES)
+            db.execute(
+                "UPDATE security_questions SET failed_attempts = 0, locked_until = NULL, "
+                "reset_token = %s, reset_token_expires_at = %s WHERE id = %s",
+                (token, token_expiry, sec["id"]),
+            )
+            db.close()
+            return redirect(url_for("Auth.set_new_password", token=token))
+
+        # Wrong answer: increment, and lock once the limit is reached.
+        failed += 1
+        if failed >= MAX_ANSWER_ATTEMPTS:
+            locked_until = datetime.utcnow() + timedelta(minutes=LOCKOUT_MINUTES)
+            db.execute(
+                "UPDATE security_questions SET failed_attempts = %s, locked_until = %s WHERE id = %s",
+                (failed, locked_until, sec["id"]),
+            )
+            db.close()
+            flash("Too many attempts. Please try again later.", "danger")
+            return render_template("forgot_password.html")
+
+        db.execute(
+            "UPDATE security_questions SET failed_attempts = %s WHERE id = %s",
+            (failed, sec["id"]),
+        )
+        db.close()
+        flash("Incorrect answer.", "danger")
+        return render_template("security_question.html", email=email, question=sec["question"])
+
+    def set_new_password(self):
+        """Token-gated 'set a new password' page, reached after a correct answer."""
+        token = request.values.get("token")
+        if not token:
+            flash("Invalid or expired reset link. Please start again.", "danger")
+            return redirect(url_for("Auth.forgot_password"))
+
+        db = Database()
+        sec = db.fetch_one("SELECT * FROM security_questions WHERE reset_token = %s", (token,))
+        expires = sec.get("reset_token_expires_at") if sec else None
+        if not sec or not expires or datetime.utcnow() > expires:
+            if sec:
+                db.execute(
+                    "UPDATE security_questions SET reset_token = NULL, reset_token_expires_at = NULL WHERE id = %s",
+                    (sec["id"],),
+                )
+            db.close()
+            flash("Your reset link has expired. Please start again.", "danger")
+            return redirect(url_for("Auth.forgot_password"))
+
+        if request.method == "POST":
+            new_password = request.form.get("password") or ""
+            confirm = request.form.get("confirm") or ""
+            if len(new_password) < 8:
+                db.close()
+                flash("Password must be at least 8 characters.", "danger")
+                return render_template("set_new_password.html", token=token)
+            if new_password != confirm:
+                db.close()
+                flash("Passwords do not match.", "danger")
+                return render_template("set_new_password.html", token=token)
+
+            # Account passwords use Werkzeug hashing (login checks with it).
+            db.execute(
+                "UPDATE users SET password = %s WHERE id = %s",
+                (generate_password_hash(new_password), sec["user_id"]),
+            )
+            db.execute(
+                "UPDATE security_questions SET reset_token = NULL, reset_token_expires_at = NULL, "
+                "failed_attempts = 0, locked_until = NULL WHERE id = %s",
+                (sec["id"],),
+            )
+            db.close()
+            flash("Your password has been reset successfully. Please login.", "success")
+            return redirect(url_for("Auth.login"))
+
+        db.close()
+        return render_template("set_new_password.html", token=token)
+
+    def forgot_password_email(self):
+        """Fallback recovery: email the user a one-time code (original flow)."""
         if request.method == "POST":
             email = request.form.get("email")
             db = Database()
@@ -139,8 +321,8 @@ class AuthController:
             else:
                 db.close()
                 flash("We couldn't find an account with that email.", "danger")
-        
-        return render_template("forgot_password.html")
+
+        return render_template("forgot_password.html", email_mode=True)
 
     def reset_password(self):
         email = request.args.get("email") or request.form.get("email")

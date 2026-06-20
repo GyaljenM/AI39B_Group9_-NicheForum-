@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Forgot Password - NicheForum{% endblock %}
+{% block title %}Security Question - NicheForum{% endblock %}
 
 {% block styles %}
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -28,42 +28,45 @@
 <div class="min-h-screen flex flex-col items-center justify-center px-6 py-12 bg-[#F8F6F1]">
     <div class="w-full max-w-md">
         <div class="text-center mb-10">
-            <h1 class="text-2xl font-semibold text-[#C2410C] mb-2">Forgot Password</h1>
-            <p class="text-[#78716C] text-sm">
-                {% if email_mode %}Enter your email and we'll send you a reset code.
-                {% else %}Enter your email to recover your account with your security question.{% endif %}
-            </p>
+            <h1 class="text-2xl font-semibold text-[#C2410C] mb-2">Security Question</h1>
+            <p class="text-[#78716C] text-sm">Answer your security question to reset your password.</p>
         </div>
 
         <div class="bg-white rounded p-6 border border-[#E5E3DE]">
-            <form method="POST" action="{% if email_mode %}{{ url_for('Auth.forgot_password_email') }}{% else %}{{ url_for('Auth.forgot_password') }}{% endif %}" class="space-y-6">
+            <form method="POST" action="{{ url_for('Auth.verify_security_answer') }}" class="space-y-6">
+                <input type="hidden" name="email" value="{{ email }}">
+
                 <div>
-                    <label for="email" class="block text-xs font-medium text-[#78716C] mb-2">Email Address</label>
-                    <div class="relative">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#78716C] text-lg">mail</span>
-                        <input type="email" id="email" name="email" required 
-                            class="w-full pl-10 pr-4 py-3 bg-[#F8F6F1] border border-[#E5E3DE] rounded focus:outline-none focus:border-[#C2410C] transition-colors"
-                            placeholder="name@example.com">
+                    <p class="block text-xs font-medium text-[#78716C] mb-2">Your Question</p>
+                    <div class="px-4 py-3 bg-[#F8F6F1] border border-[#E5E3DE] rounded text-sm font-medium text-[#1C1917]">
+                        {{ question }}
                     </div>
+                </div>
+
+                <div>
+                    <label for="answer" class="block text-xs font-medium text-[#78716C] mb-2">Your Answer</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#78716C] text-lg">key</span>
+                        <input type="text" id="answer" name="answer" required autocomplete="off" autofocus
+                            class="w-full pl-10 pr-4 py-3 bg-[#F8F6F1] border border-[#E5E3DE] rounded focus:outline-none focus:border-[#C2410C] transition-colors"
+                            placeholder="Type your answer">
+                    </div>
+                    <p class="text-xs text-[#A8A29E] mt-2">Not case-sensitive.</p>
                 </div>
 
                 <button type="submit"
                     class="w-full py-3 bg-[#C2410C] hover:bg-[#9a3412] text-white rounded text-sm font-medium transition-colors">
-                    {% if email_mode %}Send Reset Code{% else %}Continue{% endif %}
+                    Verify Answer
                 </button>
             </form>
 
             <div class="mt-6 text-center">
-                {% if email_mode %}
-                <a href="{{ url_for('Auth.forgot_password') }}" class="text-sm text-[#C2410C] font-semibold hover:underline">Use my security question instead</a>
-                {% else %}
                 <a href="{{ url_for('Auth.forgot_password_email') }}" class="text-sm text-[#C2410C] font-semibold hover:underline">Email me a code instead</a>
-                {% endif %}
             </div>
 
             <div class="mt-8 pt-6 border-t border-[#E5E3DE] text-center">
                 <p class="text-sm text-[#78716C] font-medium">
-                    Remembered your password? 
+                    Remembered your password?
                     <a href="{{ url_for('Auth.login') }}" class="text-[#C2410C] font-semibold hover:underline">Back to login</a>
                 </p>
             </div>

@@ -514,6 +514,26 @@ class Database:
             )
         """)
 
+        # ── Security-question password recovery ────────────────────────────
+        # One row per user (set at signup). The answer is bcrypt-hashed and
+        # normalized (see app/utils/security.py). failed_attempts/locked_until
+        # rate-limit the forgot-password flow; reset_token gates the
+        # set-new-password page once the question is answered correctly.
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS security_questions (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL UNIQUE,
+                question VARCHAR(255) NOT NULL,
+                answer_hash VARCHAR(255) NOT NULL,
+                failed_attempts INT NOT NULL DEFAULT 0,
+                locked_until DATETIME NULL,
+                reset_token VARCHAR(255) NULL,
+                reset_token_expires_at DATETIME NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
         column_names = []
         try:
             columns = db.fetch_all("DESCRIBE threads")

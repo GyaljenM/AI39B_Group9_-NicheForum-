@@ -19,6 +19,15 @@ class AuthRoutes:
         self.bp.route("/forgot-password",methods=["GET","POST"])(
             self.controller.forgot_password
         )
+        self.bp.route("/forgot-password/verify",methods=["POST"])(
+            self.controller.verify_security_answer
+        )
+        self.bp.route("/forgot-password/email",methods=["GET","POST"])(
+            self.controller.forgot_password_email
+        )
+        self.bp.route("/reset-password/new",methods=["GET","POST"])(
+            self.controller.set_new_password
+        )
         self.bp.route("/reset-password",methods=["GET","POST"])(
             self.controller.reset_password
         )

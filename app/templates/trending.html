@@ -194,8 +194,8 @@
                 <div class="flex items-center justify-center gap-6 mb-8">
                     <!-- Home Team -->
                     <div class="flex flex-col items-center gap-3">
-                        <img id="live-home-crest" src="https://crests.football-data.org/usa.svg" alt="Home" class="w-16 h-16 object-contain">
-                        <p id="live-home" class="text-sm font-bold text-[#1C1917]">USA</p>
+                        <img id="live-home-crest" alt="Home" class="w-16 h-16 object-contain" style="visibility:hidden">
+                        <p id="live-home" class="text-sm font-bold text-[#1C1917]">—</p>
                         <p class="text-xs text-[#A8A29E] font-medium">Home</p>
                     </div>
 
@@ -207,8 +207,8 @@
 
                     <!-- Away Team -->
                     <div class="flex flex-col items-center gap-3">
-                        <img id="live-away-crest" src="https://crests.football-data.org/779.svg" alt="Away" class="w-16 h-16 object-contain">
-                        <p id="live-away" class="text-sm font-bold text-[#1C1917]">Australia</p>
+                        <img id="live-away-crest" alt="Away" class="w-16 h-16 object-contain" style="visibility:hidden">
+                        <p id="live-away" class="text-sm font-bold text-[#1C1917]">—</p>
                         <p class="text-xs text-[#A8A29E] font-medium">Away</p>
                     </div>
                 </div>
@@ -262,58 +262,54 @@
     
     if (!home) return;
 
-    function getCountryCode(countryName) {
-        var codes = {
-            'United States': 'usa', 'USA': 'usa', 'US': 'usa',
-            'Australia': '779', 'AUS': '779',
-            'Mexico': 'mex', 'MEX': 'mex',
-            'South Africa': 'rsa', 'RSA': 'rsa',
-            'Brazil': 'bra', 'BRA': 'bra',
-            'Germany': 'ger', 'GER': 'ger',
-            'France': 'fra', 'FRA': 'fra',
-            'Spain': 'esp', 'ESP': 'esp',
-            'Italy': 'ita', 'ITA': 'ita',
-            'Japan': 'jpn', 'JPN': 'jpn',
-            'England': 'eng', 'ENG': 'eng'
-        };
-        return codes[countryName] || 'usa';
+    // Use the crest the API gives us directly (same source the /live page uses).
+    // If a match has no crest, hide the image so we don't show a wrong flag.
+    function setCrest(imgEl, team) {
+        if (team && team.crest) {
+            imgEl.src = team.crest;
+            imgEl.style.visibility = '';
+        } else {
+            imgEl.removeAttribute('src');
+            imgEl.style.visibility = 'hidden';
+        }
     }
 
     function updateLiveMatch() {
         fetch('/api/live', { credentials: 'same-origin' })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (d) {
-                if (!d || !d.matches || !d.matches.length) { 
+                if (!d || !d.matches || !d.matches.length) {
                     home.textContent = 'No match';
                     away.textContent = '';
                     time.textContent = '';
+                    setCrest(homeCrest, null);
+                    setCrest(awayCrest, null);
                     return;
                 }
                 var liveOnes = d.matches.filter(function (m) { return m.is_live; });
                 var m = liveOnes.length ? liveOnes[0] : d.matches[0];
                 var h = m.home || {}, a = m.away || {};
-                
-                var homeCode = getCountryCode(h.code || h.short || h.name || 'USA');
-                var awayCode = getCountryCode(a.code || a.short || a.name || 'AUS');
-                
+
                 home.textContent = h.short || h.name || 'Home';
                 away.textContent = a.short || a.name || 'Away';
-                homeCrest.src = 'https://crests.football-data.org/' + homeCode + '.svg';
-                awayCrest.src = 'https://crests.football-data.org/' + awayCode + '.svg';
-                
+                setCrest(homeCrest, h);
+                setCrest(awayCrest, a);
+
                 var hg = h.goals, ag = a.goals;
                 if (hg != null && ag != null) {
                     score.textContent = hg + ' - ' + ag;
                 } else {
                     score.textContent = 'vs';
                 }
-                
+
                 time.textContent = m.status || 'UPCOMING';
             })
-            .catch(function () { 
-                home.textContent = 'USA';
-                away.textContent = 'Australia';
+            .catch(function () {
+                home.textContent = 'Home';
+                away.textContent = 'Away';
                 time.textContent = 'UPCOMING';
+                setCrest(homeCrest, null);
+                setCrest(awayCrest, null);
             });
     }
 

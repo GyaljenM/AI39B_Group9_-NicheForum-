@@ -2,8 +2,9 @@ from flask import Blueprint, render_template, session, request, redirect, url_fo
 from app.models.database import Database
 from app.auth import login_required, admin_required
 from app.follows import following_ids, get_followers, get_following
-from app.notifications import notify_community_members
+from app.notifications import notify_community_members, notify_admins_of_report
 from app.services.worldcup import get_match_manager
+from app.utils.word_censor import WordCensor
 import os
 import uuid
 from werkzeug.utils import secure_filename
@@ -660,6 +661,10 @@ class HomeRoutes:
                 flash("A poll needs at least two options.", "warning")
                 return redirect(url_for("Home.community_detail", community_id=community_id))
 
+        # Mask banned words in anything the author wrote before it is stored.
+        title = WordCensor.censor_text(title)
+        content = WordCensor.censor_text(content)
+
         db.execute(
             "INSERT INTO posts (user_id, community_id, title, content, post_type) VALUES (%s, %s, %s, %s, %s)",
             (user_id, community_id, title, content, post_type),
@@ -675,7 +680,7 @@ class HomeRoutes:
         for position, option_text in enumerate(poll_options):
             db.execute(
                 "INSERT INTO post_poll_options (post_id, option_text, position) VALUES (%s, %s, %s)",
-                (post_id, option_text, position),
+                (post_id, WordCensor.censor_text(option_text), position),
             )
 
         # Create notifications for all community members about this new post
@@ -957,7 +962,7 @@ class HomeRoutes:
 
             db.execute(
                 "UPDATE posts SET title = %s, content = %s WHERE id = %s",
-                (title, content, post_id),
+                (WordCensor.censor_text(title), WordCensor.censor_text(content), post_id),
             )
             db.close()
             flash("Post updated successfully!", "success")
@@ -1022,7 +1027,7 @@ class HomeRoutes:
 
         db.execute(
             "INSERT INTO post_comments (post_id, user_id, content) VALUES (%s, %s, %s)",
-            (post_id, user_id, content))
+            (post_id, user_id, WordCensor.censor_text(content)))
         db.close()
         flash("Reply posted!", "success")
         return redirect(request.referrer or url_for("Home.community_detail", community_id=post['community_id']))
@@ -1115,6 +1120,22 @@ class HomeRoutes:
             """,
             (post_id, user_id, reason, details),
         )
+
+        # Alert the moderation team (in-app to every admin + email to admin@admin.com).
+        # Best-effort: a notification failure must not undo the recorded report.
+        try:
+            notify_admins_of_report(
+                db,
+                "post",
+                post.get("title"),
+                dict(REPORT_REASONS).get(reason, reason),
+                session.get("user_name", "A member"),
+                details=details,
+                review_url=url_for("Home.admin_reports"),
+            )
+        except Exception as e:
+            print(f"Error notifying admins of post report: {e}")
+
         db.close()
         flash("Thanks for reporting. Our moderators will review this post.", "success")
         return redirect(request.referrer or url_for("Home.community_detail", community_id=post['community_id']))
@@ -1125,28 +1146,34 @@ class HomeRoutes:
         db = Database()
         post_reports = db.fetch_all("""
             SELECT r.*, u.name AS reporter_name,
-                   p.title AS content_title, p.community_id, c.name AS community_name
+                   p.title AS content_title, p.content AS content_body,
+                   p.community_id, c.name AS community_name,
+                   au.name AS author_name
             FROM post_reports r
             JOIN users u ON r.user_id = u.id
             JOIN posts p ON r.post_id = p.id
             JOIN communities c ON p.community_id = c.id
+            JOIN users au ON p.user_id = au.id
             WHERE r.status = 'open'
             ORDER BY r.created_at DESC
         """)
         thread_reports = db.fetch_all("""
             SELECT r.*, u.name AS reporter_name,
-                   t.title AS content_title, t.category
+                   t.title AS content_title, t.content AS content_body,
+                   t.category, t.author AS author_name
             FROM thread_reports r
             JOIN users u ON r.user_id = u.id
             JOIN threads t ON r.thread_id = t.id
             WHERE r.status = 'open'
             ORDER BY r.created_at DESC
         """)
+        total_open = len(post_reports) + len(thread_reports)
         db.close()
         return render_template(
             "admin_reports.html",
             post_reports=post_reports,
             thread_reports=thread_reports,
+            total_open=total_open,
             reason_labels=dict(REPORT_REASONS),
             user_name=session.get("user_name"),
         )

@@ -41,8 +41,8 @@ def create_or_update_admin(email: str, password: str, name: str = "Admin"):
 
 def main():
     parser = argparse.ArgumentParser(description="Create or update an admin user in the database.")
-    parser.add_argument("--email", required=False, default="adimn@admin.com", help="Admin email to create/update")
-    parser.add_argument("--password", required=False, default="adimn", help="Password for the admin account")
+    parser.add_argument("--email", required=False, default="admin@admin.com", help="Admin email to create/update")
+    parser.add_argument("--password", required=False, default="admin", help="Password for the admin account")
     parser.add_argument("--name", required=False, default="Admin", help="Display name for the admin user")
     args = parser.parse_args()
 

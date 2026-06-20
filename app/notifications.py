@@ -56,6 +56,44 @@ def notify_community_members(db, community_id, type, message, url=None, actor_id
         )
 
 
+# The moderation inbox. The default admin account seeded in
+# Database.create_tables() owns this address; reports are emailed and sent
+# in-app here so moderators see them whether or not email is configured.
+ADMIN_EMAIL = "admin@admin.com"
+
+
+def notify_admins_of_report(db, content_kind, content_title, reason_label,
+                            reporter_name, details=None, review_url=None):
+    """Alert moderators that content was reported: an in-app notification to
+    every admin account plus a best-effort email to ADMIN_EMAIL.
+
+    Best-effort by contract — callers wrap this in try/except so a failure here
+    never blocks the report from being recorded. Returns True if at least the
+    in-app notification step ran.
+    """
+    kind = "post" if content_kind == "post" else "thread"
+    title = content_title or f"(untitled {kind})"
+    message = f"{reporter_name} reported a {kind}: “{title}” ({reason_label})"
+
+    # In-app notification to each admin account (this is what reliably reaches
+    # admin@admin.com, which is a real user row).
+    admins = db.fetch_all("SELECT id FROM users WHERE role = 'admin'")
+    for a in admins:
+        create_notification(db, a["id"], "report", message, url=review_url)
+
+    # Best-effort email to the moderation inbox.
+    try:
+        from app.utils.email_utils import EmailService
+        EmailService.send_report_notification(
+            ADMIN_EMAIL, kind, title, reason_label, reporter_name,
+            details=details, review_url=review_url,
+        )
+    except Exception as e:
+        print(f"DEBUG: could not email report notification: {e}")
+
+    return True
+
+
 def unread_count(db, user_id):
     """How many unread notifications ``user_id`` has (0 when logged out)."""
     if not user_id:

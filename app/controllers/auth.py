@@ -3,6 +3,7 @@ from app.models.database import Database
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.utils.email_utils import EmailService
 from datetime import datetime, timedelta
+import secrets
 
 class AuthController:
     def login(self):
@@ -194,6 +195,141 @@ class AuthController:
         session.clear()
         flash("Your account has been deactivated. Log in any time to reactivate it.", "info")
         return redirect(url_for("Auth.login"))
+
+    def request_account_deletion(self):
+        """Start the email-confirmed account deletion flow.
+
+        Generates a one-time token, stores it with a 1-hour expiry, and emails
+        the user a confirmation link. The account is NOT touched until they
+        click that link (see confirm_account_deletion).
+        """
+        user_id = session.get("user_id")
+        if not user_id:
+            flash("Please log in first.", "warning")
+            return redirect(url_for("Auth.login"))
+
+        db = Database()
+        user = db.fetch_one("SELECT id, name, email FROM users WHERE id = %s", (user_id,))
+        if not user:
+            db.close()
+            session.clear()
+            flash("Account not found.", "danger")
+            return redirect(url_for("Auth.login"))
+
+        token = secrets.token_urlsafe(32)
+        expiry_dt = datetime.utcnow() + timedelta(hours=1)
+        db.execute(
+            "UPDATE users SET deletion_token = %s, deletion_token_expires_at = %s WHERE id = %s",
+            (token, expiry_dt, user_id),
+        )
+        db.close()
+
+        confirm_url = url_for("Auth.confirm_account_deletion", token=token, _external=True)
+        sent = EmailService.send_account_deletion_confirmation(user["email"], user["name"], confirm_url)
+        if sent:
+            flash("We've emailed you a link to confirm deleting your account. It expires in 1 hour.", "info")
+        else:
+            flash("We couldn't send the confirmation email right now. Please try again later.", "danger")
+        return redirect(url_for("Home.profile"))
+
+    def confirm_account_deletion(self):
+        """Validate a deletion token and (on POST) permanently delete the account.
+
+        GET renders a final confirmation page so email link-prefetchers can't
+        trigger deletion; the actual deletion only happens on the POST.
+        """
+        token = request.values.get("token")
+        if not token:
+            flash("Invalid or missing deletion link.", "danger")
+            return redirect(url_for("Home.home"))
+
+        db = Database()
+        user = db.fetch_one("SELECT * FROM users WHERE deletion_token = %s", (token,))
+        if not user:
+            db.close()
+            flash("This deletion link is invalid or has already been used.", "danger")
+            return redirect(url_for("Home.home"))
+
+        expires = user.get("deletion_token_expires_at")
+        if not expires or datetime.utcnow() > expires:
+            db.execute(
+                "UPDATE users SET deletion_token = NULL, deletion_token_expires_at = NULL WHERE id = %s",
+                (user["id"],),
+            )
+            db.close()
+            flash("This deletion link has expired. Please request account deletion again.", "danger")
+            return redirect(url_for("Home.home"))
+
+        if request.method == "GET":
+            db.close()
+            return render_template("confirm_delete_account.html", token=token, user_name=user["name"])
+
+        # POST — carry out the deletion.
+        self._anonymize_and_delete_user(db, user)
+        db.close()
+        session.clear()
+        flash("Your account has been permanently deleted. Your posts remain on the forum as [deleted].", "info")
+        return redirect(url_for("Auth.login"))
+
+    def _get_or_create_deleted_user(self, db):
+        """Return the id of the shared '[deleted]' sentinel account, creating it
+        once if needed. Reassigning content to this account keeps posts/comments
+        on the forum without exposing the deleted user's identity."""
+        sentinel_email = "deleted@nicheforum.local"
+        row = db.fetch_one("SELECT id FROM users WHERE email = %s", (sentinel_email,))
+        if row:
+            return row["id"]
+        db.execute(
+            "INSERT INTO users (name, email, password, role, is_verified, is_active) "
+            "VALUES (%s, %s, %s, %s, %s, %s)",
+            ("[deleted]", sentinel_email, generate_password_hash(secrets.token_urlsafe(16)), "user", 1, 0),
+        )
+        return db.fetch_one("SELECT LAST_INSERT_ID() AS id")["id"]
+
+    def _table_columns(self, db, table):
+        """Return the set of column names for `table` (empty set if missing).
+
+        Used so content reassignment works across schema variants — e.g. some
+        installs key thread replies by user_id, others by an author-name string.
+        """
+        try:
+            return {c["Field"] for c in db.fetch_all(f"DESCRIBE {table}")}
+        except Exception:
+            return set()
+
+    def _anonymize_and_delete_user(self, db, user):
+        """Preserve the user's content, then remove their account and personal data.
+
+        Authored content survives under the shared '[deleted]' identity:
+          • posts / post_comments / threads / replies → reassigned to the
+            sentinel user (by user_id) and/or have their author-name string
+            blanked to '[deleted]', depending on what columns the table has.
+        Deleting the user row then cascades away their personal data (votes,
+        follows, community memberships, notifications, direct messages, reports).
+        """
+        user_id = user["id"]
+        user_name = user["name"]
+        sentinel_id = self._get_or_create_deleted_user(db)
+
+        # Community posts and their comments are keyed by user_id everywhere.
+        db.execute("UPDATE posts SET user_id = %s WHERE user_id = %s", (sentinel_id, user_id))
+        db.execute("UPDATE post_comments SET user_id = %s WHERE user_id = %s", (sentinel_id, user_id))
+
+        # Threads/replies attribute authors differently across schema versions:
+        # reassign a user_id FK if present, and blank an author-name string if present.
+        thread_cols = self._table_columns(db, "threads")
+        if "user_id" in thread_cols:
+            db.execute("UPDATE threads SET user_id = %s WHERE user_id = %s", (sentinel_id, user_id))
+        if "author" in thread_cols:
+            db.execute("UPDATE threads SET author = %s WHERE author = %s", ("[deleted]", user_name))
+
+        reply_cols = self._table_columns(db, "replies")
+        if "user_id" in reply_cols:
+            db.execute("UPDATE replies SET user_id = %s WHERE user_id = %s", (sentinel_id, user_id))
+        if "user_email" in reply_cols:
+            db.execute("UPDATE replies SET user_email = %s WHERE user_email = %s", ("[deleted]", user_name))
+
+        db.execute("DELETE FROM users WHERE id = %s", (user_id,))
 
     def verify_registration(self):
         """Handle OTP verification after registration."""

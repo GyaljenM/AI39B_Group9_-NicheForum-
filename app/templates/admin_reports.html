@@ -1,95 +1,151 @@
 {% extends "base.html" %}
 
-{% block title %}Reports{% endblock %}
+{% block title %}Moderation Queue{% endblock %}
 
 {% block content %}
 <div class="max-w-[960px] mx-auto px-6 mt-8">
-    <div class="mb-8">
-        <h1 class="font-display-lg text-headline-md mb-1 flex items-center gap-2">
-            <span class="material-symbols-outlined text-red-500">flag</span>
-            Moderation Queue
-        </h1>
-        <p class="text-on-surface-variant">Open reports from the community. Dismiss a report or remove the content.</p>
+
+    {# ── Header ─────────────────────────────────────────────────────────── #}
+    <div class="flex items-start justify-between gap-4 flex-wrap mb-2">
+        <div>
+            <h1 class="text-2xl font-bold text-[#1C1917] flex items-center gap-2">
+                <span class="material-symbols-outlined text-red-600">flag</span>
+                Moderation Queue
+            </h1>
+            <p class="text-sm text-[#78716C] mt-1">Review reports from the community. Read the reporter's note, then dismiss the report or remove the content.</p>
+        </div>
+        <span class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold
+            {% if total_open %}bg-red-50 text-red-700 border border-red-200{% else %}bg-green-50 text-green-700 border border-green-200{% endif %}">
+            <span class="material-symbols-outlined text-base">{{ 'inbox' if total_open else 'task_alt' }}</span>
+            {{ total_open }} open report{{ '' if total_open == 1 else 's' }}
+        </span>
     </div>
 
-    {% macro reason_badge(reason) %}
-    <span class="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">
-        {{ reason_labels.get(reason, reason) }}
-    </span>
+    {# ── Summary chips ──────────────────────────────────────────────────── #}
+    <div class="flex items-center gap-3 mt-4 mb-8 text-sm">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F8F6F1] border border-[#E5E3DE] text-[#1C1917]">
+            <span class="material-symbols-outlined text-base text-[#C2410C]">hub</span>
+            {{ post_reports|length }} post report{{ '' if post_reports|length == 1 else 's' }}
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F8F6F1] border border-[#E5E3DE] text-[#1C1917]">
+            <span class="material-symbols-outlined text-base text-[#C2410C]">forum</span>
+            {{ thread_reports|length }} thread report{{ '' if thread_reports|length == 1 else 's' }}
+        </span>
+    </div>
+
+    {# ── Reusable report card ───────────────────────────────────────────────
+       kind: 'post' | 'thread'. view_url/dismiss_url/delete_url are prebuilt
+       per item so the macro stays presentation-only. #}
+    {% macro report_card(r, kind, location_label, view_url, dismiss_url, delete_url) %}
+    <article class="bg-white rounded-2xl border {% if r.reason == 'hate' %}border-red-300 ring-1 ring-red-100{% else %}border-[#E5E3DE]{% endif %} overflow-hidden">
+        <div class="p-5">
+            {# Meta row: reason + when + reporter #}
+            <div class="flex items-center gap-2 mb-3 flex-wrap">
+                {% if r.reason == 'hate' %}
+                <span class="text-xs px-2.5 py-1 rounded-full bg-red-600 text-white font-semibold inline-flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">gpp_bad</span>Hate speech
+                </span>
+                {% else %}
+                <span class="text-xs px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 font-medium">
+                    {{ reason_labels.get(r.reason, r.reason) }}
+                </span>
+                {% endif %}
+                <span class="text-xs text-[#A8A29E]">{{ r.created_at }} &middot; reported by <span class="text-[#78716C] font-medium">{{ r.reporter_name }}</span></span>
+            </div>
+
+            {# Reported content #}
+            <a href="{{ view_url }}" class="block font-semibold text-[#1C1917] hover:text-[#C2410C] transition-colors">
+                {{ r.content_title or '(untitled ' ~ kind ~ ')' }}
+            </a>
+            <p class="text-xs text-[#A8A29E] mt-0.5">
+                <span class="inline-flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">{{ 'hub' if kind == 'post' else 'forum' }}</span>{{ location_label }}
+                </span>
+                &middot; by {{ r.author_name }}
+            </p>
+            {% if r.content_body %}
+            <p class="text-sm text-[#57534E] mt-2 whitespace-pre-line bg-[#F8F6F1] border border-[#E5E3DE] rounded-lg px-3 py-2">{{ r.content_body|truncate(220) }}</p>
+            {% endif %}
+
+            {# Reporter's explanation — the whole point of the feature. #}
+            {% if r.details %}
+            <div class="mt-3 border-l-4 border-[#C2410C] bg-orange-50/60 rounded-r-lg px-4 py-3">
+                <p class="text-xs font-semibold uppercase tracking-wide text-[#C2410C] flex items-center gap-1.5 mb-1">
+                    <span class="material-symbols-outlined text-sm">chat</span>Reporter's note
+                </p>
+                <p class="text-sm text-[#1C1917] whitespace-pre-line">{{ r.details }}</p>
+            </div>
+            {% else %}
+            <p class="mt-3 text-xs text-[#A8A29E] italic">The reporter didn't add a note.</p>
+            {% endif %}
+        </div>
+
+        {# Actions #}
+        <div class="flex items-center justify-end gap-2 px-5 py-3 border-t border-[#E5E3DE] bg-[#FBFAF7]">
+            <a href="{{ view_url }}" class="px-4 py-2 rounded-full border border-[#E5E3DE] text-sm text-[#78716C] hover:bg-[#F1EEE8] transition-colors inline-flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base">visibility</span>View
+            </a>
+            <form action="{{ dismiss_url }}" method="POST">
+                <button type="submit" class="px-4 py-2 rounded-full border border-[#E5E3DE] text-sm text-[#78716C] hover:bg-[#F1EEE8] transition-colors inline-flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base">done</span>Dismiss
+                </button>
+            </form>
+            <button type="button" onclick="openDeleteModal('{{ delete_url }}', '{{ kind }}')"
+                class="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors inline-flex items-center gap-1.5 active:scale-95">
+                <span class="material-symbols-outlined text-base">delete</span>Remove {{ kind }}
+            </button>
+        </div>
+    </article>
     {% endmacro %}
 
-    <!-- Post reports -->
+    {# ── All-clear empty state ──────────────────────────────────────────── #}
+    {% if not post_reports and not thread_reports %}
+    <div class="bg-white border border-dashed border-[#E5E3DE] rounded-2xl p-12 text-center">
+        <span class="material-symbols-outlined text-5xl text-green-500">task_alt</span>
+        <p class="mt-3 text-lg font-semibold text-[#1C1917]">You're all caught up</p>
+        <p class="text-sm text-[#78716C] mt-1">There are no open reports right now. New reports will appear here.</p>
+    </div>
+    {% endif %}
+
+    {# ── Post reports ───────────────────────────────────────────────────── #}
+    {% if post_reports %}
     <section class="mb-10">
-        <h2 class="font-headline-sm mb-4">Post reports ({{ post_reports|length }})</h2>
-        {% if post_reports %}
+        <h2 class="text-base font-semibold text-[#1C1917] mb-4 flex items-center gap-2">
+            Post reports
+            <span class="text-xs px-2 py-0.5 rounded-full bg-[#F8F6F1] border border-[#E5E3DE] text-[#78716C]">{{ post_reports|length }}</span>
+        </h2>
         <div class="space-y-4">
             {% for r in post_reports %}
-            <div class="bg-white rounded-2xl border border-slate-100 p-5">
-                <div class="flex items-start justify-between gap-4 flex-wrap">
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-2 mb-1">
-                            {{ reason_badge(r.reason) }}
-                            <span class="text-xs text-slate-400">{{ r.created_at }}</span>
-                        </div>
-                        <a href="{{ url_for('Home.community_detail', community_id=r.community_id) }}"
-                           class="font-semibold text-on-surface hover:text-primary transition-all">{{ r.content_title }}</a>
-                        <p class="text-xs text-slate-500 mt-0.5">in {{ r.community_name }} &middot; reported by {{ r.reporter_name }}</p>
-                        {% if r.details %}
-                        <p class="text-sm text-on-surface-variant mt-2 whitespace-pre-line">“{{ r.details }}”</p>
-                        {% endif %}
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <form action="{{ url_for('Home.resolve_post_report', report_id=r.id) }}" method="POST">
-                            <button type="submit" class="px-4 py-2 rounded-full border border-slate-200 text-sm text-on-surface-variant hover:bg-slate-50 transition-all">Dismiss</button>
-                        </form>
-                        <form action="{{ url_for('Home.delete_post', post_id=r.post_id) }}" method="POST" onsubmit="return confirm('Delete this post permanently?')">
-                            <button type="submit" class="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-all">Delete post</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+            {{ report_card(
+                r, 'post', r.community_name,
+                url_for('Home.community_detail', community_id=r.community_id),
+                url_for('Home.resolve_post_report', report_id=r.id),
+                url_for('Home.delete_post', post_id=r.post_id)
+            ) }}
             {% endfor %}
         </div>
-        {% else %}
-        <p class="text-sm text-slate-400 bg-white border border-dashed border-slate-200 rounded-2xl p-6 text-center">No open post reports. </p>
-        {% endif %}
     </section>
+    {% endif %}
 
-    <!-- Thread reports -->
-    <section>
-        <h2 class="font-headline-sm mb-4">Thread reports ({{ thread_reports|length }})</h2>
-        {% if thread_reports %}
+    {# ── Thread reports ─────────────────────────────────────────────────── #}
+    {% if thread_reports %}
+    <section class="mb-12">
+        <h2 class="text-base font-semibold text-[#1C1917] mb-4 flex items-center gap-2">
+            Thread reports
+            <span class="text-xs px-2 py-0.5 rounded-full bg-[#F8F6F1] border border-[#E5E3DE] text-[#78716C]">{{ thread_reports|length }}</span>
+        </h2>
         <div class="space-y-4">
             {% for r in thread_reports %}
-            <div class="bg-white rounded-2xl border border-slate-100 p-5">
-                <div class="flex items-start justify-between gap-4 flex-wrap">
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-2 mb-1">
-                            {{ reason_badge(r.reason) }}
-                            <span class="text-xs text-slate-400">{{ r.created_at }}</span>
-                        </div>
-                        <a href="{{ url_for('Thread.view_thread', thread_id=r.thread_id) }}"
-                           class="font-semibold text-on-surface hover:text-primary transition-all">{{ r.content_title }}</a>
-                        <p class="text-xs text-slate-500 mt-0.5">in {{ r.category }} &middot; reported by {{ r.reporter_name }}</p>
-                        {% if r.details %}
-                        <p class="text-sm text-on-surface-variant mt-2 whitespace-pre-line">“{{ r.details }}”</p>
-                        {% endif %}
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <form action="{{ url_for('Thread.resolve_thread_report', report_id=r.id) }}" method="POST">
-                            <button type="submit" class="px-4 py-2 rounded-full border border-slate-200 text-sm text-on-surface-variant hover:bg-slate-50 transition-all">Dismiss</button>
-                        </form>
-                        <form action="{{ url_for('Thread.delete_thread', thread_id=r.thread_id) }}" method="POST" onsubmit="return confirm('Delete this thread permanently?')">
-                            <button type="submit" class="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-all">Delete thread</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+            {{ report_card(
+                r, 'thread', r.category,
+                url_for('Thread.view_thread', thread_id=r.thread_id),
+                url_for('Thread.resolve_thread_report', report_id=r.id),
+                url_for('Thread.delete_thread', thread_id=r.thread_id)
+            ) }}
             {% endfor %}
         </div>
-        {% else %}
-        <p class="text-sm text-slate-400 bg-white border border-dashed border-slate-200 rounded-2xl p-6 text-center">No open thread reports.</p>
-        {% endif %}
     </section>
+    {% endif %}
+
 </div>
 {% endblock %}

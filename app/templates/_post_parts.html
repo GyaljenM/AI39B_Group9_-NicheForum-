@@ -195,7 +195,7 @@
             Add a community note
         </button>
         {% if logged_in %}
-        <button type="button" onclick="openReportModal('{{ report_action }}', {{ (item.title or 'this content')|tojson }})"
+        <button type="button" onclick='openReportModal({{ report_action|tojson }}, {{ (item.title or "this content")|tojson }})'
             class="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-slate-50 flex items-center gap-2 transition-colors">
             <span class="material-symbols-outlined text-base text-slate-500">flag</span>
             Report {{ 'post' if kind == 'post' else 'thread' }}

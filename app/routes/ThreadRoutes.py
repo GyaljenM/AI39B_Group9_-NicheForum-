@@ -2,7 +2,8 @@ from flask import Blueprint, request, redirect, url_for, session, flash, render_
 from app.models.database import Database
 from app.utils.word_censor import WordCensor
 from app.auth import login_required, admin_required
-from app.routes.HomeRoutes import save_media, attach_media_and_poll, attach_notes, REPORT_REASON_VALUES
+from app.routes.HomeRoutes import save_media, attach_media_and_poll, attach_notes, REPORT_REASON_VALUES, REPORT_REASONS
+from app.notifications import notify_admins_of_report
 import os
 
 class ThreadRoutes:
@@ -459,7 +460,7 @@ class ThreadRoutes:
             return redirect(request.referrer or url_for("Home.home"))
 
         db = Database()
-        thread = db.fetch_one("SELECT id FROM threads WHERE id = %s", (thread_id,))
+        thread = db.fetch_one("SELECT id, title FROM threads WHERE id = %s", (thread_id,))
         if not thread:
             db.close()
             flash("Thread not found.", "danger")
@@ -476,6 +477,22 @@ class ThreadRoutes:
             """,
             (thread_id, user_id, reason, details),
         )
+
+        # Alert the moderation team (in-app to every admin + email to admin@admin.com).
+        # Best-effort: a notification failure must not undo the recorded report.
+        try:
+            notify_admins_of_report(
+                db,
+                "thread",
+                thread.get("title"),
+                dict(REPORT_REASONS).get(reason, reason),
+                session.get("user_name", "A member"),
+                details=details,
+                review_url=url_for("Home.admin_reports"),
+            )
+        except Exception as e:
+            print(f"Error notifying admins of thread report: {e}")
+
         db.close()
         flash("Thanks for reporting. Our moderators will review this thread.", "success")
         return redirect(request.referrer or url_for("Thread.view_thread", thread_id=thread_id))

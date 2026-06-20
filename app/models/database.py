@@ -442,6 +442,22 @@ class Database:
             )
         """)
 
+        # ── User blocks (blocker_id blocks blocked_id) ─────────────────────
+        # A block is directed but enforced both ways: if either user has blocked
+        # the other they can't follow, message, or chat. Blocking also severs any
+        # existing follow relationship (handled in the block route).
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS user_blocks (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                blocker_id INT NOT NULL,
+                blocked_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_block (blocker_id, blocked_id),
+                FOREIGN KEY (blocker_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (blocked_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
         # ── Follows (Instagram-style: follower_id follows followee_id) ─────
         # One row per directed follow. Two users are "mutual followers" when
         # both directions exist; chat is gated on that (see ChatRoutes).
@@ -545,6 +561,15 @@ class Database:
             if 'is_active' not in user_column_names:
                 print("Adding missing is_active column to users table...")
                 db.execute("ALTER TABLE users ADD COLUMN is_active TINYINT NOT NULL DEFAULT 1")
+            # Email-confirmed account deletion: a one-time token + its expiry.
+            # Kept separate from verification_token so a pending deletion can't
+            # collide with registration/password-reset flows.
+            if 'deletion_token' not in user_column_names:
+                print("Adding missing deletion_token column to users table...")
+                db.execute("ALTER TABLE users ADD COLUMN deletion_token VARCHAR(255) NULL")
+            if 'deletion_token_expires_at' not in user_column_names:
+                print("Adding missing deletion_token_expires_at column to users table...")
+                db.execute("ALTER TABLE users ADD COLUMN deletion_token_expires_at DATETIME NULL")
         except Exception as e:
             print(f"Error updating users table structure: {e}")
 
@@ -649,11 +674,18 @@ class Database:
             admin = db.fetch_one(
                 "SELECT * FROM users WHERE email = %s", ("admin@admin.com",)
             )
+            from werkzeug.security import generate_password_hash
             if not admin:
-                from werkzeug.security import generate_password_hash
                 db.execute(
-                    "INSERT INTO users (name, email, password, role) VALUES (%s, %s, %s, %s)",
-                    ("Admin", "admin@admin.com", generate_password_hash("admin123"), "admin"),
+                    "INSERT INTO users (name, email, password, role, is_verified, is_active) VALUES (%s, %s, %s, %s, %s, %s)",
+                    ("Admin", "admin@admin.com", generate_password_hash("admin"), "admin", 1, 1),
+                )
+            elif admin.get("role") != "admin":
+                # Account exists but isn't an admin — promote it so the
+                # moderation queue always has an owner.
+                db.execute(
+                    "UPDATE users SET role = 'admin', is_active = 1 WHERE email = %s",
+                    ("admin@admin.com",),
                 )
         except Exception as e:
             print(f"Error creating admin: {e}")

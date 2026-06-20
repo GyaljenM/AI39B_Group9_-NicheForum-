@@ -5,6 +5,7 @@ from flask import (
 from app.models.database import Database
 from app.auth import login_required
 from app.follows import are_mutual_followers
+from app.blocks import has_block_between
 from app.notifications import create_notification
 from app.utils.word_censor import WordCensor
 
@@ -123,6 +124,12 @@ class ChatRoutes:
             flash("User not found.", "danger")
             return redirect(url_for("Chat.chat_home"))
 
+        # A block in either direction closes the conversation.
+        if has_block_between(db, user_id, other_id):
+            db.close()
+            flash("You can't chat with this user.", "warning")
+            return redirect(url_for("Chat.chat_home"))
+
         # Chat is restricted to mutual followers.
         if not are_mutual_followers(db, user_id, other_id):
             db.close()
@@ -154,6 +161,11 @@ class ChatRoutes:
         if not other or other_id == user_id:
             db.close()
             flash("Invalid conversation.", "danger")
+            return redirect(url_for("Chat.chat_home"))
+
+        if has_block_between(db, user_id, other_id):
+            db.close()
+            flash("You can't message this user.", "warning")
             return redirect(url_for("Chat.chat_home"))
 
         if not are_mutual_followers(db, user_id, other_id):
@@ -206,6 +218,11 @@ class ChatRoutes:
         if not other or other_id == user_id:
             db.close()
             flash("Invalid conversation.", "danger")
+            return redirect(url_for("Chat.chat_home"))
+
+        if has_block_between(db, user_id, other_id):
+            db.close()
+            flash("You can't message this user.", "warning")
             return redirect(url_for("Chat.chat_home"))
 
         if not are_mutual_followers(db, user_id, other_id):

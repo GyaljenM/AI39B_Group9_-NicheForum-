@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm account deletion{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto px-6 mt-16">
+    <div class="bg-white border border-[#E5E3DE] rounded-2xl overflow-hidden">
+        <div class="p-7 text-center">
+            <div class="mx-auto h-14 w-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                <span class="material-symbols-outlined text-red-600 text-3xl">delete_forever</span>
+            </div>
+            <h1 class="text-xl font-bold text-[#1C1917]">Delete your account?</h1>
+            <p class="text-sm text-[#78716C] mt-2">
+                {% if user_name %}<span class="font-semibold text-[#1C1917]">{{ user_name }}</span>, this{% else %}This{% endif %}
+                is permanent and can't be undone.
+            </p>
+
+            <div class="text-left bg-[#F8F6F1] border border-[#E5E3DE] rounded-xl p-4 mt-5 space-y-2">
+                <p class="text-sm text-[#1C1917] flex items-start gap-2">
+                    <span class="material-symbols-outlined text-base text-green-600 mt-0.5">check_circle</span>
+                    Your posts, threads and replies <span class="font-semibold">stay on the forum</span> — shown as <span class="font-semibold">[deleted]</span>.
+                </p>
+                <p class="text-sm text-[#1C1917] flex items-start gap-2">
+                    <span class="material-symbols-outlined text-base text-red-600 mt-0.5">cancel</span>
+                    Your profile, votes, follows, messages and notifications are <span class="font-semibold">permanently removed</span>.
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 px-7 py-4 border-t border-[#E5E3DE] bg-[#FBFAF7]">
+            <a href="{{ url_for('Home.profile') }}"
+               class="flex-1 text-center px-5 py-2.5 rounded-full border border-[#E5E3DE] bg-white text-sm font-medium text-[#78716C] hover:bg-[#F1EEE8] transition-colors">
+                Keep my account
+            </a>
+            <form action="{{ url_for('Auth.confirm_account_deletion') }}" method="POST" class="flex-1"
+                  onsubmit="return confirm('Permanently delete your account? This cannot be undone.')">
+                <input type="hidden" name="token" value="{{ token }}">
+                <button type="submit"
+                    class="w-full px-5 py-2.5 rounded-full bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors inline-flex items-center justify-center gap-1.5">
+                    <span class="material-symbols-outlined text-base">delete_forever</span>Delete forever
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

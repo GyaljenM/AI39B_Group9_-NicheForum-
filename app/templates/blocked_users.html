@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Blocked accounts{% endblock %}
+
+{% block content %}
+<div class="max-w-[720px] mx-auto px-6 mt-8">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-[#1C1917] flex items-center gap-2">
+            <span class="material-symbols-outlined text-red-600">block</span>
+            Blocked accounts
+        </h1>
+        <p class="text-sm text-[#78716C] mt-1">Blocked people can't follow you or send you messages, and you won't follow each other. They aren't told they've been blocked.</p>
+    </div>
+
+    {% if blocked %}
+    <div class="bg-white border border-[#E5E3DE] rounded-2xl divide-y divide-[#E5E3DE]">
+        {% for u in blocked %}
+        <div class="flex items-center justify-between gap-4 px-5 py-4">
+            <a href="{{ url_for('User.profile', user_id=u.id) }}" class="flex items-center gap-3 min-w-0 group">
+                <span class="h-11 w-11 rounded-full bg-[#64748b] text-white font-bold flex items-center justify-center overflow-hidden shrink-0">
+                    {% if u.profile_pic %}<img src="{{ url_for('static', filename=u.profile_pic) }}" alt="" class="w-full h-full object-cover">{% else %}{{ u.name[0]|upper }}{% endif %}
+                </span>
+                <span class="min-w-0">
+                    <span class="block font-semibold text-[#1C1917] group-hover:text-[#C2410C] transition-colors truncate">{{ u.name }}</span>
+                    <span class="block text-xs text-[#A8A29E] truncate">@{{ u.name.lower().replace(' ', '_') }} &middot; blocked {{ u.created_at }}</span>
+                </span>
+            </a>
+            <form action="{{ url_for('User.unblock', user_id=u.id) }}" method="POST" class="shrink-0">
+                <button type="submit" class="px-4 py-2 rounded-full border border-[#E5E3DE] text-sm font-medium text-[#1C1917] hover:bg-[#F8F6F1] transition-colors inline-flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base">person_check</span>Unblock
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white border border-dashed border-[#E5E3DE] rounded-2xl p-12 text-center">
+        <span class="material-symbols-outlined text-5xl text-[#D6D3D1]">block</span>
+        <p class="mt-3 text-lg font-semibold text-[#1C1917]">You haven't blocked anyone</p>
+        <p class="text-sm text-[#78716C] mt-1">When you block someone, they'll show up here so you can unblock them later.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

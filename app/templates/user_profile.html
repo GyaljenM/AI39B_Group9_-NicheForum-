@@ -34,20 +34,44 @@
             </div>
             <div class="profile-actions">
                 {% if session.get('user_id') %}
-                    {% if viewer_follows %}
-                    <form action="{{ url_for('User.unfollow', user_id=profile_user.id) }}" method="POST">
-                        <button type="submit" class="follow-btn following">Following</button>
-                    </form>
-                    {% else %}
-                    <form action="{{ url_for('User.follow', user_id=profile_user.id) }}" method="POST">
-                        <button type="submit" class="follow-btn">Follow</button>
-                    </form>
+                    {% if not block_between %}
+                        {% if viewer_follows %}
+                        <form action="{{ url_for('User.unfollow', user_id=profile_user.id) }}" method="POST">
+                            <button type="submit" class="follow-btn following">Following</button>
+                        </form>
+                        {% else %}
+                        <form action="{{ url_for('User.follow', user_id=profile_user.id) }}" method="POST">
+                            <button type="submit" class="follow-btn">Follow</button>
+                        </form>
+                        {% endif %}
+                        {% if is_mutual %}
+                        <a class="message-btn" href="{{ url_for('Chat.conversation', other_id=profile_user.id) }}">
+                            <span class="material-symbols-outlined">chat</span> Message
+                        </a>
+                        {% endif %}
                     {% endif %}
-                    {% if is_mutual %}
-                    <a class="message-btn" href="{{ url_for('Chat.conversation', other_id=profile_user.id) }}">
-                        <span class="material-symbols-outlined">chat</span> Message
-                    </a>
-                    {% endif %}
+
+                    <!-- Overflow menu: block / unblock -->
+                    <div class="relative inline-block">
+                        <button type="button" onclick="toggleKebab(event, 'profile-actions-menu')" aria-label="More actions" class="profile-more-btn">
+                            <span class="material-symbols-outlined">more_horiz</span>
+                        </button>
+                        <div id="profile-actions-menu" data-kebab
+                             class="hidden absolute right-0 top-full mt-2 z-30 bg-white border border-[#E5E3DE] rounded-xl shadow-xl py-2 min-w-[210px]">
+                            {% if viewer_blocked %}
+                            <form action="{{ url_for('User.unblock', user_id=profile_user.id) }}" method="POST">
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-[#1C1917] hover:bg-[#F8F6F1] flex items-center gap-2 transition-colors">
+                                    <span class="material-symbols-outlined text-base">person_check</span> Unblock {{ profile_user.name }}
+                                </button>
+                            </form>
+                            {% else %}
+                            <button type="button" onclick='openBlockModal({{ url_for("User.block", user_id=profile_user.id)|tojson }}, {{ profile_user.name|tojson }})'
+                                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                                <span class="material-symbols-outlined text-base">block</span> Block {{ profile_user.name }}
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
                 {% else %}
                     <button onclick="openLoginModal()" class="follow-btn">Follow</button>
                 {% endif %}
@@ -55,7 +79,12 @@
         </div>
     </header>
 
-    {% if session.get('user_id') and not is_mutual and viewer_follows %}
+    {% if session.get('user_id') and viewer_blocked %}
+    <div class="mutual-hint blocked-hint">
+        <span class="material-symbols-outlined">block</span>
+        You've blocked {{ profile_user.name }}. They can't follow or message you. Unblock from the ⋯ menu.
+    </div>
+    {% elif session.get('user_id') and not block_between and not is_mutual and viewer_follows %}
     <div class="mutual-hint">
         <span class="material-symbols-outlined">info</span>
         You follow {{ profile_user.name }}. Once they follow you back, you'll be able to message each other.
@@ -171,6 +200,12 @@
 .message-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 12px; font-weight: 700; color: #64748b; background: #ede9fe; text-decoration: none; transition: all 0.2s; }
 .message-btn:hover { background: #ddd6fe; }
 .message-btn .material-symbols-outlined { font-size: 20px; }
+.profile-more-btn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; cursor: pointer; transition: all 0.2s; }
+.profile-more-btn:hover { background: #f1f5f9; color: #1e293b; }
+.blocked-hint { background: #fef2f2; color: #b91c1c; }
+.dark .profile-more-btn { background: #1a1816; border-color: #292724; color: #a7a39d; }
+.dark .profile-more-btn:hover { background: #292724; color: #f2f1ef; }
+.dark .blocked-hint { background: #3f1d1d; color: #fca5a5; }
 .mutual-hint { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 8px; padding: 12px 32px; font-size: 13px; color: #475569; background: #f1f5f9; }
 .activity-tabs { background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: 64px; z-index: 10; }
 .tabs-container { max-width: 1200px; margin: 0 auto; padding: 0 32px; display: flex; gap: 32px; align-items: center; }

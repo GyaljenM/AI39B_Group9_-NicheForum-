@@ -109,7 +109,7 @@
                         {% if thread.replies %}
                             {% for reply in thread.replies %}
                             <div class="flex gap-3">
-                                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold">{{ reply.user_email[0]|upper }}</div>
+                                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold overflow-hidden">{% if reply.author_pic %}<img src="{{ url_for('static', filename=reply.author_pic) }}" alt="{{ reply.user_email }}" class="w-full h-full object-cover">{% else %}{{ reply.user_email[0]|upper }}{% endif %}</div>
                                 <div class="flex-1 bg-white p-4 rounded-2xl shadow-sm border border-slate-50">
                                     <div class="flex items-center gap-2 mb-1">
                                         <span class="text-sm font-bold">@{{ reply.user_email }}</span>

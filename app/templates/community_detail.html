@@ -75,8 +75,8 @@
                         <div class="bg-slate-50 rounded-2xl border border-slate-100 p-6 transition-all relative">
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold">
-                                    {{ post.user_name[0]|upper }}
+                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold overflow-hidden">
+                                    {% if post.user_pic %}<img src="{{ url_for('static', filename=post.user_pic) }}" alt="{{ post.user_name }}" class="w-full h-full object-cover">{% else %}{{ post.user_name[0]|upper }}{% endif %}
                                 </div>
                                 <div>
                                     <p class="text-sm font-semibold">{{ post.user_name }}</p>
@@ -123,8 +123,8 @@
                         <div id="replies-{{ post.id }}" class="hidden mt-4 space-y-4">
                             {% for comment in post.comments %}
                             <div class="flex gap-3">
-                                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-                                    {{ comment.user_name[0]|upper }}
+                                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-sm shrink-0 overflow-hidden">
+                                    {% if comment.user_pic %}<img src="{{ url_for('static', filename=comment.user_pic) }}" alt="{{ comment.user_name }}" class="w-full h-full object-cover">{% else %}{{ comment.user_name[0]|upper }}{% endif %}
                                 </div>
                                 <div class="flex-1 bg-slate-50 rounded-xl px-4 py-2">
                                     <div class="flex-1 bg-slate-50 rounded px-4 py-2">

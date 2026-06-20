@@ -266,10 +266,10 @@ class HomeRoutes:
     def home(self):
         db = Database()
         posts = db.fetch_all("""
-            SELECT p.*, u.name as user_name, c.name as community_name 
-            FROM posts p 
-            JOIN users u ON p.user_id = u.id 
-            JOIN communities c ON p.community_id = c.id 
+            SELECT p.*, u.name as user_name, u.profile_pic as user_pic, c.name as community_name
+            FROM posts p
+            JOIN users u ON p.user_id = u.id
+            JOIN communities c ON p.community_id = c.id
             ORDER BY p.created_at DESC LIMIT 10
         """)
         user_id = session.get("user_id")
@@ -295,7 +295,7 @@ class HomeRoutes:
 
             post['comments'] = db.fetch_all(
                 """
-                SELECT pc.*, u.name AS user_name
+                SELECT pc.*, u.name AS user_name, u.profile_pic AS user_pic
                 FROM post_comments pc
                 JOIN users u ON pc.user_id = u.id
                 WHERE pc.post_id = %s
@@ -306,10 +306,22 @@ class HomeRoutes:
             attach_media_and_poll(db, post, "post", user_id)
             attach_notes(db, post, "post", user_id)
 
-        # Also fetch threads for the home page (index.html)
-        threads = db.fetch_all("SELECT * FROM threads ORDER BY created_at DESC LIMIT 10")
+        # Also fetch threads for the home page (index.html). Threads store the
+        # author by name only, so we LEFT JOIN users on name for the avatar
+        # (best-effort: falls back to initials when there's no match).
+        threads = db.fetch_all("""
+            SELECT t.*, u.profile_pic AS author_pic
+            FROM threads t
+            LEFT JOIN users u ON u.name = t.author
+            ORDER BY t.created_at DESC LIMIT 10
+        """)
         for thread in threads:
-            thread['replies'] = db.fetch_all("SELECT * FROM replies WHERE thread_id = %s", (thread['id'],))
+            thread['replies'] = db.fetch_all("""
+                SELECT r.*, u.profile_pic AS author_pic
+                FROM replies r
+                LEFT JOIN users u ON u.name = r.user_email
+                WHERE r.thread_id = %s
+            """, (thread['id'],))
             attach_media_and_poll(db, thread, "thread", session.get("user_id"))
             attach_notes(db, thread, "thread", session.get("user_id"))
 
@@ -512,7 +524,7 @@ class HomeRoutes:
             return "Community not found", 404
         
         posts = db.fetch_all("""
-            SELECT p.*, u.name as user_name
+            SELECT p.*, u.name as user_name, u.profile_pic as user_pic
             FROM posts p
             JOIN users u ON p.user_id = u.id
             WHERE p.community_id = %s
@@ -546,7 +558,7 @@ class HomeRoutes:
                     post['user_vote'] = my_vote['vote_type']
 
             post['comments'] = db.fetch_all("""
-                SELECT pc.*, u.name AS user_name
+                SELECT pc.*, u.name AS user_name, u.profile_pic AS user_pic
                 FROM post_comments pc
                 JOIN users u ON pc.user_id = u.id
                 WHERE pc.post_id = %s

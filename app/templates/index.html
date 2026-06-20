@@ -340,7 +340,7 @@
                         <!-- Thread Meta -->
                         <div class="flex items-center flex-wrap gap-x-3 gap-y-2 text-xs text-[#78716C] mt-3">
                             <span class="flex items-center gap-1.5">
-                                <span class="w-5 h-5 rounded-full bg-gradient-to-br from-[#C2410C] to-[#9a3412] flex items-center justify-center text-[10px] text-white font-bold">{{ thread.author[0]|upper }}</span>
+                                <span class="w-5 h-5 rounded-full bg-gradient-to-br from-[#C2410C] to-[#9a3412] flex items-center justify-center text-[10px] text-white font-bold overflow-hidden">{% if thread.author_pic %}<img src="{{ url_for('static', filename=thread.author_pic) }}" alt="{{ thread.author }}" class="w-full h-full object-cover">{% else %}{{ thread.author[0]|upper }}{% endif %}</span>
                                 <span class="font-medium">@{{ thread.author }}</span>
                             </span>
                             <span class="text-[#E7E5E4]">·</span>
@@ -368,7 +368,7 @@
                     <div class="space-y-3 max-h-[300px] overflow-y-auto mb-4 custom-scrollbar">
                         {% for reply in thread.replies %}
                         <div class="flex gap-3 animate-slide-in-right">
-                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#E7E5E4] to-[#D6D3D1] flex items-center justify-center text-[10px] font-bold text-[#44403C] flex-shrink-0">{{ reply.user_email[0]|upper }}</div>
+                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#E7E5E4] to-[#D6D3D1] flex items-center justify-center text-[10px] font-bold text-[#44403C] flex-shrink-0 overflow-hidden">{% if reply.author_pic %}<img src="{{ url_for('static', filename=reply.author_pic) }}" alt="{{ reply.user_email }}" class="w-full h-full object-cover">{% else %}{{ reply.user_email[0]|upper }}{% endif %}</div>
                             <div class="flex-1 bg-white p-3 rounded-2xl border border-[#E7E5E4]">
                                 <div class="flex items-center gap-2 mb-1">
                                     <span class="text-xs font-semibold text-[#1C1917]">@{{ reply.user_email }}</span>

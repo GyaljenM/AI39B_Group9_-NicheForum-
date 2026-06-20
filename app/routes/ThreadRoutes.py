@@ -68,17 +68,25 @@ class ThreadRoutes:
     def view_thread(self, thread_id):
         try:
             db = Database()
-            thread = db.fetch_one("SELECT * FROM threads WHERE id = %s", (thread_id,))
+            # Threads/replies store the author by name only, so LEFT JOIN users
+            # on name to pull the avatar (best-effort: NULL falls back to initials).
+            thread = db.fetch_one("""
+                SELECT t.*, u.profile_pic AS author_pic
+                FROM threads t
+                LEFT JOIN users u ON u.name = t.author
+                WHERE t.id = %s
+            """, (thread_id,))
             if not thread:
                 flash("Thread not found!", "danger")
                 return redirect(url_for("Home.home"))
-            
+
             replies = db.fetch_all(
                 """
-                SELECT r.*, 
+                SELECT r.*, u.profile_pic AS author_pic,
                     COALESCE((SELECT COUNT(*) FROM reply_votes rv WHERE rv.reply_id = r.id AND rv.vote_type = 'like'), 0) AS like_count,
                     COALESCE((SELECT COUNT(*) FROM reply_votes rv WHERE rv.reply_id = r.id AND rv.vote_type = 'dislike'), 0) AS dislike_count
                 FROM replies r
+                LEFT JOIN users u ON u.name = r.user_email
                 WHERE r.thread_id = %s
                 ORDER BY r.created_at ASC
                 """,
@@ -260,15 +268,28 @@ class ThreadRoutes:
     def view_community(self, category_name):
         try:
             db = Database()
-            # Fetch threads for this specific category
+            # Fetch threads for this specific category. Authors are stored by
+            # name, so LEFT JOIN users on name for the avatar (best-effort).
             threads = db.fetch_all(
-                "SELECT * FROM threads WHERE category = %s ORDER BY votes DESC, created_at DESC",
+                """
+                SELECT t.*, u.profile_pic AS author_pic
+                FROM threads t
+                LEFT JOIN users u ON u.name = t.author
+                WHERE t.category = %s
+                ORDER BY t.votes DESC, t.created_at DESC
+                """,
                 (category_name,)
             )
             # Fetch replies for each thread
             user_id = session.get("user_id")
             for thread in threads:
-                thread['replies'] = db.fetch_all("SELECT * FROM replies WHERE thread_id = %s ORDER BY created_at ASC", (thread['id'],))
+                thread['replies'] = db.fetch_all("""
+                    SELECT r.*, u.profile_pic AS author_pic
+                    FROM replies r
+                    LEFT JOIN users u ON u.name = r.user_email
+                    WHERE r.thread_id = %s
+                    ORDER BY r.created_at ASC
+                """, (thread['id'],))
                 attach_media_and_poll(db, thread, "thread", user_id)
                 attach_notes(db, thread, "thread", user_id)
 

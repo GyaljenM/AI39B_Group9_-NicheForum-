@@ -31,8 +31,8 @@
 
                 <div class="flex-1">
                     <div class="flex items-center gap-3 mb-6">
-                        <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
-                            {{ thread.author[0]|upper }}
+                        <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold overflow-hidden">
+                            {% if thread.author_pic %}<img src="{{ url_for('static', filename=thread.author_pic) }}" alt="{{ thread.author }}" class="w-full h-full object-cover">{% else %}{{ thread.author[0]|upper }}{% endif %}
                         </div>
                         <div>
                             <p class="font-bold text-on-surface">@{{ thread.author }}</p>
@@ -112,8 +112,8 @@
         <div class="flex gap-4 group animate-in fade-in slide-in-from-bottom-2 duration-300">
             <!-- Compact Avatar -->
             <div class="flex-shrink-0">
-                <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold border border-slate-50">
-                    {{ reply.user_email[0]|upper }}
+                <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold border border-slate-50 overflow-hidden">
+                    {% if reply.author_pic %}<img src="{{ url_for('static', filename=reply.author_pic) }}" alt="{{ reply.user_email }}" class="w-full h-full object-cover">{% else %}{{ reply.user_email[0]|upper }}{% endif %}
                 </div>
             </div>
             

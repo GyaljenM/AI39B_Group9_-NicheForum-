@@ -313,6 +313,13 @@
     font-weight: 700;
     color: white;
     flex-shrink: 0;
+    overflow: hidden;
+}
+
+.feed-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .feed-author-name {
@@ -622,8 +629,8 @@
                     <div id="replies-{{ post.id }}" class="hidden mt-4 space-y-4">
                         {% for comment in post.comments %}
                         <div class="flex gap-3">
-                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-                                {{ comment.user_name[0]|upper }}
+                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-sm shrink-0 overflow-hidden">
+                                {% if comment.user_pic %}<img src="{{ url_for('static', filename=comment.user_pic) }}" alt="{{ comment.user_name }}" class="w-full h-full object-cover">{% else %}{{ comment.user_name[0]|upper }}{% endif %}
                             </div>
                             <div class="flex-1 bg-slate-50 rounded-xl px-4 py-2">
                                 <div class="flex items-center gap-2 mb-1">
@@ -654,7 +661,7 @@
                     <!-- Footer: Author + Read More -->
                     <div class="feed-meta">
                         <div class="feed-author">
-                            <div class="feed-avatar">{{ post.user_name[0]|upper }}</div>
+                            <div class="feed-avatar">{% if post.user_pic %}<img src="{{ url_for('static', filename=post.user_pic) }}" alt="{{ post.user_name }}">{% else %}{{ post.user_name[0]|upper }}{% endif %}</div>
                             <span class="feed-author-name">@{{ post.user_name }}</span>
                         </div>
                         <a href="{{ url_for('Home.community_detail', community_id=post.community_id) }}" class="feed-read-more">

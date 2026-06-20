@@ -31,7 +31,7 @@ class AuthRoutes:
         self.bp.route("/delete-account", methods=["POST"])(
             self.controller.request_account_deletion
         )
-        self.bp.route("/delete-account/confirm", methods=["GET", "POST"])(
+        self.bp.route("/delete-account/confirm", methods=["POST"])(
             self.controller.confirm_account_deletion
         )
         return self.bp

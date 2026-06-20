@@ -165,7 +165,7 @@
                 <button type="button" onclick="confirmDeactivate()" class="user-menu-item danger">
                     <span class="material-symbols-outlined">person_off</span> Deactivate account
                 </button>
-                <button type="button" onclick="confirmDeleteAccount()" class="user-menu-item danger">
+                <button type="button" onclick="openDeleteAccountModal()" class="user-menu-item danger">
                     <span class="material-symbols-outlined">delete_forever</span> Delete account
                 </button>
                 <div class="my-1 border-t border-[#E5E3DE]"></div>
@@ -183,7 +183,6 @@
             </div>
         </div>
         <form id="deactivateForm" action="{{ url_for('Auth.deactivate_account') }}" method="POST" class="hidden"></form>
-        <form id="deleteAccountForm" action="{{ url_for('Auth.request_account_deletion') }}" method="POST" class="hidden"></form>
         {% else %}
         <button onclick="openLoginModal()" class="text-[#78716C] hover:text-[#1C1917] transition-colors px-4 cursor-pointer text-sm">Login</button>
         <button onclick="openRegisterModal()" class="bg-[#C2410C] hover:bg-[#9a3412] text-white px-6 py-2 rounded text-sm font-medium transition-colors">Sign Up</button>
@@ -369,6 +368,69 @@
         </div>
     </div>
 
+    {% if session.get('user_id') %}
+    <!-- Delete-account modal: OTP-confirmed permanent deletion (openDeleteAccountModal) -->
+    <div id="deleteAccountModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4"
+         data-send-url="{{ url_for('Auth.request_account_deletion') }}">
+        <div class="absolute inset-0 bg-black/50" onclick="closeDeleteAccountModal()"></div>
+        <div class="relative bg-white rounded p-0 w-full max-w-md border border-[#E5E3DE]">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-[#E5E3DE]">
+                <h3 class="text-lg font-semibold text-[#1C1917] flex items-center gap-2">
+                    <span class="material-symbols-outlined text-red-600">delete_forever</span>Delete your account
+                </h3>
+                <button type="button" onclick="closeDeleteAccountModal()" class="p-1 hover:bg-[#F8F6F1] rounded text-[#78716C]">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <!-- Step 1: confirm intent, then send the code -->
+            <div id="deleteAccountStep1">
+                <div class="px-6 py-5">
+                    <p class="text-sm text-[#78716C]">This is <span class="font-semibold text-[#1C1917]">permanent and can't be undone</span>. To confirm, we'll email a 6-digit verification code to your account address.</p>
+                    <div class="text-left bg-[#F8F6F1] border border-[#E5E3DE] rounded-xl p-4 mt-4 space-y-2">
+                        <p class="text-sm text-[#1C1917] flex items-start gap-2">
+                            <span class="material-symbols-outlined text-base text-green-600 mt-0.5">check_circle</span>
+                            Your posts, threads and replies <span class="font-semibold">stay on the forum</span> — shown as <span class="font-semibold">[deleted]</span>.
+                        </p>
+                        <p class="text-sm text-[#1C1917] flex items-start gap-2">
+                            <span class="material-symbols-outlined text-base text-red-600 mt-0.5">cancel</span>
+                            Your profile, votes, follows, messages and notifications are <span class="font-semibold">permanently removed</span>.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 px-6 py-4 border-t border-[#E5E3DE] bg-[#F8F6F1] rounded-b">
+                    <button type="button" onclick="closeDeleteAccountModal()" class="px-5 py-2 rounded border border-[#E5E3DE] bg-white text-[#78716C] text-sm hover:bg-[#F1EEE8] transition-colors">Keep my account</button>
+                    <button type="button" id="sendDeletionOtpBtn" onclick="sendDeletionOtp()" class="px-5 py-2 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-base">mail</span>Send verification code
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: enter the emailed code to finalize deletion -->
+            <div id="deleteAccountStep2" class="hidden">
+                <form id="deleteAccountForm" action="{{ url_for('Auth.confirm_account_deletion') }}" method="POST"
+                      onsubmit="return confirm('Permanently delete your account? This cannot be undone.');">
+                    <div class="px-6 py-5">
+                        <p class="text-sm text-[#78716C]">Enter the 6-digit code we sent to <span id="deleteOtpEmail" class="font-semibold text-[#1C1917]">your email</span>. It expires in 5 minutes.</p>
+                        <input type="text" id="deleteOtpInput" name="otp" inputmode="numeric" autocomplete="one-time-code"
+                               maxlength="6" pattern="\d{6}" required placeholder="••••••"
+                               class="mt-4 w-full text-center tracking-[0.5em] text-2xl font-semibold px-4 py-3 rounded border border-[#E5E3DE] bg-[#F8F6F1] focus:border-[#C2410C] focus:outline-none">
+                        <button type="button" onclick="sendDeletionOtp()" class="mt-3 text-sm text-[#C2410C] hover:underline">
+                            Didn't get it? Resend code
+                        </button>
+                    </div>
+                    <div class="flex justify-end gap-2 px-6 py-4 border-t border-[#E5E3DE] bg-[#F8F6F1] rounded-b">
+                        <button type="button" onclick="closeDeleteAccountModal()" class="px-5 py-2 rounded border border-[#E5E3DE] bg-white text-[#78716C] text-sm hover:bg-[#F1EEE8] transition-colors">Cancel</button>
+                        <button type="submit" class="px-5 py-2 bg-red-600 text-white rounded text-sm font-semibold hover:bg-red-700 transition-colors flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-base">delete_forever</span>Delete forever
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <script>
         // ── Kebab menus, community-note panel reveal, and report modal ──────────
         function toggleKebab(e, id) {
@@ -436,7 +498,7 @@
         }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') { closeReportModal(); closeDeleteModal(); closeBlockModal(); }
+            if (e.key === 'Escape') { closeReportModal(); closeDeleteModal(); closeBlockModal(); closeDeleteAccountModal(); }
         });
     </script>
 
@@ -498,9 +560,50 @@
                 document.getElementById('deactivateForm').submit();
             }
         }
-        function confirmDeleteAccount() {
-            if (confirm('Delete your account? We\'ll email you a confirmation link. Your posts stay on the forum but will be shown as [deleted].')) {
-                document.getElementById('deleteAccountForm').submit();
+        // ── Delete-account modal (OTP-confirmed) ──────────────────────────
+        // Step 1 warns + sends the code; step 2 takes the emailed OTP and
+        // submits it to Auth.confirm_account_deletion to finalize deletion.
+        function openDeleteAccountModal() {
+            const modal = document.getElementById('deleteAccountModal');
+            if (!modal) return;
+            // Reset to step 1 each time it opens.
+            document.getElementById('deleteAccountStep1').classList.remove('hidden');
+            document.getElementById('deleteAccountStep2').classList.add('hidden');
+            const input = document.getElementById('deleteOtpInput');
+            if (input) input.value = '';
+            modal.classList.remove('hidden');
+            const menu = document.getElementById('userMenu');
+            if (menu) menu.classList.add('hidden');
+        }
+        function closeDeleteAccountModal() {
+            const modal = document.getElementById('deleteAccountModal');
+            if (modal) modal.classList.add('hidden');
+        }
+        async function sendDeletionOtp() {
+            const modal = document.getElementById('deleteAccountModal');
+            const btn = document.getElementById('sendDeletionOtpBtn');
+            const url = modal ? modal.getAttribute('data-send-url') : null;
+            if (!url) return;
+            if (btn) { btn.disabled = true; btn.classList.add('opacity-60', 'pointer-events-none'); }
+            try {
+                const resp = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (resp.ok && data.ok) {
+                    if (data.email) document.getElementById('deleteOtpEmail').textContent = data.email;
+                    document.getElementById('deleteAccountStep1').classList.add('hidden');
+                    document.getElementById('deleteAccountStep2').classList.remove('hidden');
+                    const input = document.getElementById('deleteOtpInput');
+                    if (input) input.focus();
+                } else {
+                    alert((data && data.error) || 'We couldn\'t send the code right now. Please try again.');
+                }
+            } catch (e) {
+                alert('We couldn\'t send the code right now. Please try again.');
+            } finally {
+                if (btn) { btn.disabled = false; btn.classList.remove('opacity-60', 'pointer-events-none'); }
             }
         }
 

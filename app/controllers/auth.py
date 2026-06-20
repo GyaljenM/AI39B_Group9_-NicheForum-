@@ -196,15 +196,34 @@ class AuthController:
         flash("Your account has been deactivated. Log in any time to reactivate it.", "info")
         return redirect(url_for("Auth.login"))
 
-    def request_account_deletion(self):
-        """Start the email-confirmed account deletion flow.
+    @staticmethod
+    def _mask_email(email):
+        """Partially mask an email for display, e.g. 'j***e@gmail.com'."""
+        try:
+            local, domain = email.split("@", 1)
+        except (ValueError, AttributeError):
+            return email
+        if len(local) <= 2:
+            masked = local[:1] + "*"
+        else:
+            masked = local[0] + "*" * (len(local) - 2) + local[-1]
+        return f"{masked}@{domain}"
 
-        Generates a one-time token, stores it with a 1-hour expiry, and emails
-        the user a confirmation link. The account is NOT touched until they
-        click that link (see confirm_account_deletion).
+    def request_account_deletion(self):
+        """Start the OTP-confirmed account deletion flow.
+
+        Generates a 6-digit code, stores it on the user row with a 5-minute
+        expiry, and emails it. The account is NOT touched until the user submits
+        the matching code (see confirm_account_deletion). This is called via
+        fetch() from the delete-account modal, so it answers AJAX callers with
+        JSON and falls back to a flash+redirect for non-AJAX requests.
         """
+        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
         user_id = session.get("user_id")
         if not user_id:
+            if is_ajax:
+                return {"ok": False, "error": "Please log in first."}, 401
             flash("Please log in first.", "warning")
             return redirect(url_for("Auth.login"))
 
@@ -213,58 +232,76 @@ class AuthController:
         if not user:
             db.close()
             session.clear()
+            if is_ajax:
+                return {"ok": False, "error": "Account not found."}, 404
             flash("Account not found.", "danger")
             return redirect(url_for("Auth.login"))
 
-        token = secrets.token_urlsafe(32)
-        expiry_dt = datetime.utcnow() + timedelta(hours=1)
+        otp_code = EmailService.generate_secure_otp()
+        expiry_dt = datetime.utcnow() + timedelta(minutes=5)
         db.execute(
             "UPDATE users SET deletion_token = %s, deletion_token_expires_at = %s WHERE id = %s",
-            (token, expiry_dt, user_id),
+            (otp_code, expiry_dt, user_id),
         )
         db.close()
 
-        confirm_url = url_for("Auth.confirm_account_deletion", token=token, _external=True)
-        sent = EmailService.send_account_deletion_confirmation(user["email"], user["name"], confirm_url)
+        sent = EmailService.send_otp(user["email"], otp_code)
         if sent:
-            flash("We've emailed you a link to confirm deleting your account. It expires in 1 hour.", "info")
+            if is_ajax:
+                return {"ok": True, "email": self._mask_email(user["email"])}
+            flash("We've emailed you a 6-digit code to confirm deleting your account. It expires in 5 minutes.", "info")
         else:
-            flash("We couldn't send the confirmation email right now. Please try again later.", "danger")
+            if is_ajax:
+                return {"ok": False, "error": "We couldn't send the code right now. Please try again."}, 502
+            flash("We couldn't send the verification code right now. Please try again later.", "danger")
         return redirect(url_for("Home.profile"))
 
     def confirm_account_deletion(self):
-        """Validate a deletion token and (on POST) permanently delete the account.
+        """Validate the emailed OTP and permanently delete the account.
 
-        GET renders a final confirmation page so email link-prefetchers can't
-        trigger deletion; the actual deletion only happens on the POST.
+        The code must match the one stored by request_account_deletion and not
+        have expired. Deletion only happens once the code checks out.
         """
-        token = request.values.get("token")
-        if not token:
-            flash("Invalid or missing deletion link.", "danger")
-            return redirect(url_for("Home.home"))
+        user_id = session.get("user_id")
+        if not user_id:
+            flash("Please log in first.", "warning")
+            return redirect(url_for("Auth.login"))
+
+        otp = (request.form.get("otp") or "").strip()
+        if not otp:
+            flash("Enter the verification code we emailed you.", "danger")
+            return redirect(url_for("Home.profile"))
 
         db = Database()
-        user = db.fetch_one("SELECT * FROM users WHERE deletion_token = %s", (token,))
+        user = db.fetch_one("SELECT * FROM users WHERE id = %s", (user_id,))
         if not user:
             db.close()
-            flash("This deletion link is invalid or has already been used.", "danger")
-            return redirect(url_for("Home.home"))
+            session.clear()
+            flash("Account not found.", "danger")
+            return redirect(url_for("Auth.login"))
 
+        stored = user.get("deletion_token")
         expires = user.get("deletion_token_expires_at")
-        if not expires or datetime.utcnow() > expires:
+        if not stored or not expires:
+            db.close()
+            flash("No active deletion request was found. Please start again.", "danger")
+            return redirect(url_for("Home.profile"))
+
+        if datetime.utcnow() > expires:
             db.execute(
                 "UPDATE users SET deletion_token = NULL, deletion_token_expires_at = NULL WHERE id = %s",
-                (user["id"],),
+                (user_id,),
             )
             db.close()
-            flash("This deletion link has expired. Please request account deletion again.", "danger")
-            return redirect(url_for("Home.home"))
+            flash("Your verification code has expired. Please request account deletion again.", "danger")
+            return redirect(url_for("Home.profile"))
 
-        if request.method == "GET":
+        if otp != stored:
             db.close()
-            return render_template("confirm_delete_account.html", token=token, user_name=user["name"])
+            flash("Incorrect verification code. Please try again.", "danger")
+            return redirect(url_for("Home.profile"))
 
-        # POST — carry out the deletion.
+        # Code valid — carry out the deletion.
         self._anonymize_and_delete_user(db, user)
         db.close()
         session.clear()

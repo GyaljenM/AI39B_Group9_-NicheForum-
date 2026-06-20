@@ -57,17 +57,19 @@
                             <span class="material-symbols-outlined">more_horiz</span>
                         </button>
                         <div id="profile-actions-menu" data-kebab
-                             class="hidden absolute right-0 top-full mt-2 z-30 bg-white border border-[#E5E3DE] rounded-xl shadow-xl py-2 min-w-[210px]">
+                             class="profile-actions-menu hidden absolute right-0 top-full mt-2 z-50 bg-white border border-[#E5E3DE] rounded-xl shadow-xl py-2 w-max min-w-[210px] max-w-[calc(100vw-2rem)]">
                             {% if viewer_blocked %}
                             <form action="{{ url_for('User.unblock', user_id=profile_user.id) }}" method="POST">
-                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-[#1C1917] hover:bg-[#F8F6F1] flex items-center gap-2 transition-colors">
-                                    <span class="material-symbols-outlined text-base">person_check</span> Unblock {{ profile_user.name }}
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-[#1C1917] hover:bg-[#F8F6F1] flex items-center gap-2 transition-colors whitespace-nowrap">
+                                    <span class="material-symbols-outlined text-base shrink-0">person_check</span>
+                                    <span class="truncate">Unblock {{ profile_user.name }}</span>
                                 </button>
                             </form>
                             {% else %}
                             <button type="button" onclick='openBlockModal({{ url_for("User.block", user_id=profile_user.id)|tojson }}, {{ profile_user.name|tojson }})'
-                                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
-                                <span class="material-symbols-outlined text-base">block</span> Block {{ profile_user.name }}
+                                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors whitespace-nowrap">
+                                <span class="material-symbols-outlined text-base shrink-0">block</span>
+                                <span class="truncate">Block {{ profile_user.name }}</span>
                             </button>
                             {% endif %}
                         </div>
@@ -264,6 +266,12 @@
 .dark .action-btn:hover { background: #292724; color: #c5bef5; }
 .dark .follow-btn.following { background: #1a1816; color: #d4d1cc; border-color: #292724; }
 .dark .message-btn { background: #292724; color: #c5bef5; }
+/* Block / unblock overflow menu */
+.dark .profile-actions-menu { background: #1a1816; border-color: #292724; }
+.dark .profile-actions-menu button { color: #d4d1cc; }
+.dark .profile-actions-menu button:hover { background: #292724; }
+.dark .profile-actions-menu .text-red-600 { color: #fca5a5; }
+.dark .profile-actions-menu .text-red-600:hover { background: #3f1d1d; }
 </style>
 
 <script>

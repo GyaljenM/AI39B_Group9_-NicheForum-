@@ -57,59 +57,6 @@ class EmailService:
         return ''.join(secrets.choice(string.digits) for _ in range(length))
 
     @staticmethod
-    def send_account_deletion_confirmation(recipient_email, user_name, confirm_url):
-        """Email a user a one-time link to confirm permanent account deletion.
-
-        Returns True on success, False on any failure (callers surface their
-        own flash message based on the result).
-        """
-        subject = "Confirm your NicheForum account deletion"
-
-        html_content = f"""
-        <html>
-            <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:#333; line-height:1.6;">
-                <div style="max-width:600px; margin:0 auto; padding:20px; border:1px solid #e1e1e1; border-radius:10px;">
-                    <h2 style="color:#C2410C; text-align:center;">Delete your account?</h2>
-                    <p>Hi {user_name or 'there'},</p>
-                    <p>We received a request to permanently delete your NicheForum account. If this was you, confirm below. Your posts and replies will stay on the forum but will no longer show your name — they'll appear as <strong>[deleted]</strong>.</p>
-                    <div style="text-align:center; margin:28px 0;">
-                        <a href="{confirm_url}" style="background:#dc2626; color:#fff; text-decoration:none; padding:14px 32px; border-radius:8px; font-weight:600; font-size:15px;">Confirm account deletion</a>
-                    </div>
-                    <p style="font-size:14px; color:#666;">This link expires in 1 hour and can only be used once. <strong>If you did not request this, you can safely ignore this email</strong> — your account will remain active.</p>
-                    <p style="font-size:12px; color:#999; word-break:break-all;">If the button doesn't work, paste this link into your browser:<br>{confirm_url}</p>
-                    <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
-                    <p style="font-size:12px; color:#999; text-align:center;">&copy; 2026 NicheForum Team</p>
-                </div>
-            </body>
-        </html>
-        """
-
-        text_content = (
-            f"Hi {user_name or 'there'},\n\n"
-            "We received a request to permanently delete your NicheForum account.\n"
-            "Your posts and replies will remain but will be shown as [deleted].\n\n"
-            f"Confirm deletion (link expires in 1 hour):\n{confirm_url}\n\n"
-            "If you did not request this, ignore this email and your account stays active."
-        )
-
-        msg = MIMEMultipart("alternative")
-        msg['Subject'] = subject
-        msg['From'] = config.EMAIL_SENDER
-        msg['To'] = recipient_email
-        msg.attach(MIMEText(text_content, "plain"))
-        msg.attach(MIMEText(html_content, "html"))
-
-        try:
-            with smtplib.SMTP(config.EMAIL_SMTP_SERVER, config.EMAIL_SMTP_PORT) as server:
-                server.starttls()
-                server.login(config.EMAIL_SENDER, config.EMAIL_SERVICE_API_KEY)
-                server.sendmail(config.EMAIL_SENDER, recipient_email, msg.as_string())
-            return True
-        except Exception as e:
-            print(f"DEBUG: Account deletion email failed: {str(e)}")
-            return False
-
-    @staticmethod
     def send_report_notification(recipient_email, content_kind, content_title,
                                  reason_label, reporter_name, details=None,
                                  review_url=None):

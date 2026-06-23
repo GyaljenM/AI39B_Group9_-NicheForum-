@@ -1,4 +1,4 @@
-<div data-msg class="chat-msg {% if m.sender_id == session.get('user_id') %}mine{% else %}theirs{% endif %}">
+<div data-msg data-id="{{ m.id }}" class="chat-msg {% if m.sender_id == session.get('user_id') %}mine{% else %}theirs{% endif %}">
     <div class="chat-bubble">
         {% if m.share_type %}
             <a href="{{ m.share_url }}" class="chat-share-card">

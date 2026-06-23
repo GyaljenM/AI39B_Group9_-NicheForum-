@@ -173,15 +173,19 @@ class ChatRoutes:
             flash("You can only chat with people you both follow.", "warning")
             return redirect(url_for("User.profile", user_id=other_id))
 
+        is_ajax = request.headers.get("X-Requested-With") in ("fetch", "XMLHttpRequest")
+
         if not content:
             db.close()
+            if is_ajax:
+                return jsonify(ok=False), 400
             return redirect(url_for("Chat.conversation", other_id=other_id))
 
         db.execute(
             "INSERT INTO direct_messages (sender_id, receiver_id, content) VALUES (%s, %s, %s)",
             (user_id, other_id, WordCensor.censor_text(content)),
         )
-        
+
         # Create a notification for the message receiver
         sender = db.fetch_one("SELECT id, name FROM users WHERE id = %s", (user_id,))
         if sender:
@@ -196,8 +200,10 @@ class ChatRoutes:
                 )
             except Exception as e:
                 print(f"Error creating message notification: {e}")
-        
+
         db.close()
+        if is_ajax:
+            return jsonify(ok=True)
         return redirect(url_for("Chat.conversation", other_id=other_id))
 
     @login_required

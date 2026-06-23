@@ -444,7 +444,8 @@
     font-size: 14px;
     color: #1C1917;
     outline: none;
-    text-align: right;
+    text-align: left;
+    direction: ltr;
 }
 
 .chat-input-form input::placeholder {
@@ -742,9 +743,12 @@
         });
     });
 
-    // ── Auto-Refresh Polling ──────────────────────────────────────────
+    // ── Real-time messaging (append-only polling + AJAX send) ─────────
     const POLL_URL = "{{ url_for('Chat.poll_messages', other_id=other.id) }}";
+    const SEND_URL = "{{ url_for('Chat.send_message', other_id=other.id) }}";
     const list = document.getElementById('messageList');
+    const form = document.querySelector('.chat-input-form');
+    const input = form ? form.querySelector('input[name="content"]') : null;
 
     function escapeHtml(s) {
         const d = document.createElement('div');
@@ -752,8 +756,22 @@
         return d.innerHTML;
     }
 
-    function renderMessage(m) {
-        const cls = m.mine ? 'mine' : 'theirs';
+    // Track which message ids are already on screen so we only ever append
+    // new ones — no full re-render, no flicker, no animation replay.
+    const seenIds = new Set();
+    if (list) {
+        list.querySelectorAll('[data-msg]').forEach(el => {
+            const id = el.getAttribute('data-id');
+            if (id) seenIds.add(id);
+        });
+    }
+
+    function messageEl(m) {
+        const wrap = document.createElement('div');
+        wrap.setAttribute('data-msg', '');
+        wrap.setAttribute('data-id', m.id);
+        wrap.className = 'chat-msg ' + (m.mine ? 'mine' : 'theirs');
+
         let body;
         if (m.share_type) {
             body = '<a href="' + escapeHtml(m.share_url) + '" class="chat-share-card">' +
@@ -763,35 +781,57 @@
         } else {
             body = escapeHtml(m.content);
         }
-        return (
-            '<div class="chat-msg ' + cls + '">' +
-              '<div class="chat-bubble">' + body + '</div>' +
-              '<span class="chat-time">' + escapeHtml(m.created_at) + '</span>' +
-            '</div>'
-        );
+        wrap.innerHTML =
+            '<div class="chat-bubble">' + body + '</div>' +
+            '<span class="chat-time">' + escapeHtml(m.created_at) + '</span>';
+        return wrap;
     }
 
-    let lastCount = list ? list.querySelectorAll('[data-msg]').length : 0;
     async function poll() {
+        if (!list) return;
         try {
             const res = await fetch(POLL_URL, { headers: { 'X-Requested-With': 'fetch' } });
             if (!res.ok) return;
             const data = await res.json();
             const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
-            list.innerHTML = data.messages.map(m =>
-                '<div data-msg>' + renderMessage(m) + '</div>'
-            ).join('');
-            if (data.messages.length !== lastCount || atBottom) {
+            let appended = false;
+            data.messages.forEach(m => {
+                if (seenIds.has(String(m.id))) return;
+                seenIds.add(String(m.id));
+                list.appendChild(messageEl(m));
+                appended = true;
+            });
+            if (appended && atBottom) list.scrollTop = list.scrollHeight;
+        } catch (e) { /* ignore transient errors */ }
+    }
+
+    // Send via fetch so the page never reloads; poll picks up the new message.
+    if (form && input) {
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const content = input.value.trim();
+            if (!content) return;
+            input.value = '';
+            input.focus();
+            try {
+                const res = await fetch(SEND_URL, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'fetch' },
+                    body: new URLSearchParams({ content }),
+                });
+                if (!res.ok) { input.value = content; return; }
+                await poll();
                 list.scrollTop = list.scrollHeight;
+            } catch (err) {
+                input.value = content; // restore on failure so nothing is lost
             }
-            lastCount = data.messages.length;
-        } catch (e) { /* ignore */ }
+        });
     }
 
     if (list) {
         list.scrollTop = list.scrollHeight;
         poll();
-        setInterval(poll, 4000);
+        setInterval(poll, 2000);
     }
 </script>
 {% endif %}
